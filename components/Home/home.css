@@ -1,0 +1,64 @@
+:root {
+  --scrollY: 0;
+}
+.reveal {
+  opacity: 0;
+  transform: translateY(16px) scale(0.985);
+  transition: opacity 650ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 650ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.btnInk {
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 200ms ease;
+}
+.btnInk:hover {
+  transform: translateY(-2px) rotate(-0.2deg);
+  box-shadow: 5px 5px 0 #151515;
+  filter: saturate(1.05);
+}
+.btnInk:active {
+  transform: translateY(1px);
+  box-shadow: 2px 2px 0 #151515;
+}
+.chipPop {
+  transform: rotate(-0.6deg);
+  transition: transform 200ms ease;
+}
+.chipPop:hover {
+  transform: rotate(0.6deg) translateY(-2px);
+}
+.scribbleDraw path {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: draw 900ms ease forwards;
+}
+.reveal .scribbleDraw path {
+  animation-play-state: running;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.floatSock {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.22;
+  filter: blur(0px);
+  transform: translateY(calc(var(--scrollY) * -0.03px));
+}
+.floatSock.two {
+  opacity: 0.18;
+  transform: translateY(calc(var(--scrollY) * -0.05px));
+}
+.floatSock.three {
+  opacity: 0.15;
+  transform: translateY(calc(var(--scrollY) * -0.07px));
+}
+.jitter:hover {
+  transform: rotate(0.35deg);
+}
