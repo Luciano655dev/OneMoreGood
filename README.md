@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OneMoreGood 🧦
 
-## Getting Started
+**Small purchases. Real impact. Proof you can see.**
 
-First, run the development server:
+OneMoreGood is a nonprofit initiative that turns everyday purchases into direct, local help for families in **Santa Terezinha, Paraíba (Brazil)**.  
+No middle layers. No vague promises. Just real impact you can follow.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ What is OneMoreGood?
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+OneMoreGood sells simple products (like socks) and uses the proceeds to support people in a small Brazilian town where the project has **local partners on the ground**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Every action is:
 
-## Learn More
+- **Transparent** – you can see where the help goes
+- **Local** – partners are inside the city
+- **Direct** – no abstract “global causes”
 
-To learn more about Next.js, take a look at the following resources:
+> Buy one thing. Make one more good happen.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎯 Mission
 
-## Deploy on Vercel
+To make doing good **easy**, **honest**, and **close to home**.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+We believe people want to help, but don’t trust systems that feel distant or opaque.  
+OneMoreGood exists to fix that.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🔍 How it works
+
+1. You buy a product from the shop
+2. Funds are allocated to a **specific local action**
+3. Partners on the ground execute the help
+4. We publish **proof** (photos, videos, walkthroughs)
+
+No guessing. No “trust us”.  
+You can literally watch the impact.
+
+---
+
+## 📍 Why Santa Terezinha?
+
+Santa Terezinha, Paraíba is where this project has roots.
+
+Because of that, OneMoreGood can:
+
+- Work with **trusted local partners**
+- Respond to **real needs**, not assumptions
+- Keep costs low and impact high
+
+Local first. Always.
+
+---
+
+## 🧵 What we sell
+
+**Currently**
+
+- Socks (simple, practical, universal)
+
+**In the future**
+
+- Limited products tied to specific causes
+- Drops connected to concrete local needs
+
+Products are a **means**, not the mission.
+
+---
+
+## 🧪 Project status
+
+**Active development**
+
+OneMoreGood is currently built and maintained by **one person**, with help from local partners.  
+Features, content, and flows are evolving as the project grows.
+
+---
+
+## 🤝 Contributing
+
+This project is **open to contributions**.
+
+You can help by:
+
+- Improving UI/UX
+- Adding accessibility improvements
+- Helping with documentation
+- Suggesting transparency tools
+- Reviewing code
+
+Feel free to open issues or pull requests.
+
+---
+
+## 📬 Contact
+
+- **Email:** lucianomenezes655@gmail.com
+- **Instagram:** @lucianohlmenezes
+- **Twitter/X:** @Luciano655dev
+
+---
+
+## ❤️ Final note
+
+OneMoreGood isn’t about saving the world.  
+It’s about making **one small good** happen — again and again — in a way people can actually trust.
+
+If you’re here, thanks for caring.
+# OneMoreGood
