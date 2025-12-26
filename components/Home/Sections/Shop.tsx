@@ -6,17 +6,17 @@ import colors from "@/components/colors"
 export default function Shop() {
   const products = [
     {
-      title: "Flying Money",
+      title: "Flying Money Socks",
       image: "/products/FlyingMoneySocks.png",
-      mainTag: "CONFORT SOCKS",
+      mainTag: "PREMIUM SOCKS",
     },
     {
-      title: "Other Money",
+      title: "Chicken Leg Socks",
       image: "/products/ChickenLegSocks.png",
-      mainTag: "STYLE SOCKS",
+      mainTag: "PREMIUM SOCKS",
     },
     {
-      title: "HAHAHA Money",
+      title: "DUFF Simpsons Socks",
       image: "/products/DuffSimpsonsSocks.png",
       mainTag: "PREMIUM SOCKS",
     },
