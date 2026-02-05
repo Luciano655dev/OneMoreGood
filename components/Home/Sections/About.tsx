@@ -52,8 +52,8 @@ export default function About() {
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                OneMoreGood is a small nonprofit project rooted in Santa
-                Terezinha, Paraíba, a place that matters to us personally. We
+                OneMoreGood is a small nonprofit project rooted in Pernambuco,
+                Brazil, a place that matters to us personally. We
                 focus on help that is practical and verifiable: things people
                 can use immediately, delivered through local partners, with
                 updates you can actually see.
@@ -152,10 +152,8 @@ export default function About() {
             <div className="flex items-start gap-3">
               <MapPin />
               <div>
-                <div className="font-black">Santa Terezinha, Paraíba</div>
-                <div style={{ color: colors.muted }}>
-                  Brazil • sertão region
-                </div>
+                <div className="font-black">Pernambuco, Brazil</div>
+                <div style={{ color: colors.muted }}>Brazil • Northeast</div>
               </div>
             </div>
 
@@ -202,11 +200,11 @@ export default function About() {
             >
               <div className="font-black flex items-center gap-2">
                 <SockIcon size={18} color={colors.ink} />
-                Santa Terezinha
+                Pernambuco
               </div>
 
               <div className="mt-2 text-sm" style={{ color: colors.muted }}>
-                Real photo from the Santa Terezinha community.
+                Real photo from the Pernambuco community.
               </div>
 
               {/* clickable preview */}
@@ -215,12 +213,12 @@ export default function About() {
                 onClick={() => setPhotoOpen(true)}
                 className="mt-4 w-full border-2 border-black relative overflow-hidden group"
                 style={{ cursor: "pointer" }}
-                aria-label="Open Santa Terezinha photo"
+                aria-label="Open Pernambuco photo"
               >
                 <div className="h-40 relative">
                   <Image
                     src="/SantaTerezinha01.png"
-                    alt="Santa Terezinha community"
+                    alt="Pernambuco community"
                     fill
                     className="object-cover transition-transform group-hover:scale-[1.02]"
                     priority
@@ -270,7 +268,7 @@ export default function About() {
               }}
             >
               <div className="text-sm font-black uppercase tracking-widest">
-                Santa Terezinha • full photo
+                Pernambuco • full photo
               </div>
 
               <button
@@ -296,7 +294,7 @@ export default function About() {
               <div className="relative w-full aspect-[16/9] bg-black">
                 <Image
                   src="/SantaTerezinha01.png"
-                  alt="Santa Terezinha community full photo"
+                  alt="Pernambuco community full photo"
                   fill
                   className="object-contain"
                   priority

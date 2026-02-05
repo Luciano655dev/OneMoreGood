@@ -115,7 +115,7 @@ export default function DonateSection() {
         <SectionTitle
           kicker="Donations"
           title="Fuel the mission (even without buying socks)"
-          desc="Pick an amount, tap donate, and we’ll turn it into help in Paraíba."
+          desc="Pick an amount, tap donate, and we’ll turn it into help in Pernambuco."
         />
 
         <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -255,7 +255,7 @@ export default function DonateSection() {
                   <div>
                     <p className="text-sm font-black">Local-first</p>
                     <p className="text-sm font-black opacity-70">
-                      We work with partners in our hometown in Paraíba.
+                      We work with partners in our hometown in Pernambuco.
                     </p>
                   </div>
                 </div>

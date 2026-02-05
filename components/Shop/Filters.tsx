@@ -50,8 +50,8 @@ export default function Filters({
               className="mt-3 text-base max-w-xl"
               style={{ color: colors.muted }}
             >
-              Every purchase supports practical help in Santa Terezinha,
-              Paraíba, simple, direct, and verifiable.
+              Every purchase supports practical help in Pernambuco, Brazil,
+              simple, direct, and verifiable.
             </p>
           </div>
 

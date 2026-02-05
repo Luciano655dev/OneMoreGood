@@ -38,7 +38,7 @@ export default function Navbar() {
               className="text-xs font-semibold"
               style={{ color: colors.muted }}
             >
-              Paraíba, Brazil
+              Just one more to help
             </div>
           </div>
         </a>

@@ -30,7 +30,7 @@ export default function Footer() {
                 className="text-xs font-semibold"
                 style={{ color: colors.muted }}
               >
-                Santa Terezinha, Paraíba
+                Just one more to help
               </div>
             </div>
           </div>

@@ -19,7 +19,7 @@ import SectionTitle from "../Objects/SectionTitle"
 import RoughBorder from "../Objects/RoughBorder"
 
 export default function MayorFeature() {
-  const VIDEO_ID = "unnWr7yrfZM"
+  const VIDEO_ID = "Do4dHEGPcr4"
   const MAYOR_VIDEO_URL = `https://www.youtube.com/embed/${VIDEO_ID}`
   const THUMBNAIL = `https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`
 
@@ -94,7 +94,7 @@ export default function MayorFeature() {
                   ],
                   [
                     "Where it happens",
-                    "Santa Terezinha, Paraíba, delivered through local partners.",
+                    "Pernambuco, Brazil, delivered through local partners.",
                     MapPin,
                   ],
                   [

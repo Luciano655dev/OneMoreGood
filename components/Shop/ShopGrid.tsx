@@ -203,6 +203,17 @@ function InnerShop() {
             >
               {resultsLabel}
             </span>
+            <span
+              className="text-xs font-black uppercase tracking-widest px-3 py-2"
+              style={{
+                background: colors.sand,
+                border: `2px solid ${colors.ink}`,
+                boxShadow: `2px 2px 0 ${colors.ink}`,
+                color: colors.ink,
+              }}
+            >
+              Promo: 1 pair $7.99 • 2 pairs $14 — Pickup only at Windermere Preparatory School
+            </span>
           </div>
 
           {error ? (
@@ -227,7 +238,10 @@ function InnerShop() {
               }}
             />
           ) : (
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              id="shop-grid"
+              className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+            >
               {visibleProducts.map((p: any) => (
                 <ShopItem key={p.id} {...p} />
               ))}

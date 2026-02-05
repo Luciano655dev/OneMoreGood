@@ -34,7 +34,7 @@ export default function HowItWorks() {
           {
             n: "03",
             t: "Local delivery + proof",
-            d: "Partners in Santa Terezinha deliver and we publish simple updates so it stays verifiable.",
+            d: "Partners in Pernambuco deliver and we publish simple updates so it stays verifiable.",
             icon: ShieldCheck,
             tone: colors.sand,
             rot: -0.2,

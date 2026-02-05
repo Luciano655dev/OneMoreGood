@@ -11,8 +11,8 @@ import colors from "@/components/colors"
 
 export default function Impact() {
   const photos = [
-    { src: "/SantaTerezinha02.png", alt: "Delivery photo in Santa Terezinha" },
-    { src: "/SantaTerezinha03.png", alt: "Community photo in Santa Terezinha" },
+    { src: "/SantaTerezinha02.png", alt: "Delivery photo in Pernambuco" },
+    { src: "/SantaTerezinha03.png", alt: "Community photo in Pernambuco" },
   ]
 
   const [openSrc, setOpenSrc] = useState<string | null>(null)
@@ -57,7 +57,7 @@ export default function Impact() {
                 ],
                 [
                   "Local delivery",
-                  "Support is delivered through partners inside Santa Terezinha.",
+                  "Support is delivered through partners inside Pernambuco.",
                 ],
                 [
                   "Proof-first updates",

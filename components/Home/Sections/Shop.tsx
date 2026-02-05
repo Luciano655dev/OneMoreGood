@@ -2,8 +2,11 @@ import SectionTitle from "../Objects/SectionTitle"
 import RoughBorder from "../Objects/RoughBorder"
 import SockIcon from "../Objects/SockIcon"
 import colors from "@/components/colors"
+import { useRouter } from "next/navigation"
 
 export default function Shop() {
+  const router = useRouter()
+
   const products = [
     {
       title: "Flying Money Socks",
@@ -80,11 +83,12 @@ export default function Shop() {
 
               {/* ACTION */}
               <div className="mt-4 flex items-center justify-between">
-                <div className="font-black">$24.99</div>
+                <div className="font-black">$7.99</div>
 
                 <button
                   type="button"
                   className="px-4 py-2 font-black uppercase tracking-wider"
+                  onClick={() => router.push("/shop")}
                   style={{
                     background: colors.accent,
                     color: colors.paper,

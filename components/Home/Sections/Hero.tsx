@@ -11,7 +11,7 @@ import RoughBorder from "../Objects/RoughBorder"
 import colors from "@/components/colors"
 
 export default function Hero() {
-  const VIDEO_ID = "unnWr7yrfZM"
+  const VIDEO_ID = "Do4dHEGPcr4"
   const MAYOR_VIDEO_URL = `https://www.youtube.com/embed/${VIDEO_ID}`
   const THUMBNAIL = `https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`
 
@@ -51,7 +51,7 @@ export default function Hero() {
               style={{ color: colors.muted }}
             >
               OneMoreGood turns everyday purchases into real help for families
-              in Santa Terezinha, Paraíba. We keep it simple, direct, and
+              in Pernambuco, Brazil. We keep it simple, direct, and
               honest, with proof you can watch.
             </p>
 
@@ -126,7 +126,7 @@ export default function Hero() {
                 className="mt-5 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Santa Terezinha • Paraíba
+                Pernambuco • Brazil
               </div>
             </RoughBorder>
           </div>

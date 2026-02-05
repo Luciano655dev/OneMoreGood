@@ -43,7 +43,18 @@ export default function CartDrawer() {
 
   const hasItems = items.length > 0
   const shipping = 0
-  const total = useMemo(() => subtotal + shipping, [subtotal, shipping])
+  const { baseSubtotal, promoSavings, total } = useMemo(() => {
+    const base = subtotal
+    const savings = items.reduce((sum, { product, qty }) => {
+      const pairCount = Math.floor(qty / 2)
+      const pairPrice = 14 // promo price for two
+      const regularPair = (product.price || 0) * 2
+      const discountPerPair = Math.max(0, regularPair - pairPrice)
+      return sum + pairCount * discountPerPair
+    }, 0)
+    const finalTotal = Math.max(0, base - savings + shipping)
+    return { baseSubtotal: base, promoSavings: savings, total: finalTotal }
+  }, [items, shipping, subtotal])
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [successOpen, setSuccessOpen] = useState(false)
@@ -54,6 +65,8 @@ export default function CartDrawer() {
 
   const pickupLocation = "Windermere Preparatory School"
   const pickupWhenLabel = useMemo(() => nextPickupLabel(), [])
+  const pickupNote =
+    "Pickup only. No shipping. Bring your confirmation email to the school."
 
   if (!isOpen) return null
 
@@ -316,7 +329,14 @@ export default function CartDrawer() {
           >
             <div className="flex items-center justify-between text-sm font-black">
               <span style={{ color: colors.muted }}>Subtotal</span>
-              <span>${money(subtotal)}</span>
+              <span>${money(baseSubtotal)}</span>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-sm font-black">
+              <span style={{ color: colors.muted }}>Promo (2 for $14)</span>
+              <span style={{ color: colors.clay }}>
+                {promoSavings > 0 ? `- $${money(promoSavings)}` : "$0.00"}
+              </span>
             </div>
 
             <div className="mt-2 flex items-center justify-between text-sm font-black">
@@ -330,6 +350,13 @@ export default function CartDrawer() {
             >
               <span>Total</span>
               <span>${money(total)}</span>
+            </div>
+
+            <div
+              className="mt-3 text-xs font-black uppercase tracking-widest"
+              style={{ color: colors.muted }}
+            >
+              {pickupNote}
             </div>
 
             <button
@@ -391,6 +418,10 @@ export default function CartDrawer() {
                 <p className="mt-2 text-sm" style={{ color: colors.muted }}>
                   Enter your email. Your order will be reserved and you can pick
                   it up at <b>{pickupLocation}</b> on <b>{pickupWhenLabel}</b>.
+                  <br />
+                  <br />
+                  Pickup only — no shipping. Please bring your confirmation
+                  email.
                 </p>
 
                 <label
@@ -463,6 +494,7 @@ export default function CartDrawer() {
                   style={{ color: colors.muted }}
                 >
                   By reserving, you agree we may email you about this pickup.
+                  Pickup only; no items will be shipped.
                 </div>
               </div>
             </div>
@@ -493,6 +525,9 @@ export default function CartDrawer() {
                 <p className="mt-2 text-sm" style={{ color: colors.muted }}>
                   We emailed your confirmation. Pick up at{" "}
                   <b>{pickupLocation}</b> on <b>{pickupWhenLabel}</b>.
+                  <br />
+                  <br />
+                  No shipping. Bring the email when you arrive.
                 </p>
 
                 <button
