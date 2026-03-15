@@ -7,7 +7,7 @@ import RoughBorder from "../Objects/RoughBorder"
 import HandButton from "../Objects/HandButton"
 import colors from "@/components/colors"
 
-import { Mail, Instagram, Twitter } from "lucide-react"
+import { Mail, Github, MapPin, Building2 } from "lucide-react"
 
 export default function Contact() {
   const [loading, setLoading] = useState(false)
@@ -58,8 +58,8 @@ export default function Contact() {
       <section id="contact" className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Contact"
-          title="Talk to us"
-          desc="Partnerships, volunteers, press, questions."
+          title="Contact Luciano about support"
+          desc="Reach out about partnerships, fundraising campaigns, donations, or questions about OneMoreGood and Instituto Semear."
         />
 
         <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -79,8 +79,30 @@ export default function Contact() {
                   }}
                   className="flex items-center gap-3"
                 >
+                  <Github size={18} />
+                  <a
+                    href="https://github.com/luciano655dev"
+                    className="underline"
+                  >
+                    github.com/luciano655dev
+                  </a>
+                </div>
+
+                <div
+                  style={{
+                    borderTop: `2px solid ${colors.ink}`,
+                    paddingTop: 12,
+                    color: colors.muted,
+                  }}
+                  className="flex items-center gap-3"
+                >
                   <Mail size={18} />
-                  lucianomenezes655@gmail.com
+                  <a
+                    href="mailto:lucianomenezes655@gmail.com"
+                    className="underline"
+                  >
+                    lucianomenezes655@gmail.com
+                  </a>
                 </div>
 
                 <div
@@ -89,10 +111,14 @@ export default function Contact() {
                     paddingTop: 12,
                     color: colors.muted,
                   }}
-                  className="flex items-center gap-3"
+                  className="flex items-start gap-3"
                 >
-                  <Instagram size={18} />
-                  @lucianohlmenezes
+                  <MapPin size={18} className="mt-0.5 shrink-0" />
+                  <span>
+                    Sítio Bandeiras, S/N - Zona Rural
+                    <br />
+                    Santa Terezinha / PE - CEP 56.750-000
+                  </span>
                 </div>
 
                 <div
@@ -101,10 +127,13 @@ export default function Contact() {
                     paddingTop: 12,
                     color: colors.muted,
                   }}
-                  className="flex items-center gap-3"
+                  className="flex items-start gap-3"
                 >
-                  <Twitter size={18} />
-                  @Luciano655dev
+                  <Building2 size={18} className="mt-0.5 shrink-0" />
+                  <span>
+                    Current partner: Instituto Educacional Semear, Santa
+                    Terezinha and nearby communities in Sertão do Pajeú
+                  </span>
                 </div>
               </div>
             </RoughBorder>
@@ -122,7 +151,7 @@ export default function Contact() {
                   <input
                     name="name"
                     required
-                    placeholder="Name"
+                    placeholder="Your name"
                     className="px-3 py-3 font-black"
                     style={{
                       background: colors.paper,
@@ -134,7 +163,7 @@ export default function Contact() {
                     name="email"
                     required
                     type="email"
-                    placeholder="Email"
+                    placeholder="Your email"
                     className="px-3 py-3 font-black"
                     style={{
                       background: colors.paper,
@@ -147,7 +176,7 @@ export default function Contact() {
                 <textarea
                   name="message"
                   required
-                  placeholder="Message"
+                  placeholder="Tell Luciano how you want to help: partnership, fundraising, donation, product collaboration, or questions"
                   className="px-3 py-3 font-black h-28"
                   style={{
                     background: colors.paper,

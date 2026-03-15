@@ -30,7 +30,7 @@ export default function Footer() {
                 className="text-xs font-semibold"
                 style={{ color: colors.muted }}
               >
-                Just one more to help
+                Fundraising for nonprofits through socks
               </div>
             </div>
           </div>
@@ -47,16 +47,22 @@ export default function Footer() {
               GitHub
             </a>
             <a
-              href="https://daykeeper.app"
+              href="mailto:lucianomenezes655@gmail.com"
               style={{ color: colors.ink, textDecoration: "underline" }}
             >
-              Daykeeper
+              Email
             </a>
             <a
-              href="https://hobbyasap.com"
+              href="https://www.institutoeducacionalsemear.com/?utm_source=ig&utm_medium=social&utm_content=link_in_bio"
               style={{ color: colors.ink, textDecoration: "underline" }}
             >
-              HobbyASAP
+              Instituto Semear
+            </a>
+            <a
+              href="https://www.instagram.com/ies.institutoeducacionalsemear/"
+              style={{ color: colors.ink, textDecoration: "underline" }}
+            >
+              Instagram
             </a>
             <a
               href="/shop"
@@ -67,7 +73,7 @@ export default function Footer() {
 
             <div className="flex items-center gap-2">
               <SockIcon size={18} color={colors.ink} />©{" "}
-              {new Date().getFullYear()} One More Pair
+              {new Date().getFullYear()} One More Good
             </div>
           </div>
         </div>

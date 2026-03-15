@@ -7,17 +7,18 @@ const RoughBorder = ({
   rotate = 0,
   label,
   delay = 0,
+  className = "",
 }: any) => (
   <div
     data-reveal
-    className="reveal relative"
+    className={`reveal relative ${className}`.trim()}
     style={{
       transform: `rotate(${rotate}deg)`,
       transitionDelay: `${delay}ms`,
     }}
   >
     <div
-      className="relative"
+      className="relative h-full"
       style={{ background: bg, border: `2px solid ${colors.ink}` }}
     >
       <div

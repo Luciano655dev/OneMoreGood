@@ -11,9 +11,8 @@ import RoughBorder from "../Objects/RoughBorder"
 import colors from "@/components/colors"
 
 export default function Hero() {
-  const VIDEO_ID = "Do4dHEGPcr4"
-  const MAYOR_VIDEO_URL = `https://www.youtube.com/embed/${VIDEO_ID}`
-  const THUMBNAIL = `https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`
+  const INTRO_VIDEO_URL = "/Instagram Photo Download.mp4"
+  const INTRO_VIDEO_POSTER = "/Instagram Photo Download (5).jpg"
 
   const [videoOpen, setVideoOpen] = useState(false)
   const router = useRouter()
@@ -24,21 +23,24 @@ export default function Hero() {
         <div className="grid md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-7">
             <div data-reveal className="reveal hidden md:flex flex-wrap gap-2">
-              <StampChip icon={ShieldCheck} text="Transparent" />
+              <StampChip icon={ShieldCheck} text="Fundraising organization" />
               <StampChip
                 icon={Users}
-                text="Local partners"
+                text="Instituto Semear"
                 tone={colors.paper}
               />
-              <StampChip icon={Sparkles} text="Every purchase helps" />
+              <StampChip icon={Sparkles} text="Santa Terezinha, PE" />
             </div>
 
             <h1
               data-reveal
               className="reveal mt-6 text-5xl md:text-6xl font-black leading-[0.98] tracking-tight"
             >
-              Make <span style={{ color: colors.clay }}>One More Good</span>{" "}
-              happen.
+              Make{" "}
+              <span style={{ color: colors.clay }}>
+                One More Good <br />
+              </span>
+              Happen
             </h1>
 
             <div data-reveal className="reveal mt-2">
@@ -50,17 +52,19 @@ export default function Hero() {
               className="reveal mt-6 text-lg leading-relaxed max-w-2xl"
               style={{ color: colors.muted }}
             >
-              OneMoreGood turns everyday purchases into real help for families
-              in Pernambuco, Brazil. We keep it simple, direct, and
-              honest, with proof you can watch.
+              OneMoreGood is a fundraising organization that sells fun socks to
+              help nonprofits improve their operations. Right now, every sale
+              supports Instituto Educacional Semear in Santa Terezinha,
+              Pernambuco, helping strengthen the resources and opportunities
+              they provide for local children and families.
             </p>
 
             <div data-reveal className="reveal mt-8 flex flex-wrap gap-3">
               <HandButton variant="solid" onClick={() => router.push("/shop")}>
-                Shop <ArrowRight size={18} />
+                Fundraise / support <ArrowRight size={18} />
               </HandButton>
               <HandButton variant="ghost" onClick={() => setVideoOpen(true)}>
-                Watch the proof <Play size={18} />
+                Watch intro video <Play size={18} />
               </HandButton>
             </div>
 
@@ -71,9 +75,9 @@ export default function Hero() {
               className="reveal grid sm:grid-cols-3 gap-4 text-sm"
             >
               {[
-                ["Proof over promises", "See where it goes."],
-                ["Direct and local", "Partners inside the city."],
-                ["Simple impact", "Buy something, do good."],
+                ["OneMoreGood raises funds", "We turn product sales into partner support."],
+                ["Instituto Semear receives support", "Current featured nonprofit in Santa Terezinha."],
+                ["Operations can improve", "Funds can help structure, supplies, and local capacity."],
               ].map(([t, d]) => (
                 <div key={t}>
                   <div className="font-black">{t}</div>
@@ -95,7 +99,8 @@ export default function Hero() {
                 className="mt-2 text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                A quick, real look at how OneMoreGood works on the ground.
+                A local video update showing the project environment and the
+                day-to-day community context in Santa Terezinha.
               </p>
 
               <div
@@ -105,16 +110,24 @@ export default function Hero() {
                   boxShadow: `3px 3px 0 ${colors.ink}`,
                 }}
               >
-                <div
-                  className="aspect-video flex items-center justify-center bg-center bg-cover"
-                  style={{
-                    backgroundImage: `url(${THUMBNAIL})`,
-                  }}
-                >
+                <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                  <video
+                    className="absolute inset-0 h-full w-full object-cover opacity-80"
+                    src={INTRO_VIDEO_URL}
+                    poster={INTRO_VIDEO_POSTER}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  />
                   <button
                     onClick={() => setVideoOpen(true)}
                     className="btnInk border-2 border-black text-white px-5 py-3 font-black uppercase tracking-wider inline-flex items-center gap-2"
-                    style={{ background: colors.accent, cursor: "pointer" }}
+                    style={{
+                      background: colors.accent,
+                      cursor: "pointer",
+                      zIndex: 1,
+                    }}
                   >
                     <Play size={18} />
                     Play video
@@ -126,7 +139,7 @@ export default function Hero() {
                 className="mt-5 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Pernambuco • Brazil
+                Featured partner • Brazil
               </div>
             </RoughBorder>
           </div>
@@ -167,13 +180,14 @@ export default function Hero() {
                 <X size={18} />
               </button>
             </div>
-            <div className="aspect-video bg-black">
-              <iframe
-                className="w-full h-full"
-                src={MAYOR_VIDEO_URL}
-                title="Proof video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+            <div className="bg-black flex justify-center">
+              <video
+                className="w-full max-h-[80vh]"
+                src={INTRO_VIDEO_URL}
+                poster={INTRO_VIDEO_POSTER}
+                controls
+                autoPlay
+                playsInline
               />
             </div>
             <div

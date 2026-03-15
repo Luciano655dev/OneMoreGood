@@ -38,7 +38,7 @@ export default function Navbar() {
               className="text-xs font-semibold"
               style={{ color: colors.muted }}
             >
-              Just one more to help
+              Fundraising for nonprofits through socks
             </div>
           </div>
         </a>

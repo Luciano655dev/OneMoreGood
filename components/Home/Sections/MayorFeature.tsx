@@ -19,9 +19,9 @@ import SectionTitle from "../Objects/SectionTitle"
 import RoughBorder from "../Objects/RoughBorder"
 
 export default function MayorFeature() {
-  const VIDEO_ID = "Do4dHEGPcr4"
-  const MAYOR_VIDEO_URL = `https://www.youtube.com/embed/${VIDEO_ID}`
-  const THUMBNAIL = `https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`
+  const LOCAL_VIDEO_URL =
+    "/SnapInsta.to_AQN2ocmLoqPbaZ5m8X33axudFj0rcjHijbJcQDbFP5yH96cOgZmQqr59xlzE2aisErPQpvD1WXoA4_67xt5uzByUitIBo0DJM02yJr4.mp4"
+  const LOCAL_VIDEO_POSTER = "/Instagram Photo Download (4).jpg"
 
   const router = useRouter()
   const [videoOpen, setVideoOpen] = useState(false)
@@ -48,8 +48,8 @@ export default function MayorFeature() {
       <div className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Transparency"
-          title="Proof you can watch"
-          desc="OneMoreGood is built on evidence, not marketing. This local walkthrough shows where support goes and how it lands."
+          title="See the partner and the context"
+          desc="This page explains who OneMoreGood is supporting right now, why that nonprofit matters, and how fundraising is meant to help."
         />
 
         <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -69,14 +69,24 @@ export default function MayorFeature() {
                   boxShadow: `4px 4px 0 ${colors.ink}`,
                 }}
               >
-                <div
-                  className="aspect-video flex items-center justify-center bg-center bg-cover"
-                  style={{ backgroundImage: `url(${THUMBNAIL})` }}
-                >
+                <div className="relative aspect-video flex items-center justify-center bg-black overflow-hidden">
+                  <video
+                    className="absolute inset-0 h-full w-full object-cover opacity-80"
+                    src={LOCAL_VIDEO_URL}
+                    poster={LOCAL_VIDEO_POSTER}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  />
                   <button
                     onClick={() => setVideoOpen(true)}
                     className="btnInk border-2 border-black text-white px-5 py-3 font-black uppercase tracking-wider inline-flex items-center gap-2"
-                    style={{ background: colors.accent, cursor: "pointer" }}
+                    style={{
+                      background: colors.accent,
+                      cursor: "pointer",
+                      zIndex: 1,
+                    }}
                     aria-label="Play video"
                   >
                     <Play size={18} />
@@ -89,17 +99,17 @@ export default function MayorFeature() {
                 {[
                   [
                     "What you’ll see",
-                    "The community, the needs, and what support looks like in real life.",
+                    "The fundraising story, the local setting, and the partner nonprofit currently featured on OneMoreGood.",
                     ShieldCheck,
                   ],
                   [
                     "Where it happens",
-                    "Pernambuco, Brazil, delivered through local partners.",
+                    "Santa Terezinha, Pernambuco, where Instituto Semear is based.",
                     MapPin,
                   ],
                   [
                     "Why it matters",
-                    "Trust comes from proof. Anyone can verify this later.",
+                    "Small nonprofits can move further when fundraising helps cover practical operational needs.",
                     ShieldCheck,
                   ],
                 ].map(([t, d, Icon]: any) => (
@@ -130,7 +140,7 @@ export default function MayorFeature() {
                   variant="solid"
                   onClick={() => router.push("/shop")}
                 >
-                  Shop to support <ShoppingBag size={18} />
+                  Donate / fundraise <ShoppingBag size={18} />
                 </HandButton>
 
                 <HandButton
@@ -142,12 +152,14 @@ export default function MayorFeature() {
               </div>
 
               <div className="mt-6 text-sm" style={{ color: colors.muted }}>
-                We keep this video permanent so the story stays verifiable, not
-                just a one-time campaign.
+                OneMoreGood is the fundraising layer. Instituto Educacional
+                Semear is the current nonprofit partner receiving attention and
+                support through this site.
                 <br />
                 <br />
-                This is NOT the partner video yet, as the official video will
-                only be recorded in 2026.
+                If you want to discuss partnerships, donations, or custom
+                fundraising efforts, contact Luciano directly through GitHub or
+                email.
               </div>
 
               <div
@@ -204,13 +216,14 @@ export default function MayorFeature() {
               </button>
             </div>
 
-            <div className="aspect-video bg-black">
-              <iframe
-                className="w-full h-full"
-                src={MAYOR_VIDEO_URL}
-                title="OneMoreGood local walkthrough"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+            <div className="bg-black flex justify-center">
+              <video
+                className="w-full max-h-[80vh]"
+                src={LOCAL_VIDEO_URL}
+                poster={LOCAL_VIDEO_POSTER}
+                controls
+                autoPlay
+                playsInline
               />
             </div>
 

@@ -1,40 +1,40 @@
 import SectionTitle from "../Objects/SectionTitle"
 import RoughBorder from "../Objects/RoughBorder"
 
-import { ShoppingBag, Heart, ShieldCheck } from "lucide-react"
+import { BookOpen, Heart, ShieldCheck } from "lucide-react"
 import colors from "@/components/colors"
 
 export default function HowItWorks() {
   return (
     <section id="how" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
-        kicker="Process"
-        title="How it works"
-        desc="Clear steps. Easy to trust."
+        kicker="Methodology"
+        title="How the fundraising model works"
+        desc="OneMoreGood uses product sales and direct supporter relationships to raise money for nonprofit partners."
       />
 
       <div className="mt-10 grid md:grid-cols-3 gap-6">
         {[
           {
             n: "01",
-            t: "You support",
-            d: "Choose something in the shop. Every purchase is designed to create real help.",
-            icon: ShoppingBag,
+            t: "Sell fun socks",
+            d: "Products create a straightforward way for people to support a cause without a complicated donation flow.",
+            icon: BookOpen,
             tone: colors.sand,
             rot: -0.5,
           },
           {
             n: "02",
-            t: "We fund essentials",
-            d: "We allocate support toward practical needs identified locally.”",
+            t: "Fund partner nonprofits",
+            d: "Revenue is directed to organizations already doing real local work and needing more operational support.",
             icon: Heart,
             tone: colors.paper,
             rot: 0.4,
           },
           {
             n: "03",
-            t: "Local delivery + proof",
-            d: "Partners in Pernambuco deliver and we publish simple updates so it stays verifiable.",
+            t: "Grow with partnerships",
+            d: "Luciano can coordinate partnerships, custom fundraising efforts, and direct conversations about how support should be structured.",
             icon: ShieldCheck,
             tone: colors.sand,
             rot: -0.2,
@@ -48,6 +48,7 @@ export default function HowItWorks() {
               rotate={s.rot}
               label={`Step ${s.n}`}
               delay={idx * 120}
+              className="h-full"
             >
               <div className="flex items-center justify-between">
                 <div

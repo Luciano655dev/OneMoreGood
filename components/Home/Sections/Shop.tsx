@@ -1,6 +1,7 @@
 import SectionTitle from "../Objects/SectionTitle"
 import RoughBorder from "../Objects/RoughBorder"
 import SockIcon from "../Objects/SockIcon"
+import ProgressiveImage from "../Objects/ProgressiveImage"
 import colors from "@/components/colors"
 import { useRouter } from "next/navigation"
 
@@ -36,8 +37,8 @@ export default function Shop() {
       <div className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Shop"
-          title="Pick socks that fund support"
-          desc="Choose a pair you like. We take care of the impact."
+          title="Fundraising products that support the mission"
+          desc="Choose a pair of socks and help OneMoreGood raise money for Instituto Educacional Semear."
         />
 
         <div className="mt-10 grid md:grid-cols-3 gap-6">
@@ -57,9 +58,11 @@ export default function Shop() {
                   boxShadow: `2px 2px 0 ${colors.ink}`,
                 }}
               >
-                <img
+                <ProgressiveImage
                   src={product.image}
                   alt="Sock product example"
+                  width={640}
+                  height={352}
                   className="h-44 w-full object-cover"
                 />
               </div>
@@ -105,7 +108,7 @@ export default function Shop() {
                 className="mt-3 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                + supports donation
+                + supports Instituto Semear
               </div>
             </RoughBorder>
           ))}

@@ -9,16 +9,17 @@ import {
   X,
   ArrowRight,
 } from "lucide-react"
-import Image from "next/image"
 
 import SectionTitle from "../Objects/SectionTitle"
 import RoughBorder from "../Objects/RoughBorder"
 import SockIcon from "../Objects/SockIcon"
 import HandButton from "../Objects/HandButton"
+import ProgressiveImage from "../Objects/ProgressiveImage"
 import colors from "@/components/colors"
 
 export default function About() {
   const [photoOpen, setPhotoOpen] = useState(false)
+  const COMMUNITY_IMAGE = "/Instagram Photo from SnapInsta (1).jpg"
 
   // Close on ESC
   useEffect(() => {
@@ -34,8 +35,8 @@ export default function About() {
     <section id="about" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
         kicker="About"
-        title="Local roots. Direct impact."
-        desc="OneMoreGood started with a simple idea: make doing good easy, honest, and close to the people it’s meant for."
+        title="Who we are"
+        desc="OneMoreGood raises money for nonprofit partners. Instituto Educacional Semear is the first organization currently being supported."
       />
 
       <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -44,7 +45,7 @@ export default function About() {
           <RoughBorder
             bg={colors.paper}
             rotate={0.4}
-            label="What OneMoreGood is"
+            label="Quem Somos"
             delay={60}
           >
             <div className="space-y-6">
@@ -52,11 +53,21 @@ export default function About() {
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                OneMoreGood is a small nonprofit project rooted in Pernambuco,
-                Brazil, a place that matters to us personally. We
-                focus on help that is practical and verifiable: things people
-                can use immediately, delivered through local partners, with
-                updates you can actually see.
+                OneMoreGood exists to help nonprofits raise money in a simple,
+                transparent way through product sales. Instead of operating the
+                programs ourselves, we direct fundraising energy toward partner
+                organizations already doing the frontline work in their
+                communities.
+              </p>
+
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: colors.muted }}
+              >
+                The goal is to make support easier to understand: people buy a
+                product they actually like, the fundraising stays visible, and
+                the partner organization gets more room to improve how it
+                serves its community.
               </p>
 
               <div
@@ -65,18 +76,18 @@ export default function About() {
               >
                 {[
                   [
-                    "Simple actions",
-                    "You don’t need a big donation to help. A purchase can do real work.",
+                    "Mission",
+                    "Raise money for trusted nonprofit partners through fun products and direct supporter relationships.",
                     Sparkles,
                   ],
                   [
-                    "Direct + local",
-                    "We work with partners inside the city so support lands where it should.",
+                    "Vision",
+                    "Build a fundraising platform that helps local nonprofits operate with more stability and reach.",
                     Users,
                   ],
                   [
-                    "Proof-first",
-                    "We share clear updates so trust comes from evidence, not promises.",
+                    "Values",
+                    "Transparency, practical help, accountable partnerships, and respect for the communities being served.",
                     ShieldCheck,
                   ],
                 ].map(([t, d, Icon]: any) => (
@@ -101,20 +112,20 @@ export default function About() {
               >
                 {[
                   [
-                    "What we fund",
-                    "Practical support: essential goods and needs that improve daily life quickly (just like socks).",
+                    "How OneMoreGood works",
+                    "We sell fun socks, collect support, and channel funds to partner nonprofits that need help strengthening operations.",
                   ],
                   [
-                    "How we choose",
-                    "Needs are identified locally. The goal is usefulness, not aesthetics or hype.",
+                    "Current nonprofit partner",
+                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is the organization currently featured and supported.",
                   ],
                   [
-                    "What we won’t do",
-                    "No vague claims. No poverty-as-marketing. No “we helped somewhere” without details.",
+                    "Why this model matters",
+                    "Small organizations often need flexible fundraising they can actually use for infrastructure, materials, and day-to-day improvements.",
                   ],
                   [
-                    "What growth looks like",
-                    "We expand carefully, only if we can stay transparent and keep impact real.",
+                    "What comes next",
+                    "As OneMoreGood grows, more nonprofit partners can be added for campaigns, fundraising collaborations, and targeted support.",
                   ],
                 ].map(([t, d], idx) => (
                   <div
@@ -149,95 +160,103 @@ export default function About() {
             label="Where the help goes"
             delay={140}
           >
-            <div className="flex items-start gap-3">
-              <MapPin />
-              <div>
-                <div className="font-black">Pernambuco, Brazil</div>
-                <div style={{ color: colors.muted }}>Brazil • Northeast</div>
-              </div>
-            </div>
-
-            <div
-              className="mt-6 border-2 border-black p-4"
-              style={{
-                background: colors.paper,
-                boxShadow: `3px 3px 0 ${colors.ink}`,
-              }}
-            >
-              <div className="font-black flex items-center gap-2">
-                <SockIcon size={18} color={colors.ink} />
-                Transparency promise
-              </div>
-              <div className="mt-2 text-sm" style={{ color: colors.muted }}>
-                We’ll publish simple, real updates: what was funded, where it
-                went, and proof from local partners. If something takes longer
-                than expected, we’ll say that too.
+            <div className="flex flex-col">
+              <div className="flex items-start gap-3">
+                <MapPin />
+                <div>
+                  <div className="font-black">Santa Terezinha, Pernambuco</div>
+                  <div style={{ color: colors.muted }}>
+                    Sítio Bandeiras • Sertão do Pajeú • Brazil
+                  </div>
+                </div>
               </div>
 
               <div
-                className="mt-5"
-                style={{ borderTop: `2px solid ${colors.ink}`, paddingTop: 14 }}
+                className="mt-6 border-2 border-black p-4"
+                style={{
+                  background: colors.paper,
+                  boxShadow: `3px 3px 0 ${colors.ink}`,
+                }}
               >
-                <div className="font-black">What you’ll see here</div>
-                <ul
-                  className="mt-2 text-sm list-disc pl-5"
-                  style={{ color: colors.muted }}
-                >
-                  <li>Photos from deliveries (with respect and consent)</li>
-                  <li>Short written updates (no fluff)</li>
-                  <li>Receipts / counts when it makes sense</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* PHOTO CARD */}
-            <div
-              className="mt-6 border-2 border-black p-4"
-              style={{
-                background: colors.paper,
-                boxShadow: `3px 3px 0 ${colors.ink}`,
-              }}
-            >
-              <div className="font-black flex items-center gap-2">
-                <SockIcon size={18} color={colors.ink} />
-                Pernambuco
-              </div>
-
-              <div className="mt-2 text-sm" style={{ color: colors.muted }}>
-                Real photo from the Pernambuco community.
-              </div>
-
-              {/* clickable preview */}
-              <button
-                type="button"
-                onClick={() => setPhotoOpen(true)}
-                className="mt-4 w-full border-2 border-black relative overflow-hidden group"
-                style={{ cursor: "pointer" }}
-                aria-label="Open Pernambuco photo"
-              >
-                <div className="h-40 relative">
-                  <Image
-                    src="/SantaTerezinha01.png"
-                    alt="Pernambuco community"
-                    fill
-                    className="object-cover transition-transform group-hover:scale-[1.02]"
-                    priority
-                  />
+                <div className="font-black flex items-center gap-2">
+                  <SockIcon size={18} color={colors.ink} />
+                  Area of operation
+                </div>
+                <div className="mt-2 text-sm" style={{ color: colors.muted }}>
+                  Instituto Semear is based in Santa Terezinha (PE). OneMoreGood
+                  is currently fundraising with that partner as the main focus of
+                  this campaign.
                 </div>
 
-                {/* small hint overlay */}
                 <div
-                  className="absolute inset-0 flex items-end justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{ pointerEvents: "none" }}
+                  className="mt-5"
+                  style={{ borderTop: `2px solid ${colors.ink}`, paddingTop: 14 }}
                 >
-                  <span
-                    className="text-xs font-black uppercase tracking-widest border-2 border-black px-2 py-1"
-                    style={{ background: colors.paper, color: colors.ink }}
+                  <div className="font-black">What you’ll see here</div>
+                  <div className="mt-2 text-sm" style={{ color: colors.muted }}>
+                    This page is organized to show:
+                  </div>
+                  <ul
+                    className="mt-3 text-sm list-disc pl-5"
+                    style={{ color: colors.muted }}
                   >
-                    Click to expand
-                  </span>
+                    <li>How OneMoreGood raises money</li>
+                    <li>Who Instituto Semear is and where support goes</li>
+                    <li>Ways to contact Luciano for partnerships or donations</li>
+                  </ul>
                 </div>
-              </button>
+              </div>
+
+              {/* PHOTO CARD */}
+              <div
+                className="mt-6 border-2 border-black p-4"
+                style={{
+                  background: colors.paper,
+                  boxShadow: `3px 3px 0 ${colors.ink}`,
+                }}
+              >
+                <div className="font-black flex items-center gap-2">
+                  <SockIcon size={18} color={colors.ink} />
+                  Community context
+                </div>
+
+                <div className="mt-2 text-sm" style={{ color: colors.muted }}>
+                  These photos show the local context around Instituto Semear,
+                  the nonprofit currently being supported through OneMoreGood.
+                </div>
+
+                {/* clickable preview */}
+                <button
+                  type="button"
+                  onClick={() => setPhotoOpen(true)}
+                  className="mt-4 w-full border-2 border-black relative overflow-hidden group"
+                  style={{ cursor: "pointer" }}
+                  aria-label="Open community photo"
+                >
+                  <div className="h-64 relative">
+                    <ProgressiveImage
+                      src={COMMUNITY_IMAGE}
+                      alt="Community gathering in Santa Terezinha"
+                      fill
+                      className="object-cover transition-transform group-hover:scale-[1.02]"
+                      sizes="(min-width: 768px) 420px, 100vw"
+                    />
+                  </div>
+
+                  {/* small hint overlay */}
+                  <div
+                    className="absolute inset-0 flex items-end justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    <span
+                      className="text-xs font-black uppercase tracking-widest border-2 border-black px-2 py-1"
+                      style={{ background: colors.paper, color: colors.ink }}
+                    >
+                      Click to expand
+                    </span>
+                  </div>
+                </button>
+              </div>
             </div>
           </RoughBorder>
         </div>
@@ -268,7 +287,7 @@ export default function About() {
               }}
             >
               <div className="text-sm font-black uppercase tracking-widest">
-                Pernambuco • full photo
+                Community photo • full size
               </div>
 
               <button
@@ -292,9 +311,9 @@ export default function About() {
               style={{ borderBottom: `2px solid ${colors.ink}` }}
             >
               <div className="relative w-full aspect-[16/9] bg-black">
-                <Image
-                  src="/SantaTerezinha01.png"
-                  alt="Pernambuco community full photo"
+                <ProgressiveImage
+                  src={COMMUNITY_IMAGE}
+                  alt="Santa Terezinha community full photo"
                   fill
                   className="object-contain"
                   priority
