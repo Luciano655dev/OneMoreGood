@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react"
 import type { Product } from "@/types"
+import { CART_STORAGE_KEY } from "@/lib/commerce"
 
 export type CartItem = {
   product: Product
@@ -32,8 +33,6 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null)
 
-const STORAGE_KEY = "omp_cart_v1"
-
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
@@ -45,7 +44,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Load from localStorage
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw = localStorage.getItem(CART_STORAGE_KEY)
       if (!raw) return
       const parsed = JSON.parse(raw) as CartItem[]
       if (Array.isArray(parsed)) setItems(parsed)
@@ -57,7 +56,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save to localStorage
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
     } catch {
       // ignore
     }

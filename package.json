@@ -15,7 +15,8 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "redis": "^5.10.0",
-    "resend": "^6.6.0"
+    "resend": "^6.6.0",
+    "stripe": "^20.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

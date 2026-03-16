@@ -176,7 +176,7 @@ export default function Contact() {
                 <textarea
                   name="message"
                   required
-                  placeholder="Tell Luciano how you want to help: partnership, fundraising, donation, product collaboration, or questions"
+                  placeholder="Tell us how you want to help: partnership, fundraising, donation, product collaboration, or questions"
                   className="px-3 py-3 font-black h-28"
                   style={{
                     background: colors.paper,

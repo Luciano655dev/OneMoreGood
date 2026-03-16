@@ -1,33 +1,25 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo, useState } from "react"
 import { useCart } from "./CartContext"
 import colors from "../colors"
 import Portal from "./Portal"
-
-function money(n: number) {
-  return n.toFixed(2)
-}
+import {
+  getShippingCentsForItemCount,
+  getTotalItemCount,
+  moneyFromCents,
+  priceToCents,
+  refundPolicySummary,
+  shippingPolicySummary,
+} from "@/lib/commerce"
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-// next business day (skips Sat/Sun)
-function nextPickupLabel() {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-
-  // 0 = Sun, 6 = Sat
-  if (d.getDay() === 6) d.setDate(d.getDate() + 2) // Sat -> Mon
-  if (d.getDay() === 0) d.setDate(d.getDate() + 1) // Sun -> Mon
-
-  return d.toLocaleDateString(undefined, {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+function money(n: number) {
+  return n.toFixed(2)
 }
 
 export default function CartDrawer() {
@@ -35,38 +27,41 @@ export default function CartDrawer() {
     isOpen,
     closeCart,
     items,
-    subtotal,
     removeFromCart,
     setQty,
     clearCart,
   } = useCart()
 
   const hasItems = items.length > 0
-  const shipping = 0
-  const { baseSubtotal, promoSavings, total } = useMemo(() => {
-    const base = subtotal
+  const itemCount = useMemo(
+    () => getTotalItemCount(items.map(({ product, qty }) => ({ productId: product.id, qty }))),
+    [items]
+  )
+  const shippingCents = getShippingCentsForItemCount(itemCount)
+  const { baseSubtotalCents, promoSavingsCents, totalCents } = useMemo(() => {
+    const base = items.reduce(
+      (sum, { product, qty }) => sum + priceToCents(product.price) * qty,
+      0
+    )
     const savings = items.reduce((sum, { product, qty }) => {
       const pairCount = Math.floor(qty / 2)
-      const pairPrice = 14 // promo price for two
-      const regularPair = (product.price || 0) * 2
+      const pairPrice = 1400
+      const regularPair = priceToCents(product.price || 0) * 2
       const discountPerPair = Math.max(0, regularPair - pairPrice)
       return sum + pairCount * discountPerPair
     }, 0)
-    const finalTotal = Math.max(0, base - savings + shipping)
-    return { baseSubtotal: base, promoSavings: savings, total: finalTotal }
-  }, [items, shipping, subtotal])
+    const finalTotal = Math.max(0, base - savings) + shippingCents
+    return {
+      baseSubtotalCents: base,
+      promoSavingsCents: savings,
+      totalCents: finalTotal,
+    }
+  }, [items, shippingCents])
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [successOpen, setSuccessOpen] = useState(false)
-
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
-
-  const pickupLocation = "Windermere Preparatory School"
-  const pickupWhenLabel = useMemo(() => nextPickupLabel(), [])
-  const pickupNote =
-    "Pickup only. No shipping. Bring your confirmation email to the school."
 
   if (!isOpen) return null
 
@@ -88,14 +83,8 @@ export default function CartDrawer() {
     try {
       const payload = {
         email: trimmed,
-        pickup: {
-          location: pickupLocation,
-          whenLabel: pickupWhenLabel,
-        },
         items: items.map(({ product, qty }: any) => ({
           productId: product.id,
-          title: product.title,
-          price: product.price,
           qty,
         })),
       }
@@ -113,22 +102,12 @@ export default function CartDrawer() {
         return
       }
 
-      clearCart()
-      setEmail("")
-      setCheckoutOpen(false)
-      setMsg(null)
-      setSuccessOpen(true)
+      window.location.href = data.url
     } catch {
       setMsg("Checkout failed. Please try again.")
     } finally {
       setLoading(false)
     }
-  }
-
-  function closeAll() {
-    setCheckoutOpen(false)
-    setSuccessOpen(false)
-    closeCart()
   }
 
   return (
@@ -138,7 +117,6 @@ export default function CartDrawer() {
         aria-label="Close cart"
         onClick={() => {
           setCheckoutOpen(false)
-          setSuccessOpen(false)
           closeCart()
         }}
         className="absolute inset-0"
@@ -176,7 +154,6 @@ export default function CartDrawer() {
             <button
               onClick={() => {
                 setCheckoutOpen(false)
-                setSuccessOpen(false)
                 closeCart()
               }}
               className="px-3 py-2 text-xs font-black uppercase tracking-widest"
@@ -329,35 +306,38 @@ export default function CartDrawer() {
           >
             <div className="flex items-center justify-between text-sm font-black">
               <span style={{ color: colors.muted }}>Subtotal</span>
-              <span>${money(baseSubtotal)}</span>
+              <span>${moneyFromCents(baseSubtotalCents)}</span>
             </div>
 
             <div className="mt-2 flex items-center justify-between text-sm font-black">
               <span style={{ color: colors.muted }}>Promo (2 for $14)</span>
               <span style={{ color: colors.clay }}>
-                {promoSavings > 0 ? `- $${money(promoSavings)}` : "$0.00"}
+                {promoSavingsCents > 0
+                  ? `- $${moneyFromCents(promoSavingsCents)}`
+                  : "$0.00"}
               </span>
             </div>
 
-            <div className="mt-2 flex items-center justify-between text-sm font-black">
-              <span style={{ color: colors.muted }}>Shipping</span>
-              <span>${money(shipping)}</span>
-            </div>
+            {hasItems && (
+              <div className="mt-2 flex items-center justify-between text-sm font-black">
+                <span style={{ color: colors.muted }}>Shipping</span>
+                <span>${moneyFromCents(shippingCents)}</span>
+              </div>
+            )}
 
             <div
               className="mt-3 flex items-center justify-between text-base font-black"
               style={{ borderTop: `2px solid ${colors.ink}`, paddingTop: 10 }}
             >
               <span>Total</span>
-              <span>${money(total)}</span>
+              <span>${moneyFromCents(totalCents)}</span>
             </div>
 
-            <div
-              className="mt-3 text-xs font-black uppercase tracking-widest"
-              style={{ color: colors.muted }}
-            >
-              {pickupNote}
-            </div>
+            {hasItems && (
+              <p className="mt-3 text-xs" style={{ color: colors.muted }}>
+                {shippingPolicySummary(itemCount)}
+              </p>
+            )}
 
             <button
               className="mt-4 w-full px-5 py-4 text-sm font-black uppercase tracking-wider"
@@ -373,178 +353,143 @@ export default function CartDrawer() {
               onClick={() => {
                 if (!hasItems) return
                 setCheckoutOpen(true)
-                setSuccessOpen(false)
                 setMsg(null)
               }}
             >
               Checkout
             </button>
+
+            <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
+              {refundPolicySummary()}{" "}
+              <Link href="/policies" className="underline">
+                Shipping
+              </Link>{" "}
+              and{" "}
+              <Link href="/policies" className="underline">
+                refund details
+              </Link>
+              .
+            </div>
           </div>
         </div>
       </aside>
 
       {/* FULL PAGE MODALS */}
-      {(checkoutOpen || successOpen) && (
+      {checkoutOpen && (
         <Portal>
-          {/* Checkout Modal */}
-          {checkoutOpen && (
-            <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-              <button
-                aria-label="Close checkout"
-                className="absolute inset-0"
-                onClick={() => !loading && setCheckoutOpen(false)}
-                style={{ background: "rgba(0,0,0,.55)" }}
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+            <button
+              aria-label="Close checkout"
+              className="absolute inset-0"
+              onClick={() => !loading && setCheckoutOpen(false)}
+              style={{ background: "rgba(0,0,0,.55)" }}
+            />
+
+            <div
+              className="relative w-full max-w-sm p-4"
+              style={{
+                background: colors.paper,
+                border: `2px solid ${colors.ink}`,
+                boxShadow: `6px 6px 0 ${colors.ink}`,
+              }}
+            >
+              <div
+                className="text-sm font-black uppercase tracking-widest"
+                style={{ color: colors.muted }}
+              >
+                Secure checkout
+              </div>
+
+              <div className="mt-2 text-xl font-black">
+                Redirecting to Stripe
+              </div>
+
+              <p className="mt-2 text-sm" style={{ color: colors.muted }}>
+                Enter your email, then continue to Stripe to pay securely,
+                enter your U.S. shipping address, and complete the order.
+                <br />
+                <br />
+                Shipping is currently ${moneyFromCents(shippingCents)} per
+                order. Tracking is emailed after the shipping label is created.
+              </p>
+
+              <label
+                className="mt-4 block text-xs font-black uppercase tracking-widest"
+                style={{ color: colors.muted }}
+              >
+                Email
+              </label>
+
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                style={{
+                  background: colors.sand,
+                  border: `2px solid ${colors.ink}`,
+                  color: colors.ink,
+                }}
+                disabled={loading}
               />
 
-              <div
-                className="relative w-full max-w-sm p-4"
-                style={{
-                  background: colors.paper,
-                  border: `2px solid ${colors.ink}`,
-                  boxShadow: `6px 6px 0 ${colors.ink}`,
-                }}
-              >
+              {msg && (
                 <div
-                  className="text-sm font-black uppercase tracking-widest"
-                  style={{ color: colors.muted }}
-                >
-                  Reserve your order
-                </div>
-
-                <div className="mt-2 text-xl font-black">
-                  Pickup on {pickupWhenLabel}
-                </div>
-
-                <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                  Enter your email. Your order will be reserved and you can pick
-                  it up at <b>{pickupLocation}</b> on <b>{pickupWhenLabel}</b>.
-                  <br />
-                  <br />
-                  Pickup only — no shipping. Please bring your confirmation
-                  email.
-                </p>
-
-                <label
-                  className="mt-4 block text-xs font-black uppercase tracking-widest"
-                  style={{ color: colors.muted }}
-                >
-                  Email
-                </label>
-
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                  className="mt-3 p-3 text-sm font-black"
                   style={{
                     background: colors.sand,
-                    border: `2px solid ${colors.ink}`,
+                    border: `2px dashed ${colors.ink}`,
                     color: colors.ink,
                   }}
-                  disabled={loading}
-                />
-
-                {msg && (
-                  <div
-                    className="mt-3 p-3 text-sm font-black"
-                    style={{
-                      background: colors.sand,
-                      border: `2px dashed ${colors.ink}`,
-                      color: colors.ink,
-                    }}
-                  >
-                    {msg}
-                  </div>
-                )}
-
-                <div className="mt-4 flex gap-2">
-                  <button
-                    onClick={() => setCheckoutOpen(false)}
-                    disabled={loading}
-                    className="w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                      boxShadow: `2px 2px 0 ${colors.ink}`,
-                      opacity: loading ? 0.7 : 1,
-                    }}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    onClick={submitCheckout}
-                    disabled={loading || !hasItems}
-                    className="w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest"
-                    style={{
-                      background: colors.accent,
-                      color: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                      boxShadow: `2px 2px 0 ${colors.ink}`,
-                      opacity: loading ? 0.7 : 1,
-                      cursor: loading ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {loading ? "Reserving..." : "Reserve"}
-                  </button>
-                </div>
-
-                <div
-                  className="mt-3 text-[11px] font-black"
-                  style={{ color: colors.muted }}
                 >
-                  By reserving, you agree we may email you about this pickup.
-                  Pickup only; no items will be shipped.
+                  {msg}
                 </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {/* Success Modal */}
-          {successOpen && (
-            <div className="fixed inset-0 z-[2100] flex items-center justify-center p-4">
-              <button
-                aria-label="Close success"
-                className="absolute inset-0"
-                onClick={closeAll}
-                style={{ background: "rgba(0,0,0,.55)" }}
-              />
-
-              <div
-                className="relative w-full max-w-sm p-5"
-                style={{
-                  background: colors.paper,
-                  border: `2px solid ${colors.ink}`,
-                  boxShadow: `8px 8px 0 ${colors.ink}`,
-                }}
-              >
-                <div className="text-3xl">✅</div>
-
-                <div className="mt-2 text-xl font-black">Order reserved!</div>
-
-                <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                  We emailed your confirmation. Pick up at{" "}
-                  <b>{pickupLocation}</b> on <b>{pickupWhenLabel}</b>.
-                  <br />
-                  <br />
-                  No shipping. Bring the email when you arrive.
-                </p>
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => setCheckoutOpen(false)}
+                  disabled={loading}
+                  className="w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest"
+                  style={{
+                    background: colors.paper,
+                    border: `2px solid ${colors.ink}`,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                    opacity: loading ? 0.7 : 1,
+                  }}
+                >
+                  Cancel
+                </button>
 
                 <button
-                  onClick={closeAll}
-                  className="mt-4 w-full px-4 py-3 text-xs font-black uppercase tracking-widest"
+                  onClick={submitCheckout}
+                  disabled={loading || !hasItems}
+                  className="w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest"
                   style={{
                     background: colors.accent,
                     color: colors.paper,
                     border: `2px solid ${colors.ink}`,
-                    boxShadow: `3px 3px 0 ${colors.ink}`,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                    opacity: loading ? 0.7 : 1,
+                    cursor: loading ? "not-allowed" : "pointer",
                   }}
                 >
-                  Done
+                  {loading ? "Opening..." : "Continue"}
                 </button>
               </div>
+              <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
+                By continuing, you agree to the OneMoreGood{" "}
+                <Link href="/policies" className="underline">
+                  shipping policy
+                </Link>{" "}
+                and{" "}
+                <Link href="/policies" className="underline">
+                  refund policy
+                </Link>
+                .
+              </div>
             </div>
-          )}
+          </div>
         </Portal>
       )}
     </div>

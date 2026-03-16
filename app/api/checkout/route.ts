@@ -1,73 +1,29 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
-import { getRedis } from "@/lib/redis"
+
 import { PRODUCTS } from "@/data/products"
-
 import {
-  buildBuyerEmailHtml,
-  buildOwnerEmailHtml,
-  buildProductCardsHtml,
-  type EmailCardItem,
-} from "@/lib/email/templates"
-
-import { nextBusinessDayLabelServer } from "@/lib/email/utils"
+  SHIPPING_DELIVERY_MAX_DAYS,
+  SHIPPING_DELIVERY_MIN_DAYS,
+  SHIPPING_RATE_LABEL,
+  calculateCartTotals,
+  getShippingTierForItemCount,
+  priceToCents,
+} from "@/lib/commerce"
+import { getRedis } from "@/lib/redis"
+import { getAvailableStock } from "@/lib/stock"
+import { getBaseUrl, getStripe } from "@/lib/stripe"
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-async function reserveStockAtomic(params: {
-  redis: any
-  items: { productId: string; qty: number; initial: number }[]
-}) {
-  const { redis, items } = params
-
-  const keys = items.map((it) => `stock:${it.productId}`)
-
-  const args: string[] = []
-  for (const it of items) {
-    args.push(String(it.qty), String(it.initial))
-  }
-
-  const script = `
-    for i=1,#KEYS do
-      local v = redis.call("GET", KEYS[i])
-      if not v then
-        local initial = tonumber(ARGV[(i-1)*2+2])
-        redis.call("SET", KEYS[i], initial)
-      end
-    end
-
-    for i=1,#KEYS do
-      local need = tonumber(ARGV[(i-1)*2+1])
-      local have = tonumber(redis.call("GET", KEYS[i]) or "0")
-      if have < need then
-        return {0, KEYS[i]}
-      end
-    end
-
-    for i=1,#KEYS do
-      local need = tonumber(ARGV[(i-1)*2+1])
-      redis.call("DECRBY", KEYS[i], need)
-    end
-
-    return {1, ""}
-  `
-
-  // ✅ IMPORTANT: eval(script, numKeys, ...keys, ...args)
-  const numKeys = keys.length
-  const res = await redis.eval(script, numKeys, ...keys, ...args)
-
-  const ok = Array.isArray(res) ? Number(res[0]) === 1 : false
-  const failedKey = Array.isArray(res) ? String(res[1] || "") : ""
-  return { ok, failedKey }
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json()
+    const email = String(body.email || "")
+      .trim()
+      .toLowerCase()
 
-    const email = (body.email || "").trim().toLowerCase()
     if (!isValidEmail(email)) {
       return NextResponse.json(
         { ok: false, error: "Please enter a valid email." },
@@ -75,151 +31,191 @@ export async function POST(req: Request) {
       )
     }
 
-    const itemsRaw = Array.isArray(body.items) ? body.items : []
-    if (itemsRaw.length === 0) {
+    const items = Array.isArray(body.items) ? body.items : []
+    if (items.length === 0) {
       return NextResponse.json(
         { ok: false, error: "Cart is empty." },
         { status: 400 }
       )
     }
 
-    // server-truth products
-    const productMap = new Map(PRODUCTS.map((p) => [p.id, p]))
+    const productMap = new Map(PRODUCTS.map((product) => [product.id, product]))
+    const normalizedItems: Array<{ productId: string; qty: number }> = []
 
-    // hydrate items for totals + email templates
-    const itemsHydrated: EmailCardItem[] = []
+    for (const item of items) {
+      const productId = String(item.productId || "")
+      const qty = Number(item.qty)
 
-    for (const it of itemsRaw) {
-      if (!it.productId || typeof it.qty !== "number" || it.qty <= 0) {
+      if (!productId || !Number.isInteger(qty) || qty <= 0) {
         return NextResponse.json(
           { ok: false, error: "Invalid cart items." },
           { status: 400 }
         )
       }
 
-      const p = productMap.get(it.productId)
-      if (!p) {
+      const product = productMap.get(productId)
+      if (!product) {
         return NextResponse.json(
-          { ok: false, error: `Unknown product: ${it.productId}` },
+          { ok: false, error: `Unknown product: ${productId}` },
           { status: 400 }
         )
       }
 
-      // optional: limit per order
-      if (typeof p.max_qnt === "number" && it.qty > p.max_qnt) {
+      if (typeof product.max_qnt === "number" && qty > product.max_qnt) {
         return NextResponse.json(
-          { ok: false, error: `Too many for ${p.title}.` },
+          { ok: false, error: `Too many for ${product.title}.` },
           { status: 400 }
         )
       }
 
-      itemsHydrated.push({
-        productId: p.id,
-        title: p.title,
-        price: p.price,
-        image: p.image,
-        qty: it.qty,
-      })
+      normalizedItems.push({ productId, qty })
     }
 
-    const pickupLocation =
-      body.pickup?.location || "Windermere Preparatory School"
-    const pickupWhen = body.pickup?.when || nextBusinessDayLabelServer()
+    const redis = getRedis()
+    if (redis) {
+      for (const item of normalizedItems) {
+        const product = productMap.get(item.productId)!
+        const available = await getAvailableStock({
+          redis,
+          productId: item.productId,
+          initial: product.max_qnt ?? 10,
+        })
 
+        if (available < item.qty) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: `${product.title} is out of stock (or not enough left).`,
+            },
+            { status: 409 }
+          )
+        }
+      }
+    }
+
+    const totals = calculateCartTotals(PRODUCTS, normalizedItems)
+    const shippingTier = getShippingTierForItemCount(totals.itemCount)
+    const stripe = getStripe()
+    const baseUrl = getBaseUrl()
     const orderId =
       "OMG-" +
       Math.random().toString(36).slice(2, 6).toUpperCase() +
       "-" +
       Date.now().toString().slice(-6)
 
-    const resendKey = process.env.RESEND_API_KEY
-    const from = process.env.RESEND_FROM
-    const ordersTo = process.env.ORDERS_TO
+    const lineItems = normalizedItems.flatMap((item) => {
+      const product = productMap.get(item.productId)!
+      const unitAmount = priceToCents(product.price)
+      const discountedQty = Math.floor(item.qty / 2) * 2
+      const singleQty = item.qty % 2
+      const imageUrl = `${baseUrl}${product.image}`
 
-    if (!resendKey || !from || !ordersTo) {
+      const entries = []
+
+      if (discountedQty > 0) {
+        entries.push({
+          price_data: {
+            currency: "usd",
+            unit_amount: 700,
+            product_data: {
+              name: `${product.title} (2 for $14 promo)`,
+              description: product.description,
+              images: [imageUrl],
+            },
+          },
+          quantity: discountedQty,
+        })
+      }
+
+      if (singleQty > 0) {
+        entries.push({
+          price_data: {
+            currency: "usd",
+            unit_amount: unitAmount,
+            product_data: {
+              name: product.title,
+              description: product.description,
+              images: [imageUrl],
+            },
+          },
+          quantity: singleQty,
+        })
+      }
+
+      return entries
+    })
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: email,
+      line_items: lineItems,
+      shipping_address_collection: {
+        allowed_countries: ["US"],
+      },
+      shipping_options: [
+        {
+          shipping_rate_data: {
+            display_name: SHIPPING_RATE_LABEL,
+            type: "fixed_amount",
+            fixed_amount: {
+              amount: shippingTier.amountCents,
+              currency: "usd",
+            },
+            delivery_estimate: {
+              minimum: {
+                unit: "business_day",
+                value: SHIPPING_DELIVERY_MIN_DAYS,
+              },
+              maximum: {
+                unit: "business_day",
+                value: SHIPPING_DELIVERY_MAX_DAYS,
+              },
+            },
+          },
+        },
+      ],
+      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/checkout/cancel`,
+      phone_number_collection: {
+        enabled: true,
+      },
+      billing_address_collection: "auto",
+      submit_type: "pay",
+      metadata: {
+        orderId,
+        email,
+        items: JSON.stringify(normalizedItems),
+        promoSavingsCents: String(totals.promoSavingsCents),
+        subtotalCents: String(totals.subtotalCents),
+      },
+      payment_intent_data: {
+        metadata: {
+          orderId,
+          email,
+        },
+      },
+      custom_text: {
+        shipping_address: {
+          message:
+            `We currently ship within the United States only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created.`,
+        },
+        submit: {
+          message:
+            "By placing this order, you agree to the shipping and refund terms shown on OneMoreGood.",
+        },
+      },
+    })
+
+    if (!session.url) {
       return NextResponse.json(
-        { ok: false, error: "Email service not configured." },
+        { ok: false, error: "Could not create checkout session." },
         { status: 500 }
       )
     }
 
-    // reserve stock first (atomic)
-    const redis = getRedis()
-    if (redis) {
-      const reserveItems = itemsHydrated.map((it) => {
-        const p = productMap.get(it.productId)!
-        return {
-          productId: it.productId,
-          qty: it.qty,
-          initial: p.max_qnt ?? 10,
-        }
-      })
-
-      const reserved = await reserveStockAtomic({ redis, items: reserveItems })
-      if (!reserved.ok) {
-        const failedId = reserved.failedKey.replace("stock:", "")
-        const failedProduct = productMap.get(failedId)
-        return NextResponse.json(
-          {
-            ok: false,
-            error: failedProduct
-              ? `${failedProduct.title} is out of stock (or not enough left).`
-              : "One item is out of stock.",
-          },
-          { status: 409 }
-        )
-      }
-    }
-
-    const subtotal = itemsHydrated.reduce(
-      (sum, it) => sum + it.price * it.qty,
-      0
-    )
-    const shipping = 0
-    const total = subtotal + shipping
-
-    const productCardsHtml = buildProductCardsHtml(itemsHydrated)
-
-    const buyerHtml = buildBuyerEmailHtml({
-      orderId,
-      pickupLocation,
-      pickupWhen,
-      productCardsHtml,
-      subtotal,
-      shipping,
-      total,
-    })
-
-    const ownerHtml = buildOwnerEmailHtml({
-      orderId,
-      customerEmail: email,
-      pickupLocation,
-      pickupWhen,
-      productCardsHtml,
-      subtotal,
-      shipping,
-      total,
-    })
-
-    const resend = new Resend(resendKey)
-
-    await resend.emails.send({
-      from,
-      to: email,
-      subject: `OneMoreGood reserved (${orderId})`,
-      html: buyerHtml,
-    })
-
-    await resend.emails.send({
-      from,
-      to: ordersTo,
-      subject: `New OneMoreGood order (${orderId})`,
-      html: ownerHtml,
-    })
-
-    return NextResponse.json({ ok: true, orderId })
-  } catch (err) {
-    console.error("Checkout error", err)
+    return NextResponse.json({ ok: true, url: session.url })
+  } catch (error) {
+    console.error("Checkout error", error)
     return NextResponse.json(
       { ok: false, error: "Server error." },
       { status: 500 }

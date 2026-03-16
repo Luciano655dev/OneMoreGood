@@ -212,7 +212,7 @@ function InnerShop() {
                 color: colors.ink,
               }}
             >
-              Promo: 1 pair $7.99 • 2 pairs $14 — Pickup only at Windermere Preparatory School
+              Promo: 1 pair $7.99 • 2 pairs $14 • Ships across the U.S.
             </span>
           </div>
 
