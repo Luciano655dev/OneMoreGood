@@ -137,31 +137,30 @@ export async function POST(req: Request) {
       return entries
     })
 
-    const shippingOptions =
-      totals.shippingCents > 0
-        ? [
-            {
-              shipping_rate_data: {
-                display_name: SHIPPING_RATE_LABEL,
-                type: "fixed_amount" as const,
-                fixed_amount: {
-                  amount: shippingTier.amountCents,
-                  currency: "usd",
-                },
-                delivery_estimate: {
-                  minimum: {
-                    unit: "business_day" as const,
-                    value: SHIPPING_DELIVERY_MIN_DAYS,
-                  },
-                  maximum: {
-                    unit: "business_day" as const,
-                    value: SHIPPING_DELIVERY_MAX_DAYS,
-                  },
-                },
-              },
+    const shippingOptions = [
+      {
+        shipping_rate_data: {
+          display_name:
+            totals.shippingCents > 0 ? SHIPPING_RATE_LABEL : "Free shipping",
+          type: "fixed_amount" as const,
+          fixed_amount: {
+            amount:
+              totals.shippingCents > 0 ? shippingTier.amountCents : 0,
+            currency: "usd",
+          },
+          delivery_estimate: {
+            minimum: {
+              unit: "business_day" as const,
+              value: SHIPPING_DELIVERY_MIN_DAYS,
             },
-          ]
-        : []
+            maximum: {
+              unit: "business_day" as const,
+              value: SHIPPING_DELIVERY_MAX_DAYS,
+            },
+          },
+        },
+      },
+    ]
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
