@@ -106,26 +106,34 @@ async function sendOrderEmail(params: {
   items: Array<{ title: string; qty: number }>
 }) {
   const resendKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM
-  const ordersTo = process.env.ORDERS_TO
+  const from = process.env.RESEND_FROM?.replace(/^"(.*)"$/, "$1").trim()
+  const ordersTo = process.env.ORDERS_TO?.trim()
 
   if (!resendKey || !from || !ordersTo) return
 
   const resend = new Resend(resendKey)
 
-  await resend.emails.send({
+  const ownerEmail = await resend.emails.send({
     from,
     to: ordersTo,
     subject: `New OneMoreGood paid order (${params.orderId})`,
     html: buildOrderEmailHtml(params),
   })
 
-  await resend.emails.send({
+  if (ownerEmail.error) {
+    console.error("Owner order email failed", ownerEmail.error)
+  }
+
+  const buyerEmail = await resend.emails.send({
     from,
     to: params.customerEmail,
     subject: `Your OneMoreGood order is confirmed (${params.orderId})`,
     html: buildBuyerConfirmationEmailHtml(params),
   })
+
+  if (buyerEmail.error) {
+    console.error("Buyer confirmation email failed", buyerEmail.error)
+  }
 }
 
 function buildShippingAddress(details: ShippingDetails) {
