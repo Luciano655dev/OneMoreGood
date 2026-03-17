@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 
-import { PRODUCTS } from "@/data/products"
 import {
   SHIPPING_DELIVERY_MAX_DAYS,
   SHIPPING_DELIVERY_MIN_DAYS,
@@ -9,8 +8,7 @@ import {
   getShippingTierForItemCount,
   priceToCents,
 } from "@/lib/commerce"
-import { getRedis } from "@/lib/redis"
-import { getAvailableStock } from "@/lib/stock"
+import { getStoredProducts } from "@/lib/products"
 import { getBaseUrl, getStripe } from "@/lib/stripe"
 
 function isValidEmail(email: string) {
@@ -39,7 +37,8 @@ export async function POST(req: Request) {
       )
     }
 
-    const productMap = new Map(PRODUCTS.map((product) => [product.id, product]))
+    const storedProducts = await getStoredProducts()
+    const productMap = new Map(storedProducts.map((product) => [product.id, product]))
     const normalizedItems: Array<{ productId: string; qty: number }> = []
 
     for (const item of items) {
@@ -71,29 +70,22 @@ export async function POST(req: Request) {
       normalizedItems.push({ productId, qty })
     }
 
-    const redis = getRedis()
-    if (redis) {
-      for (const item of normalizedItems) {
-        const product = productMap.get(item.productId)!
-        const available = await getAvailableStock({
-          redis,
-          productId: item.productId,
-          initial: product.max_qnt ?? 10,
-        })
+    for (const item of normalizedItems) {
+      const product = productMap.get(item.productId)!
+      const available = product.inventory_quantity
 
-        if (available < item.qty) {
-          return NextResponse.json(
-            {
-              ok: false,
-              error: `${product.title} is out of stock (or not enough left).`,
-            },
-            { status: 409 }
-          )
-        }
+      if (available < item.qty) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `${product.title} is out of stock (or not enough left).`,
+          },
+          { status: 409 }
+        )
       }
     }
 
-    const totals = calculateCartTotals(PRODUCTS, normalizedItems)
+    const totals = calculateCartTotals(storedProducts, normalizedItems)
     const shippingTier = getShippingTierForItemCount(totals.itemCount)
     const stripe = getStripe()
     const baseUrl = getBaseUrl()

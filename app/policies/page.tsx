@@ -82,8 +82,8 @@ export default function PoliciesPage() {
               </p>
               <p>
                 If a package is lost in transit or arrives damaged, contact
-                Luciano at <strong style={{ color: colors.ink }}>lucianomenezes655@gmail.com</strong> so the
-                order can be reviewed for replacement or refund.
+                us at <strong style={{ color: colors.ink }}>lucianomenezes655@gmail.com</strong> so the order can be
+                reviewed for replacement or refund.
               </p>
             </div>
           </RoughBorder>
@@ -109,8 +109,8 @@ export default function PoliciesPage() {
               </p>
               <p>
                 If an order is damaged, incorrect, or missing in transit,
-                contact Luciano at <strong style={{ color: colors.ink }}>lucianomenezes655@gmail.com</strong> with the
-                order email and any relevant photos.
+                contact us at <strong style={{ color: colors.ink }}>lucianomenezes655@gmail.com</strong> with the order
+                email and any relevant photos.
               </p>
               <p>
                 OneMoreGood may offer either a replacement or a refund

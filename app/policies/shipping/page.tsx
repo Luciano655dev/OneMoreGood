@@ -44,7 +44,7 @@ export default function ShippingPolicyPage() {
             </p>
             <p>
               If a package is lost in transit or arrives damaged, contact
-              Luciano at `lucianomenezes655@gmail.com` so the order can be
+              us at `lucianomenezes655@gmail.com` so the order can be
               reviewed for replacement or refund.
             </p>
           </div>

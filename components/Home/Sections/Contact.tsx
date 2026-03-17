@@ -58,7 +58,7 @@ export default function Contact() {
       <section id="contact" className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Contact"
-          title="Contact Luciano about support"
+          title="Contact us about support"
           desc="Reach out about partnerships, fundraising campaigns, donations, or questions about OneMoreGood and Instituto Semear."
         />
 

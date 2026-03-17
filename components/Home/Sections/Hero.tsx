@@ -148,7 +148,7 @@ export default function Hero() {
 
       {/* VIDEO MODAL */}
       {videoOpen && (
-        <div className="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-80 bg-black/70 flex items-center justify-center p-4">
           <div
             className="w-full max-w-5xl reveal is-in"
             style={{

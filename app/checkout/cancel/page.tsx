@@ -40,7 +40,7 @@ export default function CheckoutCancelPage() {
                 boxShadow: `3px 3px 0 ${colors.ink}`,
               }}
             >
-              Contact Luciano
+              Contact us
             </Link>
           </div>
         </RoughBorder>

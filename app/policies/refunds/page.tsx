@@ -27,7 +27,7 @@ export default function RefundPolicyPage() {
             </p>
             <p>
               If an order is damaged, incorrect, or missing in transit, contact
-              Luciano at `lucianomenezes655@gmail.com` with the order email and
+              us at `lucianomenezes655@gmail.com` with the order email and
               any relevant photos.
             </p>
             <p>

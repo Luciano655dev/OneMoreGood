@@ -158,8 +158,7 @@ export default function MayorFeature() {
                 <br />
                 <br />
                 If you want to discuss partnerships, donations, or custom
-                fundraising efforts, contact Luciano directly through GitHub or
-                email.
+                fundraising efforts, contact us through GitHub or email.
               </div>
 
               <div

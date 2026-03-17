@@ -304,26 +304,37 @@ export default function CartDrawer() {
               background: colors.sand,
             }}
           >
-            <div className="flex items-center justify-between text-sm font-black">
-              <span style={{ color: colors.muted }}>Subtotal</span>
-              <span>${moneyFromCents(baseSubtotalCents)}</span>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between text-sm font-black">
-              <span style={{ color: colors.muted }}>Promo (2 for $14)</span>
-              <span style={{ color: colors.clay }}>
-                {promoSavingsCents > 0
-                  ? `- $${moneyFromCents(promoSavingsCents)}`
-                  : "$0.00"}
-              </span>
-            </div>
-
-            {hasItems && (
-              <div className="mt-2 flex items-center justify-between text-sm font-black">
-                <span style={{ color: colors.muted }}>Shipping</span>
-                <span>${moneyFromCents(shippingCents)}</span>
+            <div
+              className="grid gap-2 rounded-2xl p-3"
+              style={{
+                background: colors.paper,
+                border: `2px solid ${colors.ink}`,
+                boxShadow: `3px 3px 0 ${colors.ink}`,
+              }}
+            >
+              <div className="flex items-center justify-between text-sm font-black">
+                <span style={{ color: colors.muted }}>Subtotal</span>
+                <span>${moneyFromCents(baseSubtotalCents)}</span>
               </div>
-            )}
+
+              {hasItems && (
+                <div className="flex items-center justify-between text-sm font-black">
+                  <span style={{ color: colors.muted }}>Promo (2 for $14)</span>
+                  <span style={{ color: colors.clay }}>
+                    {promoSavingsCents > 0
+                      ? `- $${moneyFromCents(promoSavingsCents)}`
+                      : "$0.00"}
+                  </span>
+                </div>
+              )}
+
+              {hasItems && (
+                <div className="flex items-center justify-between text-sm font-black">
+                  <span style={{ color: colors.muted }}>Shipping</span>
+                  <span>${moneyFromCents(shippingCents)}</span>
+                </div>
+              )}
+            </div>
 
             <div
               className="mt-3 flex items-center justify-between text-base font-black"

@@ -1,21 +1,31 @@
 import { NextResponse } from "next/server"
-import { getRedis } from "@/lib/redis"
 import { PRODUCTS } from "@/data/products"
+import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 
 export async function POST() {
   try {
-    const redis = getRedis()
-    if (!redis) return NextResponse.json({ ok: true })
-
-    for (const p of PRODUCTS) {
-      const key = `stock:${p.id}`
-      const exists = await redis.exists(key)
-
-      if (!exists) {
-        // use max_qnt as starting stock
-        await redis.set(key, p.max_qnt ?? 10)
-      }
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({
+        ok: false,
+        error: "Supabase is not configured.",
+      })
     }
+
+    const supabase = getSupabaseAdmin()
+    const rows = PRODUCTS.map((product, index) => ({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      image: product.image,
+      description: product.description ?? null,
+      tags: product.tags ?? [],
+      inventory_quantity: product.max_qnt ?? 20,
+      is_active: true,
+      sort_order: index,
+    }))
+
+    const { error } = await supabase.from("products").upsert(rows)
+    if (error) throw error
 
     return NextResponse.json({ ok: true })
   } catch (err) {

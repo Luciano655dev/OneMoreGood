@@ -202,7 +202,7 @@ export default function About() {
                   >
                     <li>How OneMoreGood raises money</li>
                     <li>Who Instituto Semear is and where support goes</li>
-                    <li>Ways to contact Luciano for partnerships or donations</li>
+                  <li>Ways to contact us for partnerships or donations</li>
                   </ul>
                 </div>
               </div>

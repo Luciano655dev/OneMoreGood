@@ -1,0 +1,63 @@
+create table if not exists public.products (
+  id text primary key,
+  title text not null,
+  price numeric(10,2) not null,
+  image text not null,
+  description text,
+  tags text[] not null default '{}',
+  inventory_quantity integer not null default 0,
+  is_active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.orders (
+  id uuid primary key default gen_random_uuid(),
+  order_id text not null unique,
+  stripe_checkout_session_id text unique,
+  stripe_payment_intent_id text,
+  customer_email text not null,
+  status text not null default 'paid',
+  subtotal_cents integer not null default 0,
+  promo_savings_cents integer not null default 0,
+  shipping_cents integer not null default 0,
+  total_cents integer not null default 0,
+  shipping_name text,
+  shipping_address jsonb,
+  tracking_number text,
+  tracking_carrier text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.order_items (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  product_id text not null,
+  title text not null,
+  quantity integer not null,
+  unit_price_cents integer not null,
+  created_at timestamptz not null default now()
+);
+
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists products_set_updated_at on public.products;
+create trigger products_set_updated_at
+before update on public.products
+for each row execute procedure public.set_updated_at();
+
+drop trigger if exists orders_set_updated_at on public.orders;
+create trigger orders_set_updated_at
+before update on public.orders
+for each row execute procedure public.set_updated_at();

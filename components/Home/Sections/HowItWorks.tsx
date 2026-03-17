@@ -34,7 +34,7 @@ export default function HowItWorks() {
           {
             n: "03",
             t: "Grow with partnerships",
-            d: "Luciano can coordinate partnerships, custom fundraising efforts, and direct conversations about how support should be structured.",
+            d: "We can coordinate partnerships, custom fundraising efforts, and direct conversations about how support should be structured.",
             icon: ShieldCheck,
             tone: colors.sand,
             rot: -0.2,
