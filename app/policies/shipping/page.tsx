@@ -1,5 +1,6 @@
 import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
+import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
   SHIPPING_DELIVERY_MAX_DAYS,
   SHIPPING_DELIVERY_MIN_DAYS,
@@ -14,6 +15,7 @@ export default function ShippingPolicyPage() {
       className="min-h-screen px-6 py-16"
       style={{ background: colors.paper, color: colors.ink }}
     >
+      <PageGridBackground />
       <div className="mx-auto max-w-3xl">
         <RoughBorder bg={colors.sand} rotate={-0.2} label="Shipping policy">
           <h1 className="text-4xl font-black">Shipping policy</h1>

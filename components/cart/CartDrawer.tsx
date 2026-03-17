@@ -57,6 +57,9 @@ export default function CartDrawer() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const popButtonClass =
+    "cursor-pointer transition duration-150 ease-out hover:-translate-y-0.5 hover:brightness-[0.98] active:translate-y-px"
+  const disabledButtonClass = "disabled:translate-y-0 disabled:brightness-100"
 
   if (!isOpen) return null
 
@@ -151,7 +154,7 @@ export default function CartDrawer() {
                 setCheckoutOpen(false)
                 closeCart()
               }}
-              className="px-3 py-2 text-xs font-black uppercase tracking-widest"
+              className={`px-3 py-2 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
               style={{
                 background: colors.paper,
                 border: `2px solid ${colors.ink}`,
@@ -221,7 +224,7 @@ export default function CartDrawer() {
                         <div className="mt-3 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <button
-                              className="px-3 py-2 text-xs font-black"
+                              className={`px-3 py-2 text-xs font-black ${popButtonClass} ${disabledButtonClass}`}
                               style={{
                                 background: colors.paper,
                                 border: `2px solid ${colors.ink}`,
@@ -244,7 +247,7 @@ export default function CartDrawer() {
                             </div>
 
                             <button
-                              className="px-3 py-2 text-xs font-black"
+                              className={`px-3 py-2 text-xs font-black ${popButtonClass} ${disabledButtonClass}`}
                               style={{
                                 background: colors.paper,
                                 border: `2px solid ${colors.ink}`,
@@ -258,7 +261,7 @@ export default function CartDrawer() {
                           </div>
 
                           <button
-                            className="px-3 py-2 text-xs font-black uppercase tracking-widest"
+                            className={`px-3 py-2 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                             style={{
                               background: colors.clay,
                               color: colors.paper,
@@ -277,7 +280,7 @@ export default function CartDrawer() {
 
                 <button
                   onClick={clearCart}
-                  className="mt-1 px-4 py-3 text-xs font-black uppercase tracking-widest"
+                  className={`mt-1 px-4 py-3 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                   style={{
                     background: colors.paper,
                     border: `2px dashed ${colors.ink}`,
@@ -346,14 +349,13 @@ export default function CartDrawer() {
             )}
 
             <button
-              className="mt-4 w-full px-5 py-4 text-sm font-black uppercase tracking-wider"
+              className={`mt-4 w-full px-5 py-4 text-sm font-black uppercase tracking-wider ${popButtonClass} ${disabledButtonClass}`}
               style={{
                 background: colors.accent,
                 color: colors.paper,
                 border: `2px solid ${colors.ink}`,
                 boxShadow: `4px 4px 0 ${colors.ink}`,
                 opacity: hasItems ? 1 : 0.6,
-                cursor: hasItems ? "pointer" : "not-allowed",
               }}
               disabled={!hasItems}
               onClick={() => {
@@ -456,7 +458,7 @@ export default function CartDrawer() {
                 <button
                   onClick={() => setCheckoutOpen(false)}
                   disabled={loading}
-                  className="w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest"
+                  className={`w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                   style={{
                     background: colors.paper,
                     border: `2px solid ${colors.ink}`,
@@ -470,14 +472,13 @@ export default function CartDrawer() {
                 <button
                   onClick={submitCheckout}
                   disabled={loading || !hasItems}
-                  className="w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest"
+                  className={`w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                   style={{
                     background: colors.accent,
                     color: colors.paper,
                     border: `2px solid ${colors.ink}`,
                     boxShadow: `2px 2px 0 ${colors.ink}`,
                     opacity: loading ? 0.7 : 1,
-                    cursor: loading ? "not-allowed" : "pointer",
                   }}
                 >
                   {loading ? "Opening..." : "Continue"}

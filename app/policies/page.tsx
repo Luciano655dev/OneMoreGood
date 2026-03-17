@@ -1,6 +1,7 @@
 import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
+import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
   RETURN_WINDOW_DAYS,
   SHIPPING_DELIVERY_MAX_DAYS,
@@ -16,19 +17,7 @@ export default function PoliciesPage() {
       className="min-h-screen"
       style={{ background: colors.paper, color: colors.ink }}
     >
-      <div
-        className="pointer-events-none fixed inset-0"
-        aria-hidden="true"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0),
-            repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0 1px, transparent 1px 18px),
-            repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0 1px, transparent 1px 22px)
-          `,
-          backgroundSize: "14px 14px, 18px 18px, 22px 22px",
-          mixBlendMode: "multiply",
-        }}
-      />
+      <PageGridBackground />
 
       <section className="relative mx-auto max-w-7xl px-6 py-16">
         <SectionTitle

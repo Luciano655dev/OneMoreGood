@@ -1,5 +1,6 @@
 import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
+import PageGridBackground from "@/components/Layout/PageGridBackground"
 import { RETURN_WINDOW_DAYS } from "@/lib/commerce"
 
 export default function RefundPolicyPage() {
@@ -8,6 +9,7 @@ export default function RefundPolicyPage() {
       className="min-h-screen px-6 py-16"
       style={{ background: colors.paper, color: colors.ink }}
     >
+      <PageGridBackground />
       <div className="mx-auto max-w-3xl">
         <RoughBorder bg={colors.sand} rotate={0.15} label="Refund policy">
           <h1 className="text-4xl font-black">Refund policy</h1>
