@@ -13,6 +13,8 @@ export type SimpleCartItem = {
   qty: number
 }
 
+export const FREE_SHIPPING_PRODUCT_IDS = new Set(["sock-test-checkout"])
+
 export const SHIPPING_TIERS = [
   {
     maxItems: 2,
@@ -63,6 +65,19 @@ export function getShippingCentsForItemCount(itemCount: number) {
   return getShippingTierForItemCount(itemCount).amountCents
 }
 
+export function getShippableItemCount(products: Product[], items: SimpleCartItem[]) {
+  const productMap = new Map(products.map((product) => [product.id, product]))
+
+  return items.reduce((sum, item) => {
+    const product = productMap.get(item.productId)
+    if (!product) return sum
+    if (product.is_test_product || FREE_SHIPPING_PRODUCT_IDS.has(product.id)) {
+      return sum
+    }
+    return sum + item.qty
+  }, 0)
+}
+
 export function calculateCartTotals(products: Product[], items: SimpleCartItem[]) {
   const productMap = new Map(products.map((product) => [product.id, product]))
 
@@ -83,11 +98,13 @@ export function calculateCartTotals(products: Product[], items: SimpleCartItem[]
   )
 
   const itemCount = getTotalItemCount(items)
-  const shippingCents = getShippingCentsForItemCount(itemCount)
+  const shippableItemCount = getShippableItemCount(products, items)
+  const shippingCents = getShippingCentsForItemCount(shippableItemCount)
   const totalCents = Math.max(0, subtotalCents - promoSavingsCents) + shippingCents
 
   return {
     itemCount,
+    shippableItemCount,
     subtotalCents,
     promoSavingsCents,
     shippingCents,

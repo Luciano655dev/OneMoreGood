@@ -6,4 +6,5 @@ export type Product = {
   description?: string
   max_qnt?: number
   tags?: string[]
+  is_test_product?: boolean
 }

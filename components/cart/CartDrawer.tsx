@@ -6,10 +6,9 @@ import { useCart } from "./CartContext"
 import colors from "../colors"
 import Portal from "./Portal"
 import {
-  getShippingCentsForItemCount,
+  calculateCartTotals,
   getTotalItemCount,
   moneyFromCents,
-  priceToCents,
   refundPolicySummary,
   shippingPolicySummary,
 } from "@/lib/commerce"
@@ -34,29 +33,25 @@ export default function CartDrawer() {
 
   const hasItems = items.length > 0
   const itemCount = useMemo(
-    () => getTotalItemCount(items.map(({ product, qty }) => ({ productId: product.id, qty }))),
+    () =>
+      getTotalItemCount(
+        items.map(({ product, qty }) => ({ productId: product.id, qty }))
+      ),
     [items]
   )
-  const shippingCents = getShippingCentsForItemCount(itemCount)
-  const { baseSubtotalCents, promoSavingsCents, totalCents } = useMemo(() => {
-    const base = items.reduce(
-      (sum, { product, qty }) => sum + priceToCents(product.price) * qty,
-      0
-    )
-    const savings = items.reduce((sum, { product, qty }) => {
-      const pairCount = Math.floor(qty / 2)
-      const pairPrice = 1400
-      const regularPair = priceToCents(product.price || 0) * 2
-      const discountPerPair = Math.max(0, regularPair - pairPrice)
-      return sum + pairCount * discountPerPair
-    }, 0)
-    const finalTotal = Math.max(0, base - savings) + shippingCents
-    return {
-      baseSubtotalCents: base,
-      promoSavingsCents: savings,
-      totalCents: finalTotal,
-    }
-  }, [items, shippingCents])
+  const {
+    subtotalCents: baseSubtotalCents,
+    promoSavingsCents,
+    shippingCents,
+    totalCents,
+  } = useMemo(
+    () =>
+      calculateCartTotals(
+        items.map(({ product }) => product),
+        items.map(({ product, qty }) => ({ productId: product.id, qty }))
+      ),
+    [items]
+  )
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [email, setEmail] = useState("")

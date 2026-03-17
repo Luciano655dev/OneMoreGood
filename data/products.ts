@@ -2,6 +2,16 @@ import type { Product } from "@/types"
 
 export const PRODUCTS: Product[] = [
   {
+    id: "sock-test-checkout",
+    title: "Test Checkout Sock",
+    price: 0.01,
+    image: "/products/CactusSocks.png",
+    description: "Low-cost internal test item for checkout verification.",
+    max_qnt: 10,
+    tags: ["Test"],
+    is_test_product: true,
+  },
+  {
     id: "sock-basketball",
     title: "Basketball Socks",
     price: 7.99,
