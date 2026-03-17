@@ -4,7 +4,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-test-checkout",
     title: "Test Checkout Sock",
-    price: 0.01,
+    price: 0.5,
     image: "/products/CactusSocks.png",
     description: "Low-cost internal test item for checkout verification.",
     max_qnt: 10,

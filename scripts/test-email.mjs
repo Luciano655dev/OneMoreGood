@@ -42,7 +42,7 @@ function buyerHtml() {
       <p>This confirms the buyer-facing confirmation email path can deliver.</p>
       <p><strong>Order:</strong> ${orderId}</p>
       <p><strong>Email:</strong> ${buyerTo}</p>
-      <p><strong>Total paid:</strong> $0.01</p>
+      <p><strong>Total paid:</strong> $0.50</p>
       <p><strong>Shipping paid:</strong> $0.00</p>
       <h3>Items</h3>
       <ul>
