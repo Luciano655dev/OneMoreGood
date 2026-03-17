@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     }
 
     const totals = calculateCartTotals(storedProducts, normalizedItems)
-    const shippingTier = getShippingTierForItemCount(totals.itemCount)
+    const shippingTier = getShippingTierForItemCount(totals.shippableItemCount)
     const stripe = getStripe()
     const baseUrl = getBaseUrl()
     const orderId =
@@ -137,6 +137,32 @@ export async function POST(req: Request) {
       return entries
     })
 
+    const shippingOptions =
+      totals.shippingCents > 0
+        ? [
+            {
+              shipping_rate_data: {
+                display_name: SHIPPING_RATE_LABEL,
+                type: "fixed_amount" as const,
+                fixed_amount: {
+                  amount: shippingTier.amountCents,
+                  currency: "usd",
+                },
+                delivery_estimate: {
+                  minimum: {
+                    unit: "business_day" as const,
+                    value: SHIPPING_DELIVERY_MIN_DAYS,
+                  },
+                  maximum: {
+                    unit: "business_day" as const,
+                    value: SHIPPING_DELIVERY_MAX_DAYS,
+                  },
+                },
+              },
+            },
+          ]
+        : []
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: email,
@@ -144,28 +170,7 @@ export async function POST(req: Request) {
       shipping_address_collection: {
         allowed_countries: ["US"],
       },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            display_name: SHIPPING_RATE_LABEL,
-            type: "fixed_amount",
-            fixed_amount: {
-              amount: shippingTier.amountCents,
-              currency: "usd",
-            },
-            delivery_estimate: {
-              minimum: {
-                unit: "business_day",
-                value: SHIPPING_DELIVERY_MIN_DAYS,
-              },
-              maximum: {
-                unit: "business_day",
-                value: SHIPPING_DELIVERY_MAX_DAYS,
-              },
-            },
-          },
-        },
-      ],
+      shipping_options: shippingOptions,
       success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/checkout/cancel`,
       phone_number_collection: {
@@ -189,7 +194,9 @@ export async function POST(req: Request) {
       custom_text: {
         shipping_address: {
           message:
-            `We currently ship within the United States only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created.`,
+            totals.shippingCents > 0
+              ? `We currently ship within the United States only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created.`
+              : "We currently ship within the United States only. This test order uses free shipping. Tracking is emailed after your label is created.",
         },
         submit: {
           message:
