@@ -409,12 +409,12 @@ export default function CartDrawer() {
               </div>
 
               <div className="mt-2 text-xl font-black">
-                Redirecting to Stripe
+                Almost there
               </div>
 
               <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                Enter your email, then continue to Stripe to pay securely,
-                enter your U.S. shipping address, and complete the order.
+                Enter your email, then continue to the secure payment page,
+                add your U.S. shipping address, and complete the order.
                 <br />
                 <br />
                 Shipping is currently ${moneyFromCents(shippingCents)} per

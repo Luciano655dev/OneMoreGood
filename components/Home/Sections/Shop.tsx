@@ -37,8 +37,8 @@ export default function Shop() {
       <div className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Shop"
-          title="Fundraising products that support the mission"
-          desc="Choose a pair of socks and help OneMoreGood raise money for Instituto Educacional Semear."
+          title="Products with a purpose"
+          desc="Choose a pair of socks and help OneMoreGood donate most of the profit to Instituto Educacional Semear."
         />
 
         <div className="mt-10 grid md:grid-cols-3 gap-6">
@@ -108,7 +108,7 @@ export default function Shop() {
                 className="mt-3 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                + supports Instituto Semear
+                + profit supports Instituto Semear
               </div>
             </RoughBorder>
           ))}

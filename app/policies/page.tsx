@@ -67,7 +67,7 @@ export default function PoliciesPage() {
               <p>
                 Shipping labels and tracking numbers are created manually after
                 purchase. Tracking is emailed to the address used during
-                checkout.
+                your order.
               </p>
               <p>
                 If a package is lost in transit or arrives damaged, contact
@@ -93,8 +93,8 @@ export default function PoliciesPage() {
                 damaged, defective, or incorrect.
               </p>
               <p>
-                Refunds are issued back to the original payment method through
-                Stripe after the return is reviewed and approved.
+                Refunds are issued back to the original payment method after
+                the return is reviewed and approved.
               </p>
               <p>
                 If an order is damaged, incorrect, or missing in transit,

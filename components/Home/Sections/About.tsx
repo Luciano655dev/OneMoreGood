@@ -36,7 +36,7 @@ export default function About() {
       <SectionTitle
         kicker="About"
         title="Who we are"
-        desc="OneMoreGood raises money for nonprofit partners. Instituto Educacional Semear is the first organization currently being supported."
+        desc="OneMoreGood is a purpose-led shop. Instituto Educacional Semear is the first organization currently being supported through our profit commitment."
       />
 
       <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -53,21 +53,20 @@ export default function About() {
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                OneMoreGood exists to help nonprofits raise money in a simple,
-                transparent way through product sales. Instead of operating the
-                programs ourselves, we direct fundraising energy toward partner
-                organizations already doing the frontline work in their
-                communities.
+                OneMoreGood exists to sell simple products and turn most of the
+                profit into support for organizations already doing frontline
+                work. People buy something they actually want, and that
+                purchase helps us send real support to the featured
+                organization.
               </p>
 
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                The goal is to make support easier to understand: people buy a
-                product they actually like, the fundraising stays visible, and
-                the partner organization gets more room to improve how it
-                serves its community.
+                The goal is to make the model easier to understand: people buy
+                a product they actually want, the purpose stays visible, and
+                the business is built to send profit toward real local work.
               </p>
 
               <div
@@ -77,12 +76,12 @@ export default function About() {
                 {[
                   [
                     "Mission",
-                    "Raise money for trusted nonprofit partners through fun products and direct supporter relationships.",
+                    "Build a purpose-led store where product sales generate profit that can be donated to trusted organizations.",
                     Sparkles,
                   ],
                   [
                     "Vision",
-                    "Build a fundraising platform that helps local nonprofits operate with more stability and reach.",
+                    "Grow a brand that can keep directing meaningful profit toward practical community support.",
                     Users,
                   ],
                   [
@@ -113,19 +112,19 @@ export default function About() {
                 {[
                   [
                     "How OneMoreGood works",
-                    "We sell fun socks, collect support, and channel funds to partner nonprofits that need help strengthening operations.",
+                    "We sell fun socks and donate most of the resulting profit to the featured organization.",
                   ],
                   [
-                    "Current nonprofit partner",
-                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is the organization currently featured and supported.",
+                    "Current featured organization",
+                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is currently featured and receives support from our profit commitment.",
                   ],
                   [
                     "Why this model matters",
-                    "Small organizations often need flexible fundraising they can actually use for infrastructure, materials, and day-to-day improvements.",
+                    "Small organizations often need unrestricted support they can actually use for infrastructure, materials, and day-to-day improvements.",
                   ],
                   [
                     "What comes next",
-                    "As OneMoreGood grows, more nonprofit partners can be added for campaigns, fundraising collaborations, and targeted support.",
+                    "As OneMoreGood grows, more organizations can be featured while the mission stays simple and easy to understand.",
                   ],
                 ].map(([t, d], idx) => (
                   <div
@@ -184,8 +183,8 @@ export default function About() {
                 </div>
                 <div className="mt-2 text-sm" style={{ color: colors.muted }}>
                   Instituto Semear is based in Santa Terezinha (PE). OneMoreGood
-                  is currently fundraising with that partner as the main focus of
-                  this campaign.
+                  is currently built around supporting that organization through
+                  profits generated by product sales.
                 </div>
 
                 <div
@@ -200,9 +199,9 @@ export default function About() {
                     className="mt-3 text-sm list-disc pl-5"
                     style={{ color: colors.muted }}
                   >
-                    <li>How OneMoreGood raises money</li>
+                    <li>How OneMoreGood sells products with a purpose</li>
                     <li>Who Instituto Semear is and where support goes</li>
-                  <li>Ways to contact us for partnerships or donations</li>
+                    <li>Ways to contact us about collaborations or questions</li>
                   </ul>
                 </div>
               </div>
@@ -222,7 +221,7 @@ export default function About() {
 
                 <div className="mt-2 text-sm" style={{ color: colors.muted }}>
                   These photos show the local context around Instituto Semear,
-                  the nonprofit currently being supported through OneMoreGood.
+                  the organization currently being supported through OneMoreGood.
                 </div>
 
                 {/* clickable preview */}

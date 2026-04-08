@@ -24,8 +24,8 @@ export default function RefundPolicyPage() {
               defective, or incorrect.
             </p>
             <p>
-              Refunds are issued back to the original payment method through
-              Stripe after the return is reviewed and approved.
+              Refunds are issued back to the original payment method after the
+              return is reviewed and approved.
             </p>
             <p>
               If an order is damaged, incorrect, or missing in transit, contact

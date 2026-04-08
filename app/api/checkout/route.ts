@@ -194,12 +194,12 @@ export async function POST(req: Request) {
         shipping_address: {
           message:
             totals.shippingCents > 0
-              ? `We currently ship within the United States only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created.`
-              : "We currently ship within the United States only. This test order uses free shipping. Tracking is emailed after your label is created.",
+              ? `We currently ship within the United States only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created. This checkout is for product purchases only.`
+              : "We currently ship within the United States only. This test order uses free shipping. Tracking is emailed after your label is created. This checkout is for product purchases only.",
         },
         submit: {
           message:
-            "By placing this order, you agree to the shipping and refund terms shown on OneMoreGood.",
+            "By placing this order, you are purchasing goods from OneMoreGood and agreeing to the shipping and refund terms shown on the site.",
         },
       },
     })

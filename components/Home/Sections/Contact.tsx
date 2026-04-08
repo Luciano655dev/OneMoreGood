@@ -58,8 +58,8 @@ export default function Contact() {
       <section id="contact" className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Contact"
-          title="Contact us about support"
-          desc="Reach out about partnerships, fundraising campaigns, donations, or questions about OneMoreGood and Instituto Semear."
+          title="Contact us about the brand"
+          desc="Reach out about collaborations, wholesale ideas, product questions, or the OneMoreGood mission and Instituto Semear."
         />
 
         <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -176,7 +176,7 @@ export default function Contact() {
                 <textarea
                   name="message"
                   required
-                  placeholder="Tell us how you want to help: partnership, fundraising, donation, product collaboration, or questions"
+                  placeholder="Tell us what you need: collaboration, retail question, product idea, press, or mission-related question"
                   className="px-3 py-3 font-black h-28"
                   style={{
                     background: colors.paper,

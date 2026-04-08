@@ -42,7 +42,7 @@ export default function ShippingPolicyPage() {
             </p>
             <p>
               Shipping labels and tracking numbers are created manually after
-              purchase. Tracking is emailed to the address used during checkout.
+              purchase. Tracking is emailed to the address used for your order.
             </p>
             <p>
               If a package is lost in transit or arrives damaged, contact

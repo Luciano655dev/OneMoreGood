@@ -46,7 +46,7 @@ export default function Impact() {
     <section id="impact" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
         kicker="Impact"
-        title="What fundraising can unlock"
+        title="What profit with purpose can unlock"
         desc="The current goal is to help Instituto Semear operate with more strength, flexibility, and local support."
       />
 
@@ -63,7 +63,7 @@ export default function Impact() {
               {[
                 [
                   "Operational breathing room",
-                  "Flexible fundraising can help a nonprofit cover practical needs that are hard to fund through restricted programs alone.",
+                  "Purpose-driven profit can help cover practical needs that are hard to fund through restricted programs alone.",
                 ],
                 [
                   "Better learning conditions",
@@ -71,15 +71,15 @@ export default function Impact() {
                 ],
                 [
                   "Community trust",
-                  "Visible fundraising tied to a real partner can make it easier for supporters to understand where money goes and why it matters.",
+                  "Visible profit-sharing tied to a real partner can make it easier for supporters to understand where money goes and why it matters.",
                 ],
                 [
-                  "More partnership opportunities",
-                  "A clear fundraising model creates room for collaborations, campaigns, and additional nonprofit partners over time.",
+                  "More partner opportunities",
+                  "A clear commerce model creates room for collaborations and additional featured organizations over time.",
                 ],
                 [
                   "Direct accountability",
-                  "OneMoreGood can share updates on the partner relationship, fundraising progress, and what support is meant to improve.",
+                  "OneMoreGood can share updates on the partner relationship, profit commitment, and what support is meant to improve.",
                 ],
               ].map(([t, d], idx) => (
                 <li
@@ -110,8 +110,8 @@ export default function Impact() {
                 color: colors.muted,
               }}
             >
-              Sustainability is planned through private donations, strategic
-              partnerships, product sales, campaign collaborations, and direct
+              Sustainability is planned through product sales, thoughtful
+              pricing, repeat customers, strategic collaborations, and direct
               supporter relationships.
             </div>
           </RoughBorder>
@@ -127,8 +127,8 @@ export default function Impact() {
           >
             <div style={{ color: colors.muted }}>
               These photos illustrate the local context around Instituto
-              Semear, the nonprofit currently being supported through
-              OneMoreGood fundraising.
+              Semear, the organization currently being supported through
+              OneMoreGood's profit commitment.
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-4">

@@ -23,7 +23,7 @@ export default function Hero() {
         <div className="grid md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-7">
             <div data-reveal className="reveal hidden md:flex flex-wrap gap-2">
-              <StampChip icon={ShieldCheck} text="Fundraising organization" />
+              <StampChip icon={ShieldCheck} text="Shop with a purpose" />
               <StampChip
                 icon={Users}
                 text="Instituto Semear"
@@ -52,16 +52,14 @@ export default function Hero() {
               className="reveal mt-6 text-lg leading-relaxed max-w-2xl"
               style={{ color: colors.muted }}
             >
-              OneMoreGood is a fundraising organization that sells fun socks to
-              help nonprofits improve their operations. Right now, every sale
-              supports Instituto Educacional Semear in Santa Terezinha,
-              Pernambuco, helping strengthen the resources and opportunities
-              they provide for local children and families.
+              OneMoreGood is a shop built around useful products and visible
+              impact. We sell fun socks and dedicate most of our profit to
+              Instituto Educacional Semear in Santa Terezinha, Pernambuco.
             </p>
 
             <div data-reveal className="reveal mt-8 flex flex-wrap gap-3">
               <HandButton variant="solid" onClick={() => router.push("/shop")}>
-                Fundraise / support <ArrowRight size={18} />
+                Shop with purpose <ArrowRight size={18} />
               </HandButton>
               <HandButton variant="ghost" onClick={() => setVideoOpen(true)}>
                 Watch intro video <Play size={18} />
@@ -75,9 +73,9 @@ export default function Hero() {
               className="reveal grid sm:grid-cols-3 gap-4 text-sm"
             >
               {[
-                ["OneMoreGood raises funds", "We turn product sales into partner support."],
-                ["Instituto Semear receives support", "Current featured nonprofit in Santa Terezinha."],
-                ["Operations can improve", "Funds can help structure, supplies, and local capacity."],
+                ["Good products, clear purpose", "Every order helps turn our profit into support for meaningful local work."],
+                ["Instituto Semear receives support", "Current featured organization in Santa Terezinha."],
+                ["Profits are meant to travel further", "The goal is stronger structure, supplies, and local capacity."],
               ].map(([t, d]) => (
                 <div key={t}>
                   <div className="font-black">{t}</div>

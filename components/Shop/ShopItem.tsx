@@ -204,7 +204,7 @@ export default function ShopItem({
               className="mt-3 text-xs font-black uppercase tracking-widest"
               style={{ color: colors.muted }}
             >
-              + supports donation
+              + purpose-backed purchase
             </div>
           </div>
         </div>

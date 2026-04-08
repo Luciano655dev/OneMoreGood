@@ -38,7 +38,7 @@ export default function Navbar() {
               className="text-xs font-semibold"
               style={{ color: colors.muted }}
             >
-              Fundraising for nonprofits through socks
+              Shop with a purpose
             </div>
           </div>
         </a>

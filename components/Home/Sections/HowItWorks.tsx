@@ -9,8 +9,8 @@ export default function HowItWorks() {
     <section id="how" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
         kicker="Methodology"
-        title="How the fundraising model works"
-        desc="OneMoreGood uses product sales and direct supporter relationships to raise money for nonprofit partners."
+        title="How the model works"
+        desc="OneMoreGood sells products with a clear purpose and directs most of its profit to support the featured organization."
       />
 
       <div className="mt-10 grid md:grid-cols-3 gap-6">
@@ -18,23 +18,23 @@ export default function HowItWorks() {
           {
             n: "01",
             t: "Sell fun socks",
-            d: "Products create a straightforward way for people to support a cause without a complicated donation flow.",
+            d: "People buy products they actually want, making support feel simple, direct, and easy to understand.",
             icon: BookOpen,
             tone: colors.sand,
             rot: -0.5,
           },
           {
             n: "02",
-            t: "Fund partner nonprofits",
-            d: "Revenue is directed to organizations already doing real local work and needing more operational support.",
+            t: "Donate most of the profit",
+            d: "After the sale, most profit is set aside for the featured organization already doing real local work.",
             icon: Heart,
             tone: colors.paper,
             rot: 0.4,
           },
           {
             n: "03",
-            t: "Grow with partnerships",
-            d: "We can coordinate partnerships, custom fundraising efforts, and direct conversations about how support should be structured.",
+            t: "Keep the purpose visible",
+            d: "We share the partner story, local context, and mission clearly so people can see where the support is meant to go.",
             icon: ShieldCheck,
             tone: colors.sand,
             rot: -0.2,

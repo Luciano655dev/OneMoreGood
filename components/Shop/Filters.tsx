@@ -50,8 +50,8 @@ export default function Filters({
               className="mt-3 text-base max-w-xl"
               style={{ color: colors.muted }}
             >
-              Every purchase helps OneMoreGood raise money for Instituto
-              Semear in Pernambuco, Brazil.
+              Every purchase helps OneMoreGood donate most of the profit to
+              Instituto Semear in Pernambuco, Brazil.
             </p>
           </div>
 
@@ -114,7 +114,7 @@ export default function Filters({
                 className="mt-2 text-[11px] font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Tip: try “classic”, “crew”, or “support”
+                Tip: try “classic”, “crew”, or “purpose”
               </div>
             </div>
           </div>

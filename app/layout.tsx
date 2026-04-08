@@ -32,7 +32,7 @@ export default function RootLayout({
 
 export const metadata: Metadata = {
   title: "OneMoreGood",
-  description: "Proof over promises. Local impact you can see.",
+  description: "Shop products with a purpose. OneMoreGood donates most of its profit to Instituto Semear.",
   icons: {
     icon: "/Logo.png",
   },
