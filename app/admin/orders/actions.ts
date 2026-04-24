@@ -1,44 +1,324 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 import { ORDER_STATUSES } from "@/lib/admin/orders"
+import { getStoredProductMap } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 
+function appendQueryParam(path: string, key: string, value: string) {
+  const separator = path.includes("?") ? "&" : "?"
+  return `${path}${separator}${key}=${encodeURIComponent(value)}`
+}
+
+function getSafeAdminReturnPath(rawPath: string, fallbackId?: string) {
+  const fallback = fallbackId ? `/admin/orders/${fallbackId}` : "/admin/orders"
+  if (!rawPath) return fallback
+  if (!rawPath.startsWith("/admin/orders")) return fallback
+  return rawPath
+}
+
 export async function updateOrderAction(formData: FormData) {
+  const id = String(formData.get("id") || "").trim()
+  const returnToRaw = String(formData.get("return_to") || "").trim()
+  const returnTo = getSafeAdminReturnPath(returnToRaw, id || undefined)
+
+  try {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Supabase is not configured.")
+    }
+
+    const status = String(formData.get("status") || "").trim()
+    const trackingNumber = String(formData.get("tracking_number") || "").trim()
+    const trackingCarrier = String(formData.get("tracking_carrier") || "").trim()
+    const notes = String(formData.get("notes") || "").trim()
+
+    if (!id) {
+      throw new Error("Order id is required.")
+    }
+
+    if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
+      throw new Error("Invalid order status.")
+    }
+
+    const supabase = getSupabaseAdmin()
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status,
+        tracking_number: trackingNumber || null,
+        tracking_carrier: trackingCarrier || null,
+        notes: notes || null,
+      })
+      .eq("id", id)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    revalidatePath("/admin/orders")
+    revalidatePath(`/admin/orders/${id}`)
+    redirect(appendQueryParam(returnTo, "saved", "1"))
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Could not update order."
+    redirect(appendQueryParam(returnTo, "error", message))
+  }
+}
+
+type ManualLineItem = {
+  productId: string
+  qty: number
+  unitPriceCents: number
+}
+
+const MANUAL_ORDER_MAX_ROWS = 25
+
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function parseDollarsToCents(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return 0
+
+  const amount = Number(trimmed)
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error("Shipping must be a non-negative dollar amount.")
+  }
+
+  return Math.round(amount * 100)
+}
+
+function buildManualOrderId() {
+  const datePart = new Date().toISOString().slice(2, 10).replaceAll("-", "")
+  const randomPart = Math.random().toString(36).slice(2, 6).toUpperCase()
+  const clockPart = Date.now().toString().slice(-6)
+  return `OMG-MAN-${datePart}-${clockPart}-${randomPart}`
+}
+
+function parseManualLineItems(formData: FormData): ManualLineItem[] {
+  const productIds = formData.getAll("product_id").map((value) => String(value || "").trim())
+  const quantities = formData.getAll("quantity").map((value) => String(value || "").trim())
+  const unitPrices = formData
+    .getAll("unit_price_dollars")
+    .map((value) => String(value || "").trim())
+  const maxLength = Math.max(productIds.length, quantities.length, unitPrices.length)
+
+  if (maxLength > MANUAL_ORDER_MAX_ROWS) {
+    throw new Error(`Manual order supports at most ${MANUAL_ORDER_MAX_ROWS} product rows.`)
+  }
+
+  const merged = new Map<string, ManualLineItem>()
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const productId = productIds[index] || ""
+    const qtyRaw = quantities[index] || "0"
+    const unitPriceRaw = unitPrices[index] || ""
+    const qty = Number(qtyRaw)
+    const unitPrice = Number(unitPriceRaw)
+
+    if (!productId && (!qtyRaw || qty === 0) && !unitPriceRaw) {
+      continue
+    }
+
+    if (productId && (!Number.isInteger(qty) || qty <= 0)) {
+      throw new Error(`Quantity must be a positive whole number on row ${index + 1}.`)
+    }
+
+    if (!productId && qty > 0) {
+      throw new Error(`Choose a product for row ${index + 1}.`)
+    }
+
+    if (productId && unitPriceRaw === "") {
+      throw new Error(`Set a unit price on row ${index + 1}.`)
+    }
+
+    if (productId && (!Number.isFinite(unitPrice) || unitPrice < 0)) {
+      throw new Error(`Unit price must be a non-negative dollar amount on row ${index + 1}.`)
+    }
+
+    if (productId && qty > 0) {
+      const unitPriceCents = Math.round(unitPrice * 100)
+      const key = `${productId}::${unitPriceCents}`
+      const existing = merged.get(key)
+
+      if (existing) {
+        merged.set(key, { ...existing, qty: existing.qty + qty })
+      } else {
+        merged.set(key, {
+          productId,
+          qty,
+          unitPriceCents,
+        })
+      }
+    }
+  }
+
+  const items = Array.from(merged.values())
+
+  if (items.length === 0) {
+    throw new Error("Add at least one product with quantity greater than 0.")
+  }
+
+  return items
+}
+
+async function createManualOrder(formData: FormData) {
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured.")
   }
 
-  const id = String(formData.get("id") || "").trim()
-  const status = String(formData.get("status") || "").trim()
-  const trackingNumber = String(formData.get("tracking_number") || "").trim()
-  const trackingCarrier = String(formData.get("tracking_carrier") || "").trim()
-  const notes = String(formData.get("notes") || "").trim()
-
-  if (!id) {
-    throw new Error("Order id is required.")
-  }
-
+  const status = String(formData.get("status") || "completed").trim()
   if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
     throw new Error("Invalid order status.")
   }
 
-  const supabase = getSupabaseAdmin()
-  const { error } = await supabase
-    .from("orders")
-    .update({
-      status,
-      tracking_number: trackingNumber || null,
-      tracking_carrier: trackingCarrier || null,
-      notes: notes || null,
-    })
-    .eq("id", id)
+  const customerName = String(formData.get("customer_name") || "").trim()
+  const rawEmail = String(formData.get("customer_email") || "")
+    .trim()
+    .toLowerCase()
+  if (rawEmail && !isValidEmail(rawEmail)) {
+    throw new Error("Customer email is invalid.")
+  }
 
-  if (error) {
-    throw new Error(error.message)
+  const paymentMethod = String(formData.get("payment_method") || "cash").trim()
+  const saleLocation = String(formData.get("sale_location") || "").trim()
+  const shippingCents = parseDollarsToCents(String(formData.get("shipping_dollars") || "0"))
+  const notesInput = String(formData.get("notes") || "").trim()
+  const purchasedAtInput = String(formData.get("purchased_at") || "").trim()
+  let purchasedAtIso: string | null = null
+
+  if (purchasedAtInput) {
+    const parsed = new Date(purchasedAtInput)
+    if (Number.isNaN(parsed.getTime())) {
+      throw new Error("Purchase date/time is invalid.")
+    }
+    purchasedAtIso = parsed.toISOString()
+  }
+
+  const lineItems = parseManualLineItems(formData)
+  const productMap = await getStoredProductMap()
+
+  const qtyByProduct = new Map<string, number>()
+  for (const item of lineItems) {
+    qtyByProduct.set(item.productId, (qtyByProduct.get(item.productId) || 0) + item.qty)
+  }
+
+  for (const [productId, totalQty] of qtyByProduct.entries()) {
+    const product = productMap.get(productId)
+    if (!product) {
+      throw new Error(`Unknown product: ${productId}`)
+    }
+
+    if (Number(product.inventory_quantity || 0) < totalQty) {
+      throw new Error(`Not enough stock for ${product.title}.`)
+    }
+  }
+
+  const subtotalCents = lineItems.reduce((sum, item) => {
+    return sum + item.unitPriceCents * item.qty
+  }, 0)
+
+  const promoSavingsCents = 0
+
+  const totalCents = Math.max(0, subtotalCents - promoSavingsCents) + shippingCents
+  const customerEmail = rawEmail || `manual-sale+${Date.now()}@onemoregood.local`
+  const orderId = buildManualOrderId()
+
+  const notesParts = [
+    "Manual order created from admin dashboard (no online payment).",
+    `Payment method: ${paymentMethod}`,
+    saleLocation ? `Sale location: ${saleLocation}` : null,
+    rawEmail ? null : "Customer email not provided.",
+    notesInput ? `Notes: ${notesInput}` : null,
+  ].filter(Boolean)
+
+  const orderPayload: Record<string, unknown> = {
+    order_id: orderId,
+    stripe_checkout_session_id: null,
+    stripe_payment_intent_id: null,
+    customer_email: customerEmail,
+    status,
+    subtotal_cents: subtotalCents,
+    promo_savings_cents: promoSavingsCents,
+    shipping_cents: shippingCents,
+    total_cents: totalCents,
+    shipping_name: customerName || null,
+    shipping_address: null,
+    notes: notesParts.join("\n"),
+  }
+
+  if (purchasedAtIso) {
+    orderPayload.created_at = purchasedAtIso
+    orderPayload.updated_at = purchasedAtIso
+  }
+
+  const supabase = getSupabaseAdmin()
+  const { data: orderRow, error: orderError } = await supabase
+    .from("orders")
+    .insert(orderPayload)
+    .select("id")
+    .single()
+
+  if (orderError || !orderRow?.id) {
+    throw new Error(orderError?.message || "Could not create manual order.")
+  }
+
+  const orderItems = lineItems.map((item) => {
+    const product = productMap.get(item.productId)!
+    return {
+      order_id: orderRow.id,
+      product_id: item.productId,
+      title: product.title,
+      quantity: item.qty,
+      unit_price_cents: item.unitPriceCents,
+    }
+  })
+
+  const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
+  if (itemsError) {
+    throw new Error(itemsError.message || "Could not save manual order items.")
+  }
+
+  for (const item of lineItems) {
+    const product = productMap.get(item.productId)!
+    const nextInventory = Math.max(0, Number(product.inventory_quantity || 0) - item.qty)
+
+    const { error: inventoryError } = await supabase
+      .from("products")
+      .update({ inventory_quantity: nextInventory })
+      .eq("id", item.productId)
+
+    if (inventoryError) {
+      throw new Error(
+        inventoryError.message || `Could not update inventory for ${product.title}.`
+      )
+    }
   }
 
   revalidatePath("/admin/orders")
-  revalidatePath(`/admin/orders/${id}`)
+  revalidatePath(`/admin/orders/${orderRow.id}`)
+  revalidatePath("/admin/orders/new")
+
+  return orderRow.id
+}
+
+export async function createManualOrderAction(formData: FormData) {
+  let orderDbId = ""
+
+  try {
+    orderDbId = await createManualOrder(formData)
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Could not create manual order."
+    redirect(`/admin/orders/new?error=${encodeURIComponent(message)}`)
+  }
+
+  redirect(`/admin/orders/${orderDbId}`)
 }

@@ -1,7 +1,19 @@
 import colors from "@/components/colors"
 import Scribble from "./Scribble"
 
-export default function SectionTitle({ kicker, title, desc }: any) {
+type SectionTitleProps = {
+  kicker?: string
+  title: React.ReactNode
+  desc?: string
+  titleAccessory?: React.ReactNode
+}
+
+export default function SectionTitle({
+  kicker,
+  title,
+  desc,
+  titleAccessory,
+}: SectionTitleProps) {
   return (
     <div data-reveal className="reveal max-w-3xl">
       {kicker ? (
@@ -17,9 +29,12 @@ export default function SectionTitle({ kicker, title, desc }: any) {
           </div>
         </div>
       ) : null}
-      <h2 className="mt-3 text-4xl md:text-5xl font-black leading-[1.02]">
-        {title}
-      </h2>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <h2 className="text-4xl md:text-5xl font-black leading-[1.02]">
+          {title}
+        </h2>
+        {titleAccessory ? titleAccessory : null}
+      </div>
       {desc ? (
         <p
           className="mt-4 text-lg leading-relaxed"

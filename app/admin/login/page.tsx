@@ -1,4 +1,5 @@
 import colors from "@/components/colors"
+import FormSubmitButton from "@/components/Admin/FormSubmitButton"
 import PasswordInput from "@/components/Admin/PasswordInput"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
@@ -56,8 +57,9 @@ export default async function AdminLoginPage({
                 </div>
               ) : null}
 
-              <button
-                type="submit"
+              <FormSubmitButton
+                idleLabel="Enter dashboard"
+                pendingLabel="Entering..."
                 className="px-4 py-3 text-xs font-black uppercase tracking-widest"
                 style={{
                   background: colors.accent,
@@ -65,9 +67,7 @@ export default async function AdminLoginPage({
                   border: `2px solid ${colors.ink}`,
                   boxShadow: `3px 3px 0 ${colors.ink}`,
                 }}
-              >
-                Enter dashboard
-              </button>
+              />
             </form>
           </RoughBorder>
         </div>

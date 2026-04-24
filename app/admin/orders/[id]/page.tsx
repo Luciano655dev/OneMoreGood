@@ -1,5 +1,7 @@
 import Link from "next/link"
 
+import CopyOrderIdButton from "@/components/Admin/CopyOrderIdButton"
+import FormSubmitButton from "@/components/Admin/FormSubmitButton"
 import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
@@ -29,11 +31,16 @@ function Label({ children }: { children: React.ReactNode }) {
 
 export default async function AdminOrderDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ saved?: string; error?: string }>
 }) {
   const { id } = await params
+  const query = await searchParams
   const order = await getOrderDetail(id)
+  const saved = query.saved === "1"
+  const error = query.error?.trim() || null
 
   if (!order) {
     return (
@@ -73,12 +80,13 @@ export default async function AdminOrderDetailPage({
           <SectionTitle
             kicker="Admin"
             title={order.order_id}
+            titleAccessory={<CopyOrderIdButton value={order.order_id} />}
             desc="Update shipping progress, tracking, notes, and final completion from one place."
           />
           <div className="flex flex-wrap gap-3">
             <Link
               href="/admin/orders"
-              className="inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
+              className="btnInteractive inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
               style={{
                 background: colors.paper,
                 border: `2px solid ${colors.ink}`,
@@ -87,21 +95,34 @@ export default async function AdminOrderDetailPage({
             >
               Back to orders
             </Link>
-            <form action="/admin/logout" method="post">
-              <button
-                type="submit"
-                className="px-4 py-3 text-xs font-black uppercase tracking-widest"
-                style={{
-                  background: colors.paper,
-                  border: `2px solid ${colors.ink}`,
-                  boxShadow: `3px 3px 0 ${colors.ink}`,
-                }}
-              >
-                Log out
-              </button>
-            </form>
           </div>
         </div>
+
+        {saved ? (
+          <div
+            className="mt-4 p-3 text-sm font-black"
+            style={{
+              background: "#DDECE9",
+              border: `2px solid ${colors.ink}`,
+              color: colors.ink,
+            }}
+          >
+            Order updated.
+          </div>
+        ) : null}
+
+        {error ? (
+          <div
+            className="mt-4 p-3 text-sm font-black"
+            style={{
+              background: colors.sand,
+              border: `2px dashed ${colors.ink}`,
+              color: colors.clay,
+            }}
+          >
+            {error}
+          </div>
+        ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_380px]">
           <div className="grid gap-6">
@@ -126,9 +147,10 @@ export default async function AdminOrderDetailPage({
                   <span
                     className="mt-2 inline-flex items-center px-3 py-2 text-[11px] font-black uppercase tracking-widest"
                     style={{
-                      background: tone.bg,
-                      color: tone.color,
+                      background: tone.rail,
+                      color: colors.paper,
                       border: `2px solid ${colors.ink}`,
+                      boxShadow: `2px 2px 0 ${colors.ink}`,
                     }}
                   >
                     {formatOrderStatus(order.status)}
@@ -283,6 +305,7 @@ export default async function AdminOrderDetailPage({
             <RoughBorder bg={colors.paper} label="Update order">
               <form action={updateOrderAction} className="grid gap-4">
                 <input type="hidden" name="id" value={order.id} />
+                <input type="hidden" name="return_to" value={`/admin/orders/${id}`} />
 
                 <div>
                   <Label>Status</Label>
@@ -346,8 +369,9 @@ export default async function AdminOrderDetailPage({
                   />
                 </div>
 
-                <button
-                  type="submit"
+                <FormSubmitButton
+                  idleLabel="Save order updates"
+                  pendingLabel="Saving..."
                   className="mt-2 px-4 py-3 text-xs font-black uppercase tracking-widest"
                   style={{
                     background: colors.accent,
@@ -355,9 +379,7 @@ export default async function AdminOrderDetailPage({
                     border: `2px solid ${colors.ink}`,
                     boxShadow: `3px 3px 0 ${colors.ink}`,
                   }}
-                >
-                  Save order updates
-                </button>
+                />
               </form>
             </RoughBorder>
 

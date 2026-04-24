@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 button,
-[role="button"] {
+[role="button"],
+.btnInteractive {
   cursor: pointer;
   transition:
     transform 140ms ease,
@@ -13,7 +14,22 @@ button,
     border-color 180ms ease;
 }
 
+button:not(:disabled):hover,
+[role="button"]:not([aria-disabled="true"]):hover,
+.btnInteractive:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.03);
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active,
+.btnInteractive:active {
+  transform: translateY(1px);
+  filter: saturate(0.98);
+}
+
 button:disabled,
-[role="button"][aria-disabled="true"] {
+[role="button"][aria-disabled="true"],
+.btnInteractive[aria-disabled="true"] {
   cursor: not-allowed;
 }
