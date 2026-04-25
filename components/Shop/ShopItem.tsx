@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState, useCallback } from "react"
 import { useCart } from "../cart/CartContext"
 import { useStock } from "@/app/hooks/useStock"
 import colors from "../colors"
+import {
+  formatMoneyFromCents,
+  getUnitPriceCentsForCountry,
+} from "@/lib/commerce"
+import type { Product } from "@/types"
 
 type ShopItemProps = {
   id: string
@@ -12,10 +17,6 @@ type ShopItemProps = {
   price: number
   description?: string
   max_qnt?: number
-}
-
-function money(n: number) {
-  return n.toFixed(2)
 }
 
 function getBadge(loading: boolean, qtyLeft?: number) {
@@ -35,7 +36,7 @@ export default function ShopItem({
   max_qnt,
 }: ShopItemProps) {
   const [open, setOpen] = useState(false)
-  const { addToCart, openCart, items } = useCart()
+  const { addToCart, openCart, items, shippingCountry } = useCart()
   const { stock, loading: stockLoading } = useStock()
 
   // Modal UX: ESC closes + lock scroll
@@ -51,13 +52,13 @@ export default function ShopItem({
     }
   }, [open])
 
-  const product = useMemo(
+  const product: Product = useMemo(
     () => ({ id, title, price, image, description, max_qnt }),
     [id, title, price, image, description, max_qnt]
   )
 
   const inCartQty = useMemo(() => {
-    const found = items.find((it: any) => it.product?.id === id)
+    const found = items.find((it) => it.product?.id === id)
     return found?.qty ?? 0
   }, [items, id])
 
@@ -72,11 +73,20 @@ export default function ShopItem({
     [stockLoading, qtyLeft]
   )
 
+  const unitPriceCents = useMemo(
+    () =>
+      getUnitPriceCentsForCountry(
+        { id, title, price, image, description, max_qnt },
+        shippingCountry
+      ),
+    [id, title, price, image, description, max_qnt, shippingCountry]
+  )
+
   const canAdd = !out && !atLimit
 
   const handleAdd = useCallback(() => {
     if (!canAdd) return
-    addToCart(product as any)
+    addToCart(product)
     openCart()
     setOpen(false)
   }, [canAdd, addToCart, openCart, product])
@@ -160,7 +170,7 @@ export default function ShopItem({
                 className="text-base font-black"
                 style={{ color: colors.accent }}
               >
-                ${money(price)}
+                {formatMoneyFromCents(unitPriceCents, shippingCountry)}
               </div>
 
               <div className="flex items-center gap-2">
@@ -283,7 +293,7 @@ export default function ShopItem({
                   className="mt-2 text-lg font-black"
                   style={{ color: colors.accent }}
                 >
-                  ${money(price)}
+                  {formatMoneyFromCents(unitPriceCents, shippingCountry)}
                 </div>
 
                 {/* ONE stock line only in modal (no repeating badge text) */}

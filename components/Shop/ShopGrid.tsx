@@ -7,6 +7,8 @@ import ShopItem from "./ShopItem"
 import Filters from "./Filters"
 import { useProducts } from "@/data/useProducts"
 import colors from "../colors"
+import { formatMoneyFromCents } from "@/lib/commerce"
+import type { Product } from "@/types"
 
 function CartButton() {
   const { totalQty, toggleOpen } = useCart()
@@ -125,6 +127,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 
 function InnerShop() {
   const { products, loading, error } = useProducts()
+  const { shippingCountry } = useCart()
 
   const [query, setQuery] = useState("")
   const [activeTag, setActiveTag] = useState("All")
@@ -135,7 +138,7 @@ function InnerShop() {
 
   const allTags = useMemo(() => {
     const set = new Set<string>()
-    for (const p of products as any[]) {
+    for (const p of products) {
       for (const t of p.tags || []) set.add(t)
     }
     return Array.from(set)
@@ -145,7 +148,7 @@ function InnerShop() {
     const q = deferredQuery.trim().toLowerCase()
     const tag = deferredTag.toLowerCase()
 
-    return (products as any[]).filter((p) => {
+    return products.filter((p: Product) => {
       const title = (p.title || "").toLowerCase()
       const desc = (p.description || "").toLowerCase()
 
@@ -162,6 +165,17 @@ function InnerShop() {
     const n = visibleProducts.length
     return `${n} result${n === 1 ? "" : "s"}`
   }, [visibleProducts.length])
+
+  const pricingLabel = useMemo(() => {
+    if (shippingCountry === "BR") {
+      return `Brazil pricing: ${formatMoneyFromCents(
+        2500,
+        shippingCountry
+      )} per sock • Brazil-only checkout`
+    }
+
+    return "US pricing: 1 pair $7.99 • 2 pairs $14 • U.S.-only checkout"
+  }, [shippingCountry])
 
   return (
     <div
@@ -212,7 +226,7 @@ function InnerShop() {
                 color: colors.ink,
               }}
             >
-              Promo: 1 pair $7.99 • 2 pairs $14 • Ships across the U.S.
+              {pricingLabel}
             </span>
           </div>
 
@@ -242,7 +256,7 @@ function InnerShop() {
               id="shop-grid"
               className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
             >
-              {visibleProducts.map((p: any) => (
+              {visibleProducts.map((p) => (
                 <ShopItem key={p.id} {...p} />
               ))}
             </div>

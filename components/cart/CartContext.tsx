@@ -8,7 +8,12 @@ import React, {
   useState,
 } from "react"
 import type { Product } from "@/types"
-import { CART_STORAGE_KEY } from "@/lib/commerce"
+import {
+  CART_STORAGE_KEY,
+  DEFAULT_SHIPPING_COUNTRY,
+  isSupportedShippingCountry,
+  type ShippingCountry,
+} from "@/lib/commerce"
 
 export type CartItem = {
   product: Product
@@ -18,6 +23,7 @@ export type CartItem = {
 type CartContextValue = {
   items: CartItem[]
   isOpen: boolean
+  shippingCountry: ShippingCountry
   totalQty: number
   subtotal: number
 
@@ -37,21 +43,47 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
-  const [isOpen, setIsOpen] = useState(false)
+function inferCountryFromNavigator(): ShippingCountry {
+  if (typeof navigator === "undefined") return DEFAULT_SHIPPING_COUNTRY
 
-  // Load from localStorage
-  useEffect(() => {
+  const localeHints = [
+    navigator.language,
+    ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+  ]
+    .map((value) => String(value || "").toUpperCase())
+    .filter(Boolean)
+
+  if (
+    localeHints.some(
+      (value) =>
+        value === "PT-BR" ||
+        value.endsWith("-BR") ||
+        value.includes("_BR") ||
+        value.includes("BR")
+    )
+  ) {
+    return "BR"
+  }
+
+  return DEFAULT_SHIPPING_COUNTRY
+}
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return []
     try {
       const raw = localStorage.getItem(CART_STORAGE_KEY)
-      if (!raw) return
+      if (!raw) return []
       const parsed = JSON.parse(raw) as CartItem[]
-      if (Array.isArray(parsed)) setItems(parsed)
+      return Array.isArray(parsed) ? parsed : []
     } catch {
-      // ignore
+      return []
     }
-  }, [])
+  })
+  const [isOpen, setIsOpen] = useState(false)
+  const [shippingCountry, setShippingCountry] = useState<ShippingCountry>(
+    () => inferCountryFromNavigator()
+  )
 
   // Save to localStorage
   useEffect(() => {
@@ -61,6 +93,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // ignore
     }
   }, [items])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadCountry = async () => {
+      try {
+        const res = await fetch("/api/geo-country", { cache: "no-store" })
+        if (!res.ok) return
+        const data = (await res.json()) as { country?: string }
+        const detectedCountry = String(data.country || "").toUpperCase()
+        if (!isSupportedShippingCountry(detectedCountry)) return
+        if (cancelled) return
+        setShippingCountry(detectedCountry)
+      } catch {
+        // ignore
+      }
+    }
+
+    loadCountry()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // ESC to close drawer
   useEffect(() => {
@@ -123,6 +179,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const value: CartContextValue = {
     items,
     isOpen,
+    shippingCountry,
     totalQty,
     subtotal,
     addToCart,

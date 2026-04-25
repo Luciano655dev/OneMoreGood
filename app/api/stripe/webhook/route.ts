@@ -5,7 +5,13 @@ import type Stripe from "stripe"
 import { getStoredProducts } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 import { getStripe } from "@/lib/stripe"
-import { moneyFromCents } from "@/lib/commerce"
+import {
+  DEFAULT_SHIPPING_COUNTRY,
+  formatMoneyFromCents,
+  getUnitPriceCentsForCountry,
+  normalizeShippingCountry,
+  type ShippingCountry,
+} from "@/lib/commerce"
 
 type ShippingDetails = {
   name?: string | null
@@ -32,6 +38,47 @@ type CustomerDetails = {
   } | null
 } | null
 
+type CheckoutSessionWithShippingDetails = Stripe.Checkout.Session & {
+  shipping_details?: ShippingDetails
+}
+
+function normalizeOrderCurrency(
+  value?: string | null,
+  fallbackCountry: ShippingCountry = "US"
+) {
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase()
+
+  if (raw === "usd" || raw === "brl") return raw
+  return fallbackCountry === "BR" ? "brl" : "usd"
+}
+
+function isMissingCurrencyColumnError(
+  error?: {
+    code?: string | null
+    message?: string | null
+    details?: string | null
+  } | null
+) {
+  if (!error) return false
+  const normalized = `${String(error.message || "")} ${String(error.details || "")}`
+    .trim()
+    .toLowerCase()
+
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    normalized.includes("orders.currency") ||
+    (normalized.includes("currency") &&
+      normalized.includes("orders") &&
+      normalized.includes("schema cache")) ||
+    (normalized.includes("column") &&
+      normalized.includes("currency") &&
+      normalized.includes("orders"))
+  )
+}
+
 function buildOrderEmailHtml(params: {
   orderId: string
   customerEmail: string
@@ -39,6 +86,7 @@ function buildOrderEmailHtml(params: {
   shippingAddress: string
   shippingCost: number
   total: number
+  shippingCountry: ShippingCountry
   items: Array<{ title: string; qty: number }>
 }) {
   const itemHtml = params.items
@@ -54,8 +102,14 @@ function buildOrderEmailHtml(params: {
       <p><strong>Order:</strong> ${params.orderId}</p>
       <p><strong>Customer:</strong> ${params.customerEmail}</p>
       <p><strong>Ship to:</strong><br />${params.shippingName}<br />${params.shippingAddress}</p>
-      <p><strong>Shipping:</strong> $${moneyFromCents(params.shippingCost)}</p>
-      <p><strong>Total paid:</strong> $${moneyFromCents(params.total)}</p>
+      <p><strong>Shipping:</strong> ${formatMoneyFromCents(
+        params.shippingCost,
+        params.shippingCountry
+      )}</p>
+      <p><strong>Total paid:</strong> ${formatMoneyFromCents(
+        params.total,
+        params.shippingCountry
+      )}</p>
       <h3>Items</h3>
       <ul>${itemHtml}</ul>
       <p>Create the shipping label, then send the tracking number to the customer.</p>
@@ -70,6 +124,7 @@ function buildBuyerConfirmationEmailHtml(params: {
   shippingAddress: string
   shippingCost: number
   total: number
+  shippingCountry: ShippingCountry
   items: Array<{ title: string; qty: number }>
 }) {
   const itemHtml = params.items
@@ -86,8 +141,14 @@ function buildBuyerConfirmationEmailHtml(params: {
       <p><strong>Order:</strong> ${params.orderId}</p>
       <p><strong>Email:</strong> ${params.customerEmail}</p>
       <p><strong>Shipping to:</strong><br />${params.shippingName}<br />${params.shippingAddress}</p>
-      <p><strong>Shipping paid:</strong> $${moneyFromCents(params.shippingCost)}</p>
-      <p><strong>Total paid:</strong> $${moneyFromCents(params.total)}</p>
+      <p><strong>Shipping paid:</strong> ${formatMoneyFromCents(
+        params.shippingCost,
+        params.shippingCountry
+      )}</p>
+      <p><strong>Total paid:</strong> ${formatMoneyFromCents(
+        params.total,
+        params.shippingCountry
+      )}</p>
       <h3>Items</h3>
       <ul>${itemHtml}</ul>
       <p>Tracking is created after the shipping label is purchased. We will email your tracking number once the package is ready.</p>
@@ -103,6 +164,7 @@ async function sendOrderEmail(params: {
   shippingAddress: string
   shippingCost: number
   total: number
+  shippingCountry: ShippingCountry
   items: Array<{ title: string; qty: number }>
 }) {
   const resendKey = process.env.RESEND_API_KEY
@@ -176,10 +238,20 @@ export async function POST(req: Request) {
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
+      const sessionWithShipping =
+        session as CheckoutSessionWithShippingDetails
+      const shippingDetails = sessionWithShipping.shipping_details || null
       const rawItems = session.metadata?.items
       const orderId = session.metadata?.orderId || session.id
       const customerEmail =
         session.customer_details?.email || session.customer_email || "Unknown"
+      const shippingCountry =
+        normalizeShippingCountry(session.metadata?.shippingCountry) ||
+        DEFAULT_SHIPPING_COUNTRY
+      const orderCurrency = normalizeOrderCurrency(
+        session.metadata?.currency || session.currency,
+        shippingCountry
+      )
 
       if (rawItems) {
         const normalizedItems = JSON.parse(rawItems) as Array<{
@@ -198,7 +270,6 @@ export async function POST(req: Request) {
         if (isSupabaseConfigured()) {
           shouldSendOrderEmail = false
           const supabase = getSupabaseAdmin()
-          const shippingDetails = ((session as any).shipping_details as ShippingDetails) || null
           const customerDetails = (session.customer_details as CustomerDetails) || null
           const shippingAddressJson = shippingDetails?.address
             ? {
@@ -237,6 +308,7 @@ export async function POST(req: Request) {
                 ? session.payment_intent
                 : null,
             customer_email: customerEmail,
+            currency: orderCurrency,
             subtotal_cents: Number(session.metadata?.subtotalCents || 0),
             promo_savings_cents: Number(session.metadata?.promoSavingsCents || 0),
             shipping_cents:
@@ -255,16 +327,29 @@ export async function POST(req: Request) {
             orderIdInDb = existingOrder.id
             shouldSendOrderEmail = false
 
-            const { error: updateError } = await supabase
+            let { error: updateError } = await supabase
               .from("orders")
               .update(baseOrderPayload)
               .eq("id", existingOrder.id)
+
+            if (updateError && isMissingCurrencyColumnError(updateError)) {
+              const fallbackPayload = Object.fromEntries(
+                Object.entries(baseOrderPayload).filter(
+                  ([key]) => key !== "currency"
+                )
+              )
+              const fallbackUpdate = await supabase
+                .from("orders")
+                .update(fallbackPayload)
+                .eq("id", existingOrder.id)
+              updateError = fallbackUpdate.error
+            }
 
             if (updateError) {
               console.error("Supabase order update failed", updateError)
             }
           } else {
-            const { data: insertedOrder, error: insertError } = await supabase
+            let { data: insertedOrder, error: insertError } = await supabase
               .from("orders")
               .insert({
                 order_id: orderId,
@@ -273,6 +358,25 @@ export async function POST(req: Request) {
               })
               .select("id")
               .single()
+
+            if (insertError && isMissingCurrencyColumnError(insertError)) {
+              const fallbackPayload = Object.fromEntries(
+                Object.entries(baseOrderPayload).filter(
+                  ([key]) => key !== "currency"
+                )
+              )
+              const fallbackInsert = await supabase
+                .from("orders")
+                .insert({
+                  order_id: orderId,
+                  status: "paid",
+                  ...fallbackPayload,
+                })
+                .select("id")
+                .single()
+              insertedOrder = fallbackInsert.data
+              insertError = fallbackInsert.error
+            }
 
             if (insertError || !insertedOrder?.id) {
               console.error("Supabase order insert failed", insertError)
@@ -289,8 +393,14 @@ export async function POST(req: Request) {
               product_id: item.productId,
               title: productMap.get(item.productId)?.title || item.productId,
               quantity: item.qty,
-              unit_price_cents: Math.round(
-                Number(productMap.get(item.productId)?.price || 0) * 100
+              unit_price_cents: getUnitPriceCentsForCountry(
+                productMap.get(item.productId) || {
+                  id: item.productId,
+                  title: item.productId,
+                  price: 0,
+                  image: "",
+                },
+                shippingCountry
               ),
             }))
 
@@ -330,16 +440,12 @@ export async function POST(req: Request) {
             orderId,
             customerEmail,
             shippingName:
-              (session as any).shipping_details?.name ||
+              shippingDetails?.name ||
               session.customer_details?.name ||
               "Unknown",
             shippingAddress:
-              buildShippingAddress(
-                ((session as any).shipping_details as ShippingDetails) || null
-              ) !== "Address not provided"
-                ? buildShippingAddress(
-                    ((session as any).shipping_details as ShippingDetails) || null
-                  )
+              buildShippingAddress(shippingDetails) !== "Address not provided"
+                ? buildShippingAddress(shippingDetails)
                 : buildAddressFromCustomerDetails(
                     (session.customer_details as CustomerDetails) || null
                   ),
@@ -348,6 +454,7 @@ export async function POST(req: Request) {
               session.total_details?.amount_shipping ||
               0,
             total: session.amount_total || 0,
+            shippingCountry,
             items,
           })
         }

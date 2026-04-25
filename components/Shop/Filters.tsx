@@ -31,7 +31,7 @@ export default function Filters({
       }}
     >
       <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="grid gap-5 md:grid-cols-12 md:items-end">
+        <div className="grid gap-5 md:grid-cols-12 md:items-start">
           {/* LEFT */}
           <div className="md:col-span-7">
             <div
@@ -65,56 +65,61 @@ export default function Filters({
                 boxShadow: `3px 3px 0 ${colors.ink}`,
               }}
             >
-              <div className="flex items-center justify-between gap-3">
-                <label
-                  htmlFor="shop-search"
-                  className="text-xs font-black uppercase tracking-widest"
-                  style={{ color: colors.muted }}
-                >
-                  Search
-                </label>
+              <div className="grid gap-4">
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <label
+                      htmlFor="shop-search"
+                      className="text-xs font-black uppercase tracking-widest"
+                      style={{ color: colors.muted }}
+                    >
+                      Search
+                    </label>
 
-                {query.trim().length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="text-xs font-black uppercase tracking-widest"
+                    {query.trim().length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setQuery("")}
+                        className="text-xs font-black uppercase tracking-widest"
+                        style={{
+                          color: colors.ink,
+                          background: "transparent",
+                          border: `2px solid ${colors.ink}`,
+                          padding: "6px 10px",
+                          boxShadow: `2px 2px 0 ${colors.ink}`,
+                          cursor: "pointer",
+                        }}
+                        aria-label="Clear search"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  <input
+                    id="shop-search"
+                    type="text"
+                    placeholder="Search socks…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="mt-2 w-full px-3 py-3 font-black outline-none"
                     style={{
-                      color: colors.ink,
-                      background: "transparent",
+                      background: colors.paper,
                       border: `2px solid ${colors.ink}`,
-                      padding: "6px 10px",
                       boxShadow: `2px 2px 0 ${colors.ink}`,
-                      cursor: "pointer",
                     }}
-                    aria-label="Clear search"
+                    autoComplete="off"
+                    inputMode="search"
+                  />
+
+                  <div
+                    className="mt-2 text-[11px] font-black uppercase tracking-widest"
+                    style={{ color: colors.muted }}
                   >
-                    Clear
-                  </button>
-                )}
-              </div>
+                    Tip: try “classic”, “crew”, or “purpose”
+                  </div>
+                </div>
 
-              <input
-                id="shop-search"
-                type="text"
-                placeholder="Search socks…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="mt-2 w-full px-3 py-3 font-black outline-none"
-                style={{
-                  background: colors.paper,
-                  border: `2px solid ${colors.ink}`,
-                  boxShadow: `2px 2px 0 ${colors.ink}`,
-                }}
-                autoComplete="off"
-                inputMode="search"
-              />
-
-              <div
-                className="mt-2 text-[11px] font-black uppercase tracking-widest"
-                style={{ color: colors.muted }}
-              >
-                Tip: try “classic”, “crew”, or “purpose”
               </div>
             </div>
           </div>

@@ -6,12 +6,16 @@ import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
+  normalizeChartMarketFilter,
   ORDER_STATUSES,
+  formatOrderMarketLabel,
   formatOrderStatus,
+  getOrderCurrencyForMarket,
   getStatusColors,
   listOrders,
   moneyFromCents,
   type DailySocksPoint,
+  type OrderMarket,
   type OrderSort,
 } from "@/lib/admin/orders"
 
@@ -94,6 +98,62 @@ function StatCard({
   )
 }
 
+function MarketSummaryCards({
+  market,
+  summary,
+}: {
+  market: OrderMarket
+  summary: {
+    countedOrders: number
+    grossRevenueCents: number
+    productsSubtotalCents: number
+    shippingCollectedCents: number
+    promoSavingsCents: number
+  }
+}) {
+  const currency = getOrderCurrencyForMarket(market)
+  return (
+    <div
+      className="p-4"
+      style={{
+        background: colors.paper,
+        border: `2px solid ${colors.ink}`,
+        boxShadow: `3px 3px 0 ${colors.ink}`,
+      }}
+    >
+      <div
+        className="text-[11px] font-black uppercase tracking-widest"
+        style={{ color: colors.muted }}
+      >
+        {formatOrderMarketLabel(market)}
+      </div>
+
+      <div className="mt-2 grid gap-2 text-sm font-black">
+        <div className="flex items-center justify-between gap-3">
+          <span style={{ color: colors.muted }}>Counted orders</span>
+          <span>{summary.countedOrders}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span style={{ color: colors.muted }}>Revenue</span>
+          <span>{moneyFromCents(summary.grossRevenueCents, currency)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span style={{ color: colors.muted }}>Products</span>
+          <span>{moneyFromCents(summary.productsSubtotalCents, currency)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span style={{ color: colors.muted }}>Shipping</span>
+          <span>{moneyFromCents(summary.shippingCollectedCents, currency)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span style={{ color: colors.muted }}>Promo</span>
+          <span>{moneyFromCents(summary.promoSavingsCents, currency)}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
@@ -105,17 +165,20 @@ export default async function AdminOrdersPage({
     days?: string
     from?: string
     to?: string
+    chartMarket?: string
   }>
 }) {
   const params = await searchParams
   const status = params.status || "all"
   const q = params.q || ""
   const sort = params.sort || "newest"
+  const chartMarket = normalizeChartMarketFilter(params.chartMarket)
   const parsedRange = Number(params.days || params.range || 14)
   const requestedRangeDays = Number.isFinite(parsedRange) ? parsedRange : 14
   const {
     orders,
     summary,
+    summaryByCurrency,
     socksByDay,
     rangeDays,
     rangeStartDate,
@@ -127,6 +190,7 @@ export default async function AdminOrdersPage({
     rangeDays: requestedRangeDays,
     startDate: params.from,
     endDate: params.to,
+    chartMarket,
   })
   const { bars: chartBars, bucketSize } = buildChartBars(socksByDay)
   const maxSocksByBar = Math.max(1, ...chartBars.map((point) => point.socks))
@@ -155,10 +219,17 @@ export default async function AdminOrdersPage({
   if (q) baseChartParams.set("q", q)
   if (status) baseChartParams.set("status", status)
   if (sort) baseChartParams.set("sort", sort)
+  if (chartMarket !== "all") baseChartParams.set("chartMarket", chartMarket)
   const baseChartQuery = baseChartParams.toString()
   const baseChartHref = baseChartQuery
     ? `/admin/orders?${baseChartQuery}`
     : "/admin/orders"
+
+  const chartMarketLabel =
+    chartMarket === "all" ? "all markets" : formatOrderMarketLabel(chartMarket)
+  const usSalesSubtotalCents = summaryByCurrency.usd.productsSubtotalCents
+  const brSalesSubtotalCents = summaryByCurrency.brl.productsSubtotalCents
+  const combinedSubtotalCents = Math.round(usSalesSubtotalCents + brSalesSubtotalCents / 6)
 
   return (
     <div style={{ background: colors.paper, color: colors.ink }}>
@@ -184,6 +255,18 @@ export default async function AdminOrdersPage({
             Log offline purchase
           </Link>
 
+          <Link
+            href="/admin/stock"
+            className="btnInteractive inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
+            style={{
+              background: colors.paper,
+              border: `2px solid ${colors.ink}`,
+              boxShadow: `3px 3px 0 ${colors.ink}`,
+            }}
+          >
+            Manage stock
+          </Link>
+
           <form action="/admin/logout" method="post">
             <FormSubmitButton
               idleLabel="Log out"
@@ -203,29 +286,42 @@ export default async function AdminOrdersPage({
             className="text-[11px] font-black uppercase tracking-widest"
             style={{ color: colors.muted }}
           >
-            Sales totals
+            Sales totals (combined)
           </div>
           <div className="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <StatCard
-              label="Revenue"
-              value={moneyFromCents(summary.grossRevenueCents)}
+              label="Amount of items"
+              value={summary.totalItemsSold}
               bg="#DDECE9"
             />
             <StatCard
-              label="Products subtotal"
-              value={moneyFromCents(summary.productsSubtotalCents)}
+              label="Brazil sales subtotal"
+              value={moneyFromCents(brSalesSubtotalCents, "brl")}
               bg={colors.paper}
             />
             <StatCard
-              label="Shipping collected"
-              value={moneyFromCents(summary.shippingCollectedCents)}
+              label="US sales subtotal"
+              value={moneyFromCents(usSalesSubtotalCents, "usd")}
               bg={colors.paper}
             />
             <StatCard
-              label="Promo discounts"
-              value={moneyFromCents(summary.promoSavingsCents)}
+              label="Subtotal combined (US + BR/6)"
+              value={moneyFromCents(combinedSubtotalCents, "usd")}
               bg={colors.paper}
             />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div
+            className="text-[11px] font-black uppercase tracking-widest"
+            style={{ color: colors.muted }}
+          >
+            Sales totals by market
+          </div>
+          <div className="mt-2 grid gap-3 md:grid-cols-2">
+            <MarketSummaryCards market="US" summary={summaryByCurrency.usd} />
+            <MarketSummaryCards market="BR" summary={summaryByCurrency.brl} />
           </div>
         </div>
 
@@ -295,7 +391,7 @@ export default async function AdminOrdersPage({
               ))}
             </div>
 
-            <form className="mb-4 grid gap-3 md:grid-cols-[140px_220px_220px_auto]">
+            <form className="mb-4 grid gap-3 md:grid-cols-[140px_220px_220px_220px_auto]">
               <input type="hidden" name="q" value={q} />
               <input type="hidden" name="status" value={status} />
               <input type="hidden" name="sort" value={sort} />
@@ -359,6 +455,28 @@ export default async function AdminOrdersPage({
                 />
               </div>
 
+              <div>
+                <label
+                  className="text-[11px] font-black uppercase tracking-widest"
+                  style={{ color: colors.muted }}
+                >
+                  Market
+                </label>
+                <select
+                  name="chartMarket"
+                  defaultValue={chartMarket}
+                  className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                  style={{
+                    background: colors.paper,
+                    border: `2px solid ${colors.ink}`,
+                  }}
+                >
+                  <option value="all">All markets</option>
+                  <option value="US">{formatOrderMarketLabel("US")}</option>
+                  <option value="BR">{formatOrderMarketLabel("BR")}</option>
+                </select>
+              </div>
+
               <div className="flex items-end gap-2">
                 <FormSubmitButton
                   idleLabel="Apply"
@@ -415,7 +533,7 @@ export default async function AdminOrdersPage({
               className="mb-2 text-[11px] font-black uppercase tracking-widest"
               style={{ color: colors.muted }}
             >
-              {chartViewLabel} • {chartBars.length} bars
+              {chartViewLabel} • {chartMarketLabel} • {chartBars.length} bars
             </div>
 
             <div
@@ -476,6 +594,7 @@ export default async function AdminOrdersPage({
         <div className="mt-8 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
           <RoughBorder bg={colors.sand} label="Filters">
             <form className="grid gap-4">
+              <input type="hidden" name="chartMarket" value={chartMarket} />
               <div>
                 <label
                   className="text-[11px] font-black uppercase tracking-widest"
@@ -615,7 +734,7 @@ export default async function AdminOrdersPage({
                             </span>
                           </div>
 
-                          <div className="mt-4 grid gap-3 md:grid-cols-4">
+                          <div className="mt-4 grid gap-3 md:grid-cols-5">
                             <div>
                               <div
                                 className="text-[11px] font-black uppercase tracking-widest"
@@ -624,7 +743,7 @@ export default async function AdminOrdersPage({
                                 Total
                               </div>
                               <div className="mt-1 font-black">
-                                {moneyFromCents(order.total_cents)}
+                                {moneyFromCents(order.total_cents, order.currency)}
                               </div>
                             </div>
                             <div>
@@ -635,7 +754,21 @@ export default async function AdminOrdersPage({
                                 Shipping
                               </div>
                               <div className="mt-1 font-black">
-                                {moneyFromCents(order.shipping_cents)}
+                                {moneyFromCents(
+                                  order.shipping_cents,
+                                  order.currency
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <div
+                                className="text-[11px] font-black uppercase tracking-widest"
+                                style={{ color: colors.muted }}
+                              >
+                                Market
+                              </div>
+                              <div className="mt-1 font-black">
+                                {formatOrderMarketLabel(order.market)}
                               </div>
                             </div>
                             <div>

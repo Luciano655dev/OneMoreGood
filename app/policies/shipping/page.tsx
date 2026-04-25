@@ -2,11 +2,13 @@ import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
+  BRAZIL_SHIPPING_RATE_LABEL,
+  BRAZIL_SHIPPING_TIERS,
   SHIPPING_DELIVERY_MAX_DAYS,
   SHIPPING_DELIVERY_MIN_DAYS,
   SHIPPING_RATE_LABEL,
   SHIPPING_TIERS,
-  moneyFromCents,
+  formatMoneyFromCents,
 } from "@/lib/commerce"
 
 export default function ShippingPolicyPage() {
@@ -22,7 +24,7 @@ export default function ShippingPolicyPage() {
 
           <div className="mt-6 space-y-5 text-sm leading-relaxed" style={{ color: colors.muted }}>
             <p>
-              OneMoreGood currently ships within the United States only.
+              OneMoreGood ships only to the United States and Brazil.
             </p>
             <p>
               <strong style={{ color: colors.ink }}>{SHIPPING_RATE_LABEL}:</strong>{" "}
@@ -31,7 +33,20 @@ export default function ShippingPolicyPage() {
             <ul className="space-y-2">
               {SHIPPING_TIERS.map((tier) => (
                 <li key={tier.label}>
-                  {tier.label}: ${moneyFromCents(tier.amountCents)}
+                  {tier.label}: {formatMoneyFromCents(tier.amountCents, "US")}
+                </li>
+              ))}
+            </ul>
+            <p>
+              <strong style={{ color: colors.ink }}>
+                {BRAZIL_SHIPPING_RATE_LABEL}:
+              </strong>{" "}
+              shipping is also based on order size, not distance.
+            </p>
+            <ul className="space-y-2">
+              {BRAZIL_SHIPPING_TIERS.map((tier) => (
+                <li key={tier.label}>
+                  {tier.label}: {formatMoneyFromCents(tier.amountCents, "BR")}
                 </li>
               ))}
             </ul>

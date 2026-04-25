@@ -90,7 +90,8 @@ export default function ManualOrderItemsFields({
             <option value="">No item</option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.title} - ${product.price.toFixed(2)} (stock: {product.inventory_quantity})
+                {product.title} - price {product.price.toFixed(2)} (stock:{" "}
+                {product.inventory_quantity})
               </option>
             ))}
           </select>

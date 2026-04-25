@@ -43,7 +43,7 @@ export default function CheckoutSuccessPage() {
             >
               <div className="font-black">Shipping timeline</div>
               <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                Standard U.S. shipping is estimated at{" "}
+                Standard shipping to the U.S. or Brazil is estimated at{" "}
                 {SHIPPING_DELIVERY_MIN_DAYS}-{SHIPPING_DELIVERY_MAX_DAYS} business
                 days after your label is purchased.
               </p>

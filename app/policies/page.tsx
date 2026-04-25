@@ -3,12 +3,14 @@ import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
+  BRAZIL_SHIPPING_RATE_LABEL,
+  BRAZIL_SHIPPING_TIERS,
   RETURN_WINDOW_DAYS,
   SHIPPING_DELIVERY_MAX_DAYS,
   SHIPPING_DELIVERY_MIN_DAYS,
   SHIPPING_RATE_LABEL,
   SHIPPING_TIERS,
-  moneyFromCents,
+  formatMoneyFromCents,
 } from "@/lib/commerce"
 
 export default function PoliciesPage() {
@@ -23,7 +25,7 @@ export default function PoliciesPage() {
         <SectionTitle
           kicker="Policies"
           title="Shipping and refunds"
-          desc="The practical terms for U.S. orders, tracking, returns, and refunds on OneMoreGood."
+          desc="The practical terms for U.S. and Brazil orders, tracking, returns, and refunds on OneMoreGood."
         />
 
         <div className="mt-10 grid gap-8 lg:grid-cols-2">
@@ -34,7 +36,9 @@ export default function PoliciesPage() {
             className="h-full"
           >
             <div className="space-y-5 text-sm leading-relaxed" style={{ color: colors.muted }}>
-              <p>OneMoreGood currently ships within the United States only.</p>
+              <p>
+                OneMoreGood ships only to the United States and Brazil.
+              </p>
               <p>
                 <strong style={{ color: colors.ink }}>{SHIPPING_RATE_LABEL}:</strong>{" "}
                 shipping is based on how many pairs are in the order, not on
@@ -49,12 +53,37 @@ export default function PoliciesPage() {
                 }}
               >
                 <div className="font-black" style={{ color: colors.ink }}>
-                  Current shipping tiers
+                  Current U.S. shipping tiers
                 </div>
                 <ul className="mt-3 space-y-2">
                   {SHIPPING_TIERS.map((tier) => (
                     <li key={tier.label}>
-                      {tier.label}: ${moneyFromCents(tier.amountCents)}
+                      {tier.label}: {formatMoneyFromCents(tier.amountCents, "US")}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p>
+                <strong style={{ color: colors.ink }}>
+                  {BRAZIL_SHIPPING_RATE_LABEL}:
+                </strong>{" "}
+                shipping is also based on order size.
+              </p>
+              <div
+                className="p-4"
+                style={{
+                  background: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `3px 3px 0 ${colors.ink}`,
+                }}
+              >
+                <div className="font-black" style={{ color: colors.ink }}>
+                  Current Brazil shipping tiers
+                </div>
+                <ul className="mt-3 space-y-2">
+                  {BRAZIL_SHIPPING_TIERS.map((tier) => (
+                    <li key={tier.label}>
+                      {tier.label}: {formatMoneyFromCents(tier.amountCents, "BR")}
                     </li>
                   ))}
                 </ul>

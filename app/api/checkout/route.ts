@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server"
 
 import {
+  BRAZIL_UNIT_PRICE_CENTS,
   SHIPPING_DELIVERY_MAX_DAYS,
   SHIPPING_DELIVERY_MIN_DAYS,
-  SHIPPING_RATE_LABEL,
   calculateCartTotals,
+  getCurrencyForCountry,
+  getShippingCountryLabel,
+  getShippingRateLabel,
   getShippingTierForItemCount,
   priceToCents,
 } from "@/lib/commerce"
+import { detectShippingCountryFromHeaders } from "@/lib/geo-country"
 import { getStoredProducts } from "@/lib/products"
 import { getBaseUrl, getStripe } from "@/lib/stripe"
 
@@ -30,6 +34,8 @@ export async function POST(req: Request) {
     }
 
     const items = Array.isArray(body.items) ? body.items : []
+    const shippingCountry = detectShippingCountryFromHeaders(req.headers)
+
     if (items.length === 0) {
       return NextResponse.json(
         { ok: false, error: "Cart is empty." },
@@ -85,8 +91,16 @@ export async function POST(req: Request) {
       }
     }
 
-    const totals = calculateCartTotals(storedProducts, normalizedItems)
-    const shippingTier = getShippingTierForItemCount(totals.shippableItemCount)
+    const totals = calculateCartTotals(
+      storedProducts,
+      normalizedItems,
+      shippingCountry
+    )
+    const shippingTier = getShippingTierForItemCount(
+      totals.shippableItemCount,
+      shippingCountry
+    )
+    const currency = getCurrencyForCountry(shippingCountry)
     const stripe = getStripe()
     const baseUrl = getBaseUrl()
     const orderId =
@@ -97,17 +111,34 @@ export async function POST(req: Request) {
 
     const lineItems = normalizedItems.flatMap((item) => {
       const product = productMap.get(item.productId)!
+      const imageUrl = `${baseUrl}${product.image}`
+
+      if (shippingCountry === "BR") {
+        return [
+          {
+            price_data: {
+              currency,
+              unit_amount: BRAZIL_UNIT_PRICE_CENTS,
+              product_data: {
+                name: `${product.title} (R$25 each)`,
+                description: product.description,
+                images: [imageUrl],
+              },
+            },
+            quantity: item.qty,
+          },
+        ]
+      }
+
       const unitAmount = priceToCents(product.price)
       const discountedQty = Math.floor(item.qty / 2) * 2
       const singleQty = item.qty % 2
-      const imageUrl = `${baseUrl}${product.image}`
-
       const entries = []
 
       if (discountedQty > 0) {
         entries.push({
           price_data: {
-            currency: "usd",
+            currency,
             unit_amount: 700,
             product_data: {
               name: `${product.title} (2 for $14 promo)`,
@@ -122,7 +153,7 @@ export async function POST(req: Request) {
       if (singleQty > 0) {
         entries.push({
           price_data: {
-            currency: "usd",
+            currency,
             unit_amount: unitAmount,
             product_data: {
               name: product.title,
@@ -141,12 +172,14 @@ export async function POST(req: Request) {
       {
         shipping_rate_data: {
           display_name:
-            totals.shippingCents > 0 ? SHIPPING_RATE_LABEL : "Free shipping",
+            totals.shippingCents > 0
+              ? getShippingRateLabel(shippingCountry)
+              : "Free shipping",
           type: "fixed_amount" as const,
           fixed_amount: {
             amount:
               totals.shippingCents > 0 ? shippingTier.amountCents : 0,
-            currency: "usd",
+            currency,
           },
           delivery_estimate: {
             minimum: {
@@ -167,7 +200,7 @@ export async function POST(req: Request) {
       customer_email: email,
       line_items: lineItems,
       shipping_address_collection: {
-        allowed_countries: ["US"],
+        allowed_countries: [shippingCountry],
       },
       shipping_options: shippingOptions,
       success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -180,6 +213,8 @@ export async function POST(req: Request) {
       metadata: {
         orderId,
         email,
+        shippingCountry,
+        currency,
         items: JSON.stringify(normalizedItems),
         promoSavingsCents: String(totals.promoSavingsCents),
         subtotalCents: String(totals.subtotalCents),
@@ -188,14 +223,20 @@ export async function POST(req: Request) {
         metadata: {
           orderId,
           email,
+          shippingCountry,
+          currency,
         },
       },
       custom_text: {
         shipping_address: {
           message:
             totals.shippingCents > 0
-              ? `We currently ship within the United States only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created. This checkout is for product purchases only.`
-              : "We currently ship within the United States only. This test order uses free shipping. Tracking is emailed after your label is created. This checkout is for product purchases only.",
+              ? `This checkout is locked to ${getShippingCountryLabel(
+                  shippingCountry
+                )} addresses only. This order uses the ${shippingTier.label} shipping tier. Tracking is emailed after your label is created.`
+              : `This checkout is locked to ${getShippingCountryLabel(
+                  shippingCountry
+                )} addresses only. Tracking is emailed after your label is created.`,
         },
         submit: {
           message:

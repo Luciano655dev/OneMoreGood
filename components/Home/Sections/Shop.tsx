@@ -86,7 +86,7 @@ export default function Shop() {
 
               {/* ACTION */}
               <div className="mt-4 flex items-center justify-between">
-                <div className="font-black">$7.99</div>
+                <div className="font-black">US: $7.99 • BR: R$25</div>
 
                 <button
                   type="button"
@@ -108,7 +108,7 @@ export default function Shop() {
                 className="mt-3 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                + profit supports Instituto Semear
+                + US promo available (2 for $14) • Brazil: R$25 each
               </div>
             </RoughBorder>
           ))}

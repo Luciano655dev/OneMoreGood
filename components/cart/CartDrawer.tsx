@@ -7,8 +7,10 @@ import colors from "../colors"
 import Portal from "./Portal"
 import {
   calculateCartTotals,
+  formatMoneyFromCents,
   getTotalItemCount,
-  moneyFromCents,
+  getShippingCountryLabel,
+  getUnitPriceCentsForCountry,
   refundPolicySummary,
   shippingPolicySummary,
 } from "@/lib/commerce"
@@ -17,15 +19,12 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-function money(n: number) {
-  return n.toFixed(2)
-}
-
 export default function CartDrawer() {
   const {
     isOpen,
     closeCart,
     items,
+    shippingCountry,
     removeFromCart,
     setQty,
     clearCart,
@@ -48,9 +47,10 @@ export default function CartDrawer() {
     () =>
       calculateCartTotals(
         items.map(({ product }) => product),
-        items.map(({ product, qty }) => ({ productId: product.id, qty }))
+        items.map(({ product, qty }) => ({ productId: product.id, qty })),
+        shippingCountry
       ),
-    [items]
+    [items, shippingCountry]
   )
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
@@ -81,7 +81,7 @@ export default function CartDrawer() {
     try {
       const payload = {
         email: trimmed,
-        items: items.map(({ product, qty }: any) => ({
+        items: items.map(({ product, qty }) => ({
           productId: product.id,
           qty,
         })),
@@ -218,7 +218,13 @@ export default function CartDrawer() {
                           className="mt-1 text-sm font-black"
                           style={{ color: colors.accent }}
                         >
-                          ${money(product.price)}
+                          {formatMoneyFromCents(
+                            getUnitPriceCentsForCountry(
+                              product,
+                              shippingCountry
+                            ),
+                            shippingCountry
+                          )}
                         </div>
 
                         <div className="mt-3 flex items-center justify-between gap-2">
@@ -310,18 +316,39 @@ export default function CartDrawer() {
                 boxShadow: `3px 3px 0 ${colors.ink}`,
               }}
             >
-              <div className="flex items-center justify-between text-sm font-black">
-                <span style={{ color: colors.muted }}>Subtotal</span>
-                <span>${moneyFromCents(baseSubtotalCents)}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-black uppercase tracking-widest" style={{ color: colors.muted }}>
+                  Shipping country
+                </span>
+                <span
+                  className="px-2 py-2 text-xs font-black uppercase tracking-widest"
+                  style={{
+                    background: colors.sand,
+                    border: `2px solid ${colors.ink}`,
+                    color: colors.ink,
+                  }}
+                >
+                  {getShippingCountryLabel(shippingCountry)}
+                </span>
               </div>
 
-              {hasItems && (
+              <div className="flex items-center justify-between text-sm font-black">
+                <span style={{ color: colors.muted }}>Subtotal</span>
+                <span>
+                  {formatMoneyFromCents(baseSubtotalCents, shippingCountry)}
+                </span>
+              </div>
+
+              {hasItems && shippingCountry === "US" && (
                 <div className="flex items-center justify-between text-sm font-black">
                   <span style={{ color: colors.muted }}>Promo (2 for $14)</span>
                   <span style={{ color: colors.clay }}>
                     {promoSavingsCents > 0
-                      ? `- $${moneyFromCents(promoSavingsCents)}`
-                      : "$0.00"}
+                      ? `- ${formatMoneyFromCents(
+                          promoSavingsCents,
+                          shippingCountry
+                        )}`
+                      : formatMoneyFromCents(0, shippingCountry)}
                   </span>
                 </div>
               )}
@@ -329,7 +356,9 @@ export default function CartDrawer() {
               {hasItems && (
                 <div className="flex items-center justify-between text-sm font-black">
                   <span style={{ color: colors.muted }}>Shipping</span>
-                  <span>${moneyFromCents(shippingCents)}</span>
+                  <span>
+                    {formatMoneyFromCents(shippingCents, shippingCountry)}
+                  </span>
                 </div>
               )}
             </div>
@@ -339,12 +368,12 @@ export default function CartDrawer() {
               style={{ borderTop: `2px solid ${colors.ink}`, paddingTop: 10 }}
             >
               <span>Total</span>
-              <span>${moneyFromCents(totalCents)}</span>
+              <span>{formatMoneyFromCents(totalCents, shippingCountry)}</span>
             </div>
 
             {hasItems && (
               <p className="mt-3 text-xs" style={{ color: colors.muted }}>
-                {shippingPolicySummary(itemCount)}
+                {shippingPolicySummary(itemCount, shippingCountry)}
               </p>
             )}
 
@@ -414,12 +443,33 @@ export default function CartDrawer() {
 
               <p className="mt-2 text-sm" style={{ color: colors.muted }}>
                 Enter your email, then continue to the secure payment page,
-                add your U.S. shipping address, and complete the order.
+                add your {getShippingCountryLabel(shippingCountry)} shipping
+                address, and complete the order.
                 <br />
                 <br />
-                Shipping is currently ${moneyFromCents(shippingCents)} per
-                order. Tracking is emailed after the shipping label is created.
+                Shipping is currently{" "}
+                {formatMoneyFromCents(shippingCents, shippingCountry)} per
+                order for this destination. Tracking is emailed after the
+                shipping label is created.
               </p>
+
+              <label
+                className="mt-4 block text-xs font-black uppercase tracking-widest"
+                style={{ color: colors.muted }}
+              >
+                Detected destination country
+              </label>
+
+              <div
+                className="mt-2 w-full px-3 py-3 text-sm font-black"
+                style={{
+                  background: colors.sand,
+                  border: `2px solid ${colors.ink}`,
+                  color: colors.ink,
+                }}
+              >
+                {getShippingCountryLabel(shippingCountry)}
+              </div>
 
               <label
                 className="mt-4 block text-xs font-black uppercase tracking-widest"

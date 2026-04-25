@@ -1,4 +1,8 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
+import {
+  getCurrencyForCountry,
+  normalizeShippingCountry,
+} from "@/lib/commerce"
 
 export const ORDER_STATUSES = [
   "paid",
@@ -11,12 +15,18 @@ export const ORDER_STATUSES = [
 ] as const
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number]
+export const ORDER_CURRENCIES = ["usd", "brl"] as const
+export type OrderCurrency = (typeof ORDER_CURRENCIES)[number]
+export const ORDER_MARKETS = ["US", "BR"] as const
+export type OrderMarket = (typeof ORDER_MARKETS)[number]
 
 export type OrderListItem = {
   id: string
   order_id: string
   customer_email: string
   status: OrderStatus | string
+  market: OrderMarket
+  currency: OrderCurrency
   subtotal_cents: number
   promo_savings_cents: number
   shipping_cents: number
@@ -59,9 +69,12 @@ export type OrderSort =
   | "total_asc"
   | "status"
 
+export type ChartMarketFilter = "all" | OrderMarket
+
 export type SalesSummary = {
   totalOrders: number
   countedOrders: number
+  totalItemsSold: number
   testOrders: number
   openOrders: number
   completedOrders: number
@@ -72,10 +85,69 @@ export type SalesSummary = {
   promoSavingsCents: number
 }
 
+export type SalesSummaryByCurrency = Record<OrderCurrency, SalesSummary>
+
 export type DailySocksPoint = {
   date: string
   label: string
   socks: number
+}
+
+type ShippingAddressLike =
+  | {
+      country?: string | null
+    }
+  | null
+  | undefined
+
+type OrderListQueryRow = Record<string, unknown> & {
+  status?: string | null
+  currency?: string | null
+  shipping_address?: ShippingAddressLike
+}
+
+type SummaryQueryRow = {
+  status: string | null
+  currency: string | null
+  shipping_address?: ShippingAddressLike
+  total_cents: number | null
+  subtotal_cents: number | null
+  shipping_cents: number | null
+  promo_savings_cents: number | null
+  created_at: string | null
+  order_items?: Array<{ quantity: number | null }> | null
+}
+
+type OrderDetailQueryRow = Record<string, unknown> & {
+  status?: string | null
+  currency?: string | null
+  shipping_address?: ShippingAddressLike
+  order_items?: OrderItemRow[] | null
+}
+
+function isMissingCurrencyColumnError(
+  error?: {
+    code?: string | null
+    message?: string | null
+    details?: string | null
+  } | null
+) {
+  if (!error) return false
+  const normalized = `${String(error.message || "")} ${String(error.details || "")}`
+    .trim()
+    .toLowerCase()
+
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    normalized.includes("orders.currency") ||
+    (normalized.includes("currency") &&
+      normalized.includes("orders") &&
+      normalized.includes("schema cache")) ||
+    (normalized.includes("column") &&
+      normalized.includes("currency") &&
+      normalized.includes("orders"))
+  )
 }
 
 function normalizeRangeDays(value?: number) {
@@ -179,8 +251,71 @@ function formatDayLabel(dayKey: string) {
   }).format(parsed)
 }
 
-export function moneyFromCents(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`
+export function normalizeOrderCurrency(value?: string | null): OrderCurrency {
+  const raw = String(value || "").trim().toLowerCase()
+  if (ORDER_CURRENCIES.includes(raw as OrderCurrency)) {
+    return raw as OrderCurrency
+  }
+  return "usd"
+}
+
+export function normalizeOrderMarket(value?: string | null): OrderMarket {
+  const normalized = normalizeShippingCountry(value)
+  return normalized || "US"
+}
+
+export function normalizeChartMarketFilter(
+  value?: string | null
+): ChartMarketFilter {
+  const raw = String(value || "")
+    .trim()
+    .toUpperCase()
+  if (raw === "ALL") return "all"
+  if (raw === "US" || raw === "BR") return raw
+  return "all"
+}
+
+export function getOrderCurrencyForMarket(market: OrderMarket): OrderCurrency {
+  return getCurrencyForCountry(market) as OrderCurrency
+}
+
+export function getOrderMarketFromCurrency(currency: OrderCurrency): OrderMarket {
+  return currency === "brl" ? "BR" : "US"
+}
+
+export function formatOrderMarketLabel(market: OrderMarket) {
+  return market === "BR" ? "Brazil (BRL / R$)" : "United States (USD / $)"
+}
+
+function resolveOrderMarket(params: {
+  currency?: string | null
+  shippingAddress?: ShippingAddressLike
+}) {
+  const rawCurrency = String(params.currency || "").trim().toLowerCase()
+  if (rawCurrency === "usd" || rawCurrency === "brl") {
+    const marketFromCurrency = getOrderMarketFromCurrency(
+      rawCurrency as OrderCurrency
+    )
+    return marketFromCurrency
+  }
+
+  const marketFromAddress = normalizeShippingCountry(params.shippingAddress?.country)
+  if (marketFromAddress) return marketFromAddress
+  return "US"
+}
+
+export function formatOrderCurrencyLabel(currency: OrderCurrency) {
+  return currency === "brl" ? "BRL (R$)" : "USD ($)"
+}
+
+export function moneyFromCents(
+  cents: number,
+  currency: OrderCurrency = "usd"
+) {
+  return new Intl.NumberFormat(currency === "brl" ? "pt-BR" : "en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(cents / 100)
 }
 
 export function normalizeOrderStatus(status: string): OrderStatus | string {
@@ -260,12 +395,15 @@ export async function listOrders(params: {
   rangeDays?: number
   startDate?: string
   endDate?: string
+  chartMarket?: ChartMarketFilter
 }) {
   const chartRange = resolveChartRange({
     rangeDays: params.rangeDays,
     startDate: params.startDate,
     endDate: params.endDate,
   })
+
+  const chartMarket = params.chartMarket || "all"
 
   if (!isSupabaseConfigured()) {
     return {
@@ -274,6 +412,7 @@ export async function listOrders(params: {
       summary: {
         totalOrders: 0,
         countedOrders: 0,
+        totalItemsSold: 0,
         testOrders: 0,
         openOrders: 0,
         completedOrders: 0,
@@ -283,6 +422,34 @@ export async function listOrders(params: {
         shippingCollectedCents: 0,
         promoSavingsCents: 0,
       } satisfies SalesSummary,
+      summaryByCurrency: {
+        usd: {
+          totalOrders: 0,
+          countedOrders: 0,
+          totalItemsSold: 0,
+          testOrders: 0,
+          openOrders: 0,
+          completedOrders: 0,
+          shippedOrders: 0,
+          grossRevenueCents: 0,
+          productsSubtotalCents: 0,
+          shippingCollectedCents: 0,
+          promoSavingsCents: 0,
+        },
+        brl: {
+          totalOrders: 0,
+          countedOrders: 0,
+          totalItemsSold: 0,
+          testOrders: 0,
+          openOrders: 0,
+          completedOrders: 0,
+          shippedOrders: 0,
+          grossRevenueCents: 0,
+          productsSubtotalCents: 0,
+          shippingCollectedCents: 0,
+          promoSavingsCents: 0,
+        },
+      } satisfies SalesSummaryByCurrency,
       socksByDay: [] as DailySocksPoint[],
       rangeDays: chartRange.rangeDays,
       rangeStartDate: chartRange.startDateKey,
@@ -291,68 +458,163 @@ export async function listOrders(params: {
   }
 
   const supabase = getSupabaseAdmin()
-  let query = supabase.from("orders").select(
-    "id, order_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, tracking_number, tracking_carrier, created_at, updated_at"
+  const search = params.search?.trim()
+
+  let ordersQuery = supabase.from("orders").select(
+    "id, order_id, customer_email, status, currency, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, created_at, updated_at"
   )
 
-  const search = params.search?.trim()
   if (search) {
-    query = query.or(
+    ordersQuery = ordersQuery.or(
       `order_id.ilike.%${search}%,customer_email.ilike.%${search}%,shipping_name.ilike.%${search}%`
     )
   }
 
   if (params.status && params.status !== "all") {
-    query = query.eq("status", params.status)
+    ordersQuery = ordersQuery.eq("status", params.status)
   }
 
   switch (params.sort) {
     case "oldest":
-      query = query.order("created_at", { ascending: true })
+      ordersQuery = ordersQuery.order("created_at", { ascending: true })
       break
     case "total_desc":
-      query = query.order("total_cents", { ascending: false }).order("created_at", {
-        ascending: false,
-      })
+      ordersQuery = ordersQuery
+        .order("total_cents", { ascending: false })
+        .order("created_at", {
+          ascending: false,
+        })
       break
     case "total_asc":
-      query = query.order("total_cents", { ascending: true }).order("created_at", {
-        ascending: false,
-      })
+      ordersQuery = ordersQuery
+        .order("total_cents", { ascending: true })
+        .order("created_at", {
+          ascending: false,
+        })
       break
     case "status":
-      query = query.order("status", { ascending: true }).order("created_at", {
-        ascending: false,
-      })
+      ordersQuery = ordersQuery
+        .order("status", { ascending: true })
+        .order("created_at", {
+          ascending: false,
+        })
       break
     case "newest":
     default:
-      query = query.order("created_at", { ascending: false })
+      ordersQuery = ordersQuery.order("created_at", { ascending: false })
       break
   }
 
-  const { data } = await query
-  const orders = (data || []).map((order) => ({
-    ...order,
-    status: normalizeOrderStatus(String(order.status || "")),
-  })) as OrderListItem[]
-
-  const { data: summaryRows } = await supabase
-    .from("orders")
-    .select(
-      "status,total_cents,subtotal_cents,shipping_cents,promo_savings_cents,created_at,order_items(quantity)"
+  const ordersWithCurrencyResult = await ordersQuery
+  let orderRows = ordersWithCurrencyResult.data as OrderListQueryRow[] | null
+  let ordersError = ordersWithCurrencyResult.error as {
+    code?: string | null
+    message?: string | null
+  } | null
+  if (ordersError && isMissingCurrencyColumnError(ordersError)) {
+    let fallbackOrdersQuery = supabase.from("orders").select(
+      "id, order_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, created_at, updated_at"
     )
 
-  type SummaryRow = {
-    status: string | null
-    total_cents: number | null
-    subtotal_cents: number | null
-    shipping_cents: number | null
-    promo_savings_cents: number | null
-    created_at: string | null
-    order_items?: Array<{ quantity: number | null }> | null
+    if (search) {
+      fallbackOrdersQuery = fallbackOrdersQuery.or(
+        `order_id.ilike.%${search}%,customer_email.ilike.%${search}%,shipping_name.ilike.%${search}%`
+      )
+    }
+
+    if (params.status && params.status !== "all") {
+      fallbackOrdersQuery = fallbackOrdersQuery.eq("status", params.status)
+    }
+
+    switch (params.sort) {
+      case "oldest":
+        fallbackOrdersQuery = fallbackOrdersQuery.order("created_at", {
+          ascending: true,
+        })
+        break
+      case "total_desc":
+        fallbackOrdersQuery = fallbackOrdersQuery
+          .order("total_cents", { ascending: false })
+          .order("created_at", {
+            ascending: false,
+          })
+        break
+      case "total_asc":
+        fallbackOrdersQuery = fallbackOrdersQuery
+          .order("total_cents", { ascending: true })
+          .order("created_at", {
+            ascending: false,
+          })
+        break
+      case "status":
+        fallbackOrdersQuery = fallbackOrdersQuery
+          .order("status", { ascending: true })
+          .order("created_at", {
+            ascending: false,
+          })
+        break
+      case "newest":
+      default:
+        fallbackOrdersQuery = fallbackOrdersQuery.order("created_at", {
+          ascending: false,
+        })
+        break
+    }
+
+    const fallbackOrders = await fallbackOrdersQuery
+    orderRows = fallbackOrders.data as OrderListQueryRow[] | null
+    ordersError = fallbackOrders.error as {
+      code?: string | null
+      message?: string | null
+    } | null
   }
-  const normalizedSummaryRows = (summaryRows || []) as SummaryRow[]
+  if (ordersError) {
+    throw new Error(ordersError.message || "Could not load orders.")
+  }
+
+  const normalizedOrderRows = (orderRows || []) as OrderListQueryRow[]
+  const orders = normalizedOrderRows.map((order) => ({
+    market: resolveOrderMarket({
+      currency: order.currency,
+      shippingAddress: order.shipping_address as ShippingAddressLike,
+    }),
+    ...order,
+    status: normalizeOrderStatus(String(order.status || "")),
+    currency: getOrderCurrencyForMarket(
+      resolveOrderMarket({
+        currency: order.currency,
+        shippingAddress: order.shipping_address as ShippingAddressLike,
+      })
+    ),
+  })) as OrderListItem[]
+
+  const summarySelectWithCurrency =
+    "status,currency,shipping_address,total_cents,subtotal_cents,shipping_cents,promo_savings_cents,created_at,order_items(quantity)"
+  const summarySelectWithoutCurrency =
+    "status,shipping_address,total_cents,subtotal_cents,shipping_cents,promo_savings_cents,created_at,order_items(quantity)"
+  const summaryWithCurrencyResult = await supabase
+    .from("orders")
+    .select(summarySelectWithCurrency)
+  let summaryRows = summaryWithCurrencyResult.data as SummaryQueryRow[] | null
+  let summaryError = summaryWithCurrencyResult.error as {
+    code?: string | null
+    message?: string | null
+  } | null
+  if (summaryError && isMissingCurrencyColumnError(summaryError)) {
+    const fallbackSummary = await supabase
+      .from("orders")
+      .select(summarySelectWithoutCurrency)
+    summaryRows = fallbackSummary.data as SummaryQueryRow[] | null
+    summaryError = fallbackSummary.error as {
+      code?: string | null
+      message?: string | null
+    } | null
+  }
+  if (summaryError) {
+    throw new Error(summaryError.message || "Could not load order summary.")
+  }
+
+  const normalizedSummaryRows = (summaryRows || []) as SummaryQueryRow[]
 
   const statusCounts = new Map<string, number>()
   const revenueStatuses = new Set<OrderStatus>([
@@ -362,34 +624,87 @@ export async function listOrders(params: {
     "completed",
   ])
   let countedOrders = 0
+  let totalItemsSold = 0
   let grossRevenueCents = 0
   let productsSubtotalCents = 0
   let shippingCollectedCents = 0
   let promoSavingsCents = 0
   const socksByDayMap = new Map<string, number>()
+  const summaryByCurrency: SalesSummaryByCurrency = {
+    usd: {
+      totalOrders: 0,
+      countedOrders: 0,
+      totalItemsSold: 0,
+      testOrders: 0,
+      openOrders: 0,
+      completedOrders: 0,
+      shippedOrders: 0,
+      grossRevenueCents: 0,
+      productsSubtotalCents: 0,
+      shippingCollectedCents: 0,
+      promoSavingsCents: 0,
+    },
+    brl: {
+      totalOrders: 0,
+      countedOrders: 0,
+      totalItemsSold: 0,
+      testOrders: 0,
+      openOrders: 0,
+      completedOrders: 0,
+      shippedOrders: 0,
+      grossRevenueCents: 0,
+      productsSubtotalCents: 0,
+      shippingCollectedCents: 0,
+      promoSavingsCents: 0,
+    },
+  }
 
   for (const row of normalizedSummaryRows) {
     const key = row.status || "unknown"
+    const market = resolveOrderMarket({
+      currency: row.currency,
+      shippingAddress: row.shipping_address,
+    })
+    const currency = getOrderCurrencyForMarket(market)
     statusCounts.set(key, (statusCounts.get(key) || 0) + 1)
+
+    const currencySummary = summaryByCurrency[currency]
+    if (key === "test") {
+      currencySummary.testOrders += 1
+    } else {
+      currencySummary.totalOrders += 1
+    }
+    if (key === "completed") currencySummary.completedOrders += 1
+    if (key === "shipped") currencySummary.shippedOrders += 1
 
     if (!revenueStatuses.has(key as OrderStatus)) {
       continue
     }
 
     countedOrders += 1
+    currencySummary.countedOrders += 1
     grossRevenueCents += Number(row.total_cents || 0)
+    currencySummary.grossRevenueCents += Number(row.total_cents || 0)
     productsSubtotalCents += Number(row.subtotal_cents || 0)
+    currencySummary.productsSubtotalCents += Number(row.subtotal_cents || 0)
     shippingCollectedCents += Number(row.shipping_cents || 0)
+    currencySummary.shippingCollectedCents += Number(row.shipping_cents || 0)
     promoSavingsCents += Number(row.promo_savings_cents || 0)
-
-    const dayKey = String(row.created_at || "").slice(0, 10)
-    if (!dayKey) {
-      continue
-    }
+    currencySummary.promoSavingsCents += Number(row.promo_savings_cents || 0)
 
     const socksInOrder = (row.order_items || []).reduce((sum, item) => {
       return sum + Number(item.quantity || 0)
     }, 0)
+    totalItemsSold += socksInOrder
+    currencySummary.totalItemsSold += socksInOrder
+
+    const dayKey = String(row.created_at || "").slice(0, 10)
+    if (chartMarket !== "all" && market !== chartMarket) {
+      continue
+    }
+    if (!dayKey) {
+      continue
+    }
     socksByDayMap.set(dayKey, (socksByDayMap.get(dayKey) || 0) + socksInOrder)
   }
 
@@ -402,6 +717,7 @@ export async function listOrders(params: {
     totalOrders:
       normalizedSummaryRows.length - (statusCounts.get("test") || 0),
     countedOrders,
+    totalItemsSold,
     testOrders: statusCounts.get("test") || 0,
     openOrders,
     completedOrders: statusCounts.get("completed") || 0,
@@ -411,6 +727,13 @@ export async function listOrders(params: {
     shippingCollectedCents,
     promoSavingsCents,
   }
+
+  summaryByCurrency.usd.openOrders =
+    summaryByCurrency.usd.countedOrders -
+    summaryByCurrency.usd.completedOrders
+  summaryByCurrency.brl.openOrders =
+    summaryByCurrency.brl.countedOrders -
+    summaryByCurrency.brl.completedOrders
 
   const socksByDay: DailySocksPoint[] = chartRange.dayKeys.map((dayKey) => ({
     date: dayKey,
@@ -422,6 +745,7 @@ export async function listOrders(params: {
     orders,
     statusCounts,
     summary,
+    summaryByCurrency,
     socksByDay,
     rangeDays: chartRange.rangeDays,
     rangeStartDate: chartRange.startDateKey,
@@ -433,19 +757,51 @@ export async function getOrderDetail(id: string) {
   if (!isSupabaseConfigured()) return null
 
   const supabase = getSupabaseAdmin()
-  const { data } = await supabase
+  const detailSelectWithCurrency =
+    "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, currency, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
+  const detailSelectWithoutCurrency =
+    "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
+  const detailWithCurrencyResult = await supabase
     .from("orders")
-    .select(
-      "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
-    )
+    .select(detailSelectWithCurrency)
     .eq("id", id)
     .single()
+  let data = detailWithCurrencyResult.data as OrderDetailQueryRow | null
+  let error = detailWithCurrencyResult.error as {
+    code?: string | null
+    message?: string | null
+  } | null
+  if (error && isMissingCurrencyColumnError(error)) {
+    const fallbackDetail = await supabase
+      .from("orders")
+      .select(detailSelectWithoutCurrency)
+      .eq("id", id)
+      .single()
+    data = fallbackDetail.data as OrderDetailQueryRow | null
+    error = fallbackDetail.error as {
+      code?: string | null
+      message?: string | null
+    } | null
+  }
+  if (error) {
+    throw new Error(error.message || "Could not load order details.")
+  }
 
   if (!data) return null
 
   return {
     ...data,
-    status: normalizeOrderStatus(data.status),
+    market: resolveOrderMarket({
+      currency: data.currency || null,
+      shippingAddress: data.shipping_address,
+    }),
+    status: normalizeOrderStatus(String(data.status || "")),
+    currency: getOrderCurrencyForMarket(
+      resolveOrderMarket({
+        currency: data.currency || null,
+        shippingAddress: data.shipping_address,
+      })
+    ),
     order_items: data.order_items || [],
   } as OrderDetail
 }

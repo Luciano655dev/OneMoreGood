@@ -7,6 +7,9 @@ import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
+  ORDER_MARKETS,
+  formatOrderCurrencyLabel,
+  formatOrderMarketLabel,
   ORDER_STATUSES,
   formatAddress,
   formatOrderStatus,
@@ -27,6 +30,16 @@ function Label({ children }: { children: React.ReactNode }) {
       {children}
     </label>
   )
+}
+
+function toDateTimeLocalValue(value: string) {
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ""
+
+  const pad = (input: number) => String(input).padStart(2, "0")
+  return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(
+    parsed.getDate()
+  )}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`
 }
 
 export default async function AdminOrderDetailPage({
@@ -178,6 +191,28 @@ export default async function AdminOrderDetailPage({
                     {new Date(order.updated_at).toLocaleString("en-US")}
                   </div>
                 </div>
+                <div>
+                  <div
+                    className="text-[11px] font-black uppercase tracking-widest"
+                    style={{ color: colors.muted }}
+                  >
+                    Market
+                  </div>
+                  <div className="mt-1 font-black">
+                    {formatOrderMarketLabel(order.market)}
+                  </div>
+                </div>
+                <div>
+                  <div
+                    className="text-[11px] font-black uppercase tracking-widest"
+                    style={{ color: colors.muted }}
+                  >
+                    Currency
+                  </div>
+                  <div className="mt-1 font-black">
+                    {formatOrderCurrencyLabel(order.currency)}
+                  </div>
+                </div>
               </div>
 
               <div
@@ -192,7 +227,7 @@ export default async function AdminOrderDetailPage({
                     Subtotal
                   </div>
                   <div className="mt-1 font-black">
-                    {moneyFromCents(order.subtotal_cents)}
+                    {moneyFromCents(order.subtotal_cents, order.currency)}
                   </div>
                 </div>
                 <div>
@@ -203,7 +238,7 @@ export default async function AdminOrderDetailPage({
                     Promo
                   </div>
                   <div className="mt-1 font-black">
-                    {moneyFromCents(order.promo_savings_cents)}
+                    {moneyFromCents(order.promo_savings_cents, order.currency)}
                   </div>
                 </div>
                 <div>
@@ -214,7 +249,7 @@ export default async function AdminOrderDetailPage({
                     Shipping
                   </div>
                   <div className="mt-1 font-black">
-                    {moneyFromCents(order.shipping_cents)}
+                    {moneyFromCents(order.shipping_cents, order.currency)}
                   </div>
                 </div>
                 <div>
@@ -225,7 +260,7 @@ export default async function AdminOrderDetailPage({
                     Total
                   </div>
                   <div className="mt-1 text-lg font-black">
-                    {moneyFromCents(order.total_cents)}
+                    {moneyFromCents(order.total_cents, order.currency)}
                   </div>
                 </div>
               </div>
@@ -250,7 +285,7 @@ export default async function AdminOrderDetailPage({
                     </div>
                     <div className="font-black">Qty {item.quantity}</div>
                     <div className="font-black">
-                      {moneyFromCents(item.unit_price_cents)}
+                      {moneyFromCents(item.unit_price_cents, order.currency)}
                     </div>
                   </div>
                 ))}
@@ -327,6 +362,28 @@ export default async function AdminOrderDetailPage({
                 </div>
 
                 <div>
+                  <Label>Order market</Label>
+                  <select
+                    name="market"
+                    defaultValue={order.market}
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.sand,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  >
+                    {ORDER_MARKETS.map((market) => (
+                      <option key={market} value={market}>
+                        {formatOrderMarketLabel(market)}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
+                    Market keeps currency and shipping country aligned.
+                  </p>
+                </div>
+
+                <div>
                   <Label>Tracking carrier</Label>
                   <input
                     name="tracking_carrier"
@@ -346,6 +403,20 @@ export default async function AdminOrderDetailPage({
                     name="tracking_number"
                     defaultValue={order.tracking_number || ""}
                     placeholder="9400..."
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.sand,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <Label>Purchase date/time</Label>
+                  <input
+                    name="purchased_at"
+                    type="datetime-local"
+                    defaultValue={toDateTimeLocalValue(order.created_at)}
                     className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
                     style={{
                       background: colors.sand,

@@ -70,6 +70,12 @@ export default function Footer() {
             >
               Shop
             </a>
+            <a
+              href="/design-guide"
+              style={{ color: colors.ink, textDecoration: "underline" }}
+            >
+              Design Guide
+            </a>
 
             <div className="flex items-center gap-2">
               <SockIcon size={18} color={colors.ink} />©{" "}

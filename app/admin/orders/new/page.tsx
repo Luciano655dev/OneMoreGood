@@ -6,7 +6,12 @@ import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
-import { ORDER_STATUSES, formatOrderStatus } from "@/lib/admin/orders"
+import {
+  ORDER_MARKETS,
+  formatOrderMarketLabel,
+  ORDER_STATUSES,
+  formatOrderStatus,
+} from "@/lib/admin/orders"
 import { getStoredProducts } from "@/lib/products"
 import { createManualOrderAction } from "../actions"
 
@@ -103,7 +108,7 @@ export default async function AdminNewManualOrderPage({
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-5">
                 <div>
                   <Label>Status</Label>
                   <select
@@ -142,7 +147,29 @@ export default async function AdminNewManualOrderPage({
                 </div>
 
                 <div>
-                  <Label>Shipping ($)</Label>
+                  <Label>Order market</Label>
+                  <select
+                    name="market"
+                    defaultValue="US"
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.paper,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  >
+                    {ORDER_MARKETS.map((market) => (
+                      <option key={market} value={market}>
+                        {formatOrderMarketLabel(market)}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
+                    Market defines both payment currency and shipping country.
+                  </p>
+                </div>
+
+                <div>
+                  <Label>Shipping amount</Label>
                   <input
                     name="shipping_dollars"
                     type="number"
@@ -206,9 +233,9 @@ export default async function AdminNewManualOrderPage({
                     }))}
                   />
                 )}
-                <p className="mt-2 text-xs" style={{ color: colors.muted }}>
-                  Start with one row and add more only when needed. Maximum 25 product rows per manual order.
-                </p>
+              <p className="mt-2 text-xs" style={{ color: colors.muted }}>
+                Start with one row and add more only when needed. Maximum 25 product rows per manual order.
+              </p>
               </div>
 
               <div>

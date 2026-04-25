@@ -19,6 +19,7 @@ create table if not exists public.orders (
   stripe_payment_intent_id text,
   customer_email text not null,
   status text not null default 'paid',
+  currency text not null default 'usd' check (currency in ('usd', 'brl')),
   subtotal_cents integer not null default 0,
   promo_savings_cents integer not null default 0,
   shipping_cents integer not null default 0,
@@ -61,3 +62,23 @@ drop trigger if exists orders_set_updated_at on public.orders;
 create trigger orders_set_updated_at
 before update on public.orders
 for each row execute procedure public.set_updated_at();
+
+alter table public.orders
+add column if not exists currency text;
+
+update public.orders
+set currency = 'usd'
+where currency is null or btrim(currency) = '';
+
+alter table public.orders
+alter column currency set default 'usd';
+
+alter table public.orders
+alter column currency set not null;
+
+alter table public.orders
+drop constraint if exists orders_currency_check;
+
+alter table public.orders
+add constraint orders_currency_check
+check (currency in ('usd', 'brl'));

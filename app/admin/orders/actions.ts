@@ -3,9 +3,39 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-import { ORDER_STATUSES } from "@/lib/admin/orders"
+import {
+  ORDER_MARKETS,
+  ORDER_STATUSES,
+  getOrderCurrencyForMarket,
+  normalizeOrderMarket,
+} from "@/lib/admin/orders"
 import { getStoredProductMap } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
+
+function isMissingCurrencyColumnError(
+  error?: {
+    code?: string | null
+    message?: string | null
+    details?: string | null
+  } | null
+) {
+  if (!error) return false
+  const normalized = `${String(error.message || "")} ${String(error.details || "")}`
+    .trim()
+    .toLowerCase()
+
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    normalized.includes("orders.currency") ||
+    (normalized.includes("currency") &&
+      normalized.includes("orders") &&
+      normalized.includes("schema cache")) ||
+    (normalized.includes("column") &&
+      normalized.includes("currency") &&
+      normalized.includes("orders"))
+  )
+}
 
 function appendQueryParam(path: string, key: string, value: string) {
   const separator = path.includes("?") ? "&" : "?"
@@ -19,6 +49,37 @@ function getSafeAdminReturnPath(rawPath: string, fallbackId?: string) {
   return rawPath
 }
 
+function isNextRedirectError(error: unknown) {
+  if (!error || typeof error !== "object") return false
+  const digest = "digest" in error ? (error as { digest?: unknown }).digest : null
+  return typeof digest === "string" && digest.includes("NEXT_REDIRECT")
+}
+
+function parseDateTimeLocalToIso(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  const parsed = new Date(trimmed)
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("Purchase date/time is invalid.")
+  }
+  return parsed.toISOString()
+}
+
+function mergeShippingAddressCountry(
+  source: unknown,
+  country: "US" | "BR"
+): Record<string, unknown> {
+  const base =
+    source && typeof source === "object" && !Array.isArray(source)
+      ? (source as Record<string, unknown>)
+      : {}
+  return {
+    ...base,
+    country,
+  }
+}
+
 export async function updateOrderAction(formData: FormData) {
   const id = String(formData.get("id") || "").trim()
   const returnToRaw = String(formData.get("return_to") || "").trim()
@@ -30,9 +91,16 @@ export async function updateOrderAction(formData: FormData) {
     }
 
     const status = String(formData.get("status") || "").trim()
+    const marketRaw = String(formData.get("market") || "").trim().toUpperCase()
+    if (!ORDER_MARKETS.includes(marketRaw as (typeof ORDER_MARKETS)[number])) {
+      throw new Error("Invalid order market.")
+    }
+    const market = normalizeOrderMarket(marketRaw)
+    const currency = getOrderCurrencyForMarket(market)
     const trackingNumber = String(formData.get("tracking_number") || "").trim()
     const trackingCarrier = String(formData.get("tracking_carrier") || "").trim()
     const notes = String(formData.get("notes") || "").trim()
+    const purchasedAtInput = String(formData.get("purchased_at") || "").trim()
 
     if (!id) {
       throw new Error("Order id is required.")
@@ -43,15 +111,52 @@ export async function updateOrderAction(formData: FormData) {
     }
 
     const supabase = getSupabaseAdmin()
-    const { error } = await supabase
+    const { data: existingOrder, error: existingOrderError } = await supabase
       .from("orders")
-      .update({
-        status,
-        tracking_number: trackingNumber || null,
-        tracking_carrier: trackingCarrier || null,
-        notes: notes || null,
-      })
+      .select("shipping_address,created_at")
       .eq("id", id)
+      .maybeSingle()
+    if (existingOrderError) {
+      throw new Error(existingOrderError.message)
+    }
+
+    const nextShippingAddress = mergeShippingAddressCountry(
+      existingOrder?.shipping_address,
+      market
+    )
+    const nextCreatedAtIso =
+      parseDateTimeLocalToIso(purchasedAtInput) ||
+      String(existingOrder?.created_at || "").trim() ||
+      null
+
+    const payloadWithCurrency = {
+      status,
+      currency,
+      shipping_address: nextShippingAddress,
+      tracking_number: trackingNumber || null,
+      tracking_carrier: trackingCarrier || null,
+      notes: notes || null,
+      ...(nextCreatedAtIso ? { created_at: nextCreatedAtIso } : {}),
+    }
+    let { error } = await supabase
+      .from("orders")
+      .update(payloadWithCurrency)
+      .eq("id", id)
+
+    if (error && isMissingCurrencyColumnError(error)) {
+      const { error: fallbackError } = await supabase
+        .from("orders")
+        .update({
+          status,
+          shipping_address: nextShippingAddress,
+          tracking_number: trackingNumber || null,
+          tracking_carrier: trackingCarrier || null,
+          notes: notes || null,
+          ...(nextCreatedAtIso ? { created_at: nextCreatedAtIso } : {}),
+        })
+        .eq("id", id)
+      error = fallbackError
+    }
 
     if (error) {
       throw new Error(error.message)
@@ -61,6 +166,9 @@ export async function updateOrderAction(formData: FormData) {
     revalidatePath(`/admin/orders/${id}`)
     redirect(appendQueryParam(returnTo, "saved", "1"))
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error
+    }
     const message =
       error instanceof Error && error.message
         ? error.message
@@ -81,13 +189,13 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
-function parseDollarsToCents(value: string) {
+function parseAmountToCents(value: string, label = "Amount") {
   const trimmed = value.trim()
   if (!trimmed) return 0
 
   const amount = Number(trimmed)
   if (!Number.isFinite(amount) || amount < 0) {
-    throw new Error("Shipping must be a non-negative dollar amount.")
+    throw new Error(`${label} must be a non-negative amount.`)
   }
 
   return Math.round(amount * 100)
@@ -138,7 +246,7 @@ function parseManualLineItems(formData: FormData): ManualLineItem[] {
     }
 
     if (productId && (!Number.isFinite(unitPrice) || unitPrice < 0)) {
-      throw new Error(`Unit price must be a non-negative dollar amount on row ${index + 1}.`)
+      throw new Error(`Unit price must be a non-negative amount on row ${index + 1}.`)
     }
 
     if (productId && qty > 0) {
@@ -173,6 +281,14 @@ async function createManualOrder(formData: FormData) {
   }
 
   const status = String(formData.get("status") || "completed").trim()
+  const marketRaw = String(formData.get("market") || "US")
+    .trim()
+    .toUpperCase()
+  if (!ORDER_MARKETS.includes(marketRaw as (typeof ORDER_MARKETS)[number])) {
+    throw new Error("Invalid order market.")
+  }
+  const market = normalizeOrderMarket(marketRaw)
+  const currency = getOrderCurrencyForMarket(market)
   if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
     throw new Error("Invalid order status.")
   }
@@ -187,7 +303,10 @@ async function createManualOrder(formData: FormData) {
 
   const paymentMethod = String(formData.get("payment_method") || "cash").trim()
   const saleLocation = String(formData.get("sale_location") || "").trim()
-  const shippingCents = parseDollarsToCents(String(formData.get("shipping_dollars") || "0"))
+  const shippingCents = parseAmountToCents(
+    String(formData.get("shipping_dollars") || "0"),
+    "Shipping"
+  )
   const notesInput = String(formData.get("notes") || "").trim()
   const purchasedAtInput = String(formData.get("purchased_at") || "").trim()
   let purchasedAtIso: string | null = null
@@ -243,12 +362,15 @@ async function createManualOrder(formData: FormData) {
     stripe_payment_intent_id: null,
     customer_email: customerEmail,
     status,
+    currency,
     subtotal_cents: subtotalCents,
     promo_savings_cents: promoSavingsCents,
     shipping_cents: shippingCents,
     total_cents: totalCents,
     shipping_name: customerName || null,
-    shipping_address: null,
+    shipping_address: {
+      country: market,
+    },
     notes: notesParts.join("\n"),
   }
 
@@ -258,11 +380,24 @@ async function createManualOrder(formData: FormData) {
   }
 
   const supabase = getSupabaseAdmin()
-  const { data: orderRow, error: orderError } = await supabase
+  let { data: orderRow, error: orderError } = await supabase
     .from("orders")
     .insert(orderPayload)
     .select("id")
     .single()
+
+  if (orderError && isMissingCurrencyColumnError(orderError)) {
+    const fallbackPayload = { ...orderPayload }
+    delete fallbackPayload.currency
+
+    const fallbackInsert = await supabase
+      .from("orders")
+      .insert(fallbackPayload)
+      .select("id")
+      .single()
+    orderRow = fallbackInsert.data
+    orderError = fallbackInsert.error
+  }
 
   if (orderError || !orderRow?.id) {
     throw new Error(orderError?.message || "Could not create manual order.")
