@@ -1,4 +1,5 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
+import { isMissingCurrencyColumnError } from "@/lib/supabase/errors"
 import {
   getCurrencyForCountry,
   normalizeShippingCountry,
@@ -123,31 +124,6 @@ type OrderDetailQueryRow = Record<string, unknown> & {
   currency?: string | null
   shipping_address?: ShippingAddressLike
   order_items?: OrderItemRow[] | null
-}
-
-function isMissingCurrencyColumnError(
-  error?: {
-    code?: string | null
-    message?: string | null
-    details?: string | null
-  } | null
-) {
-  if (!error) return false
-  const normalized = `${String(error.message || "")} ${String(error.details || "")}`
-    .trim()
-    .toLowerCase()
-
-  return (
-    error.code === "42703" ||
-    error.code === "PGRST204" ||
-    normalized.includes("orders.currency") ||
-    (normalized.includes("currency") &&
-      normalized.includes("orders") &&
-      normalized.includes("schema cache")) ||
-    (normalized.includes("column") &&
-      normalized.includes("currency") &&
-      normalized.includes("orders"))
-  )
 }
 
 function normalizeRangeDays(value?: number) {
@@ -308,7 +284,7 @@ export function formatOrderCurrencyLabel(currency: OrderCurrency) {
   return currency === "brl" ? "BRL (R$)" : "USD ($)"
 }
 
-export function moneyFromCents(
+export function formatOrderMoney(
   cents: number,
   currency: OrderCurrency = "usd"
 ) {

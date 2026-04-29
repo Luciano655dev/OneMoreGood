@@ -15,10 +15,6 @@ import {
   shippingPolicySummary,
 } from "@/lib/commerce"
 
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-}
-
 export default function CartDrawer() {
   const {
     isOpen,
@@ -54,59 +50,11 @@ export default function CartDrawer() {
   )
 
   const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
   const popButtonClass =
     "cursor-pointer transition duration-150 ease-out hover:-translate-y-0.5 hover:brightness-[0.98] active:translate-y-px"
   const disabledButtonClass = "disabled:translate-y-0 disabled:brightness-100"
 
   if (!isOpen) return null
-
-  async function submitCheckout() {
-    setMsg(null)
-
-    if (!hasItems) {
-      setMsg("Your cart is empty.")
-      return
-    }
-
-    const trimmed = email.trim().toLowerCase()
-    if (!isValidEmail(trimmed)) {
-      setMsg("Please enter a valid email.")
-      return
-    }
-
-    setLoading(true)
-    try {
-      const payload = {
-        email: trimmed,
-        items: items.map(({ product, qty }) => ({
-          productId: product.id,
-          qty,
-        })),
-      }
-
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await res.json().catch(() => ({}))
-
-      if (!res.ok || !data.ok) {
-        setMsg(data.error || "Checkout failed. Please try again.")
-        return
-      }
-
-      window.location.href = data.url
-    } catch {
-      setMsg("Checkout failed. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="fixed inset-0 z-[1100]">
@@ -390,10 +338,9 @@ export default function CartDrawer() {
               onClick={() => {
                 if (!hasItems) return
                 setCheckoutOpen(true)
-                setMsg(null)
               }}
             >
-              Checkout
+              Contact to buy
             </button>
 
             <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
@@ -416,9 +363,9 @@ export default function CartDrawer() {
         <Portal>
           <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
             <button
-              aria-label="Close checkout"
+              aria-label="Close contact modal"
               className="absolute inset-0"
-              onClick={() => !loading && setCheckoutOpen(false)}
+              onClick={() => setCheckoutOpen(false)}
               style={{ background: "rgba(0,0,0,.55)" }}
             />
 
@@ -434,24 +381,65 @@ export default function CartDrawer() {
                 className="text-sm font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Secure checkout
+                Online payment paused
               </div>
 
-              <div className="mt-2 text-xl font-black">
-                Almost there
-              </div>
+              <div className="mt-2 text-xl font-black">Contact us to buy</div>
 
               <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                Enter your email, then continue to the secure payment page,
-                add your {getShippingCountryLabel(shippingCountry)} shipping
-                address, and complete the order.
+                Online payment is suspended for now.
                 <br />
                 <br />
-                Shipping is currently{" "}
+                If you want to buy these items, contact Luciano directly and we
+                will arrange the order manually. The current estimated shipping
+                for {getShippingCountryLabel(shippingCountry)} is{" "}
                 {formatMoneyFromCents(shippingCents, shippingCountry)} per
-                order for this destination. Tracking is emailed after the
-                shipping label is created.
+                order.
               </p>
+
+              <div
+                className="mt-4 grid gap-3"
+              >
+                <a
+                  href="mailto:lucianomenezes655@gmail.com"
+                  className="block px-3 py-3 text-sm font-black underline"
+                  style={{
+                    background: colors.sand,
+                    border: `2px solid ${colors.ink}`,
+                    color: colors.ink,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                  }}
+                >
+                  lucianomenezes655@gmail.com
+                </a>
+
+                <a
+                  href="https://www.instagram.com/lucianohlmenezes/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block px-3 py-3 text-sm font-black underline"
+                  style={{
+                    background: colors.paper,
+                    border: `2px solid ${colors.ink}`,
+                    color: colors.ink,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                  }}
+                >
+                  Instagram: @lucianohlmenezes
+                </a>
+
+                <div
+                  className="px-3 py-3 text-sm font-black"
+                  style={{
+                    background: colors.sand,
+                    border: `2px dashed ${colors.ink}`,
+                    color: colors.ink,
+                  }}
+                >
+                  Include the product name, quantity, and your shipping country
+                  in the message.
+                </div>
+              </div>
 
               <label
                 className="mt-4 block text-xs font-black uppercase tracking-widest"
@@ -471,79 +459,39 @@ export default function CartDrawer() {
                 {getShippingCountryLabel(shippingCountry)}
               </div>
 
-              <label
-                className="mt-4 block text-xs font-black uppercase tracking-widest"
-                style={{ color: colors.muted }}
-              >
-                Email
-              </label>
-
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                style={{
-                  background: colors.sand,
-                  border: `2px solid ${colors.ink}`,
-                  color: colors.ink,
-                }}
-                disabled={loading}
-              />
-
-              {msg && (
-                <div
-                  className="mt-3 p-3 text-sm font-black"
-                  style={{
-                    background: colors.sand,
-                    border: `2px dashed ${colors.ink}`,
-                    color: colors.ink,
-                  }}
-                >
-                  {msg}
-                </div>
-              )}
-
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={() => setCheckoutOpen(false)}
-                  disabled={loading}
                   className={`w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                   style={{
                     background: colors.paper,
                     border: `2px solid ${colors.ink}`,
                     boxShadow: `2px 2px 0 ${colors.ink}`,
-                    opacity: loading ? 0.7 : 1,
                   }}
                 >
-                  Cancel
+                  Close
                 </button>
 
-                <button
-                  onClick={submitCheckout}
-                  disabled={loading || !hasItems}
-                  className={`w-1/2 px-4 py-3 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
+                <Link
+                  href="/#contact"
+                  onClick={() => setCheckoutOpen(false)}
+                  className={`flex w-1/2 items-center justify-center px-4 py-3 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                   style={{
                     background: colors.accent,
                     color: colors.paper,
                     border: `2px solid ${colors.ink}`,
                     boxShadow: `2px 2px 0 ${colors.ink}`,
-                    opacity: loading ? 0.7 : 1,
                   }}
                 >
-                  {loading ? "Opening..." : "Continue"}
-                </button>
+                  Contact page
+                </Link>
               </div>
               <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
-                By continuing, you agree to the OneMoreGood{" "}
+                Shipping and refund details remain available in the{" "}
                 <Link href="/policies" className="underline">
-                  shipping policy
+                  policy page
                 </Link>{" "}
-                and{" "}
-                <Link href="/policies" className="underline">
-                  refund policy
-                </Link>
-                .
+                while direct orders are handled manually.
               </div>
             </div>
           </div>

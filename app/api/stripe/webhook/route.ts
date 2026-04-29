@@ -4,6 +4,7 @@ import type Stripe from "stripe"
 
 import { getStoredProducts } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
+import { isMissingCurrencyColumnError } from "@/lib/supabase/errors"
 import { getStripe } from "@/lib/stripe"
 import {
   DEFAULT_SHIPPING_COUNTRY,
@@ -12,6 +13,7 @@ import {
   normalizeShippingCountry,
   type ShippingCountry,
 } from "@/lib/commerce"
+import { normalizeOrderCurrency } from "@/lib/admin/orders"
 
 type ShippingDetails = {
   name?: string | null
@@ -40,43 +42,6 @@ type CustomerDetails = {
 
 type CheckoutSessionWithShippingDetails = Stripe.Checkout.Session & {
   shipping_details?: ShippingDetails
-}
-
-function normalizeOrderCurrency(
-  value?: string | null,
-  fallbackCountry: ShippingCountry = "US"
-) {
-  const raw = String(value || "")
-    .trim()
-    .toLowerCase()
-
-  if (raw === "usd" || raw === "brl") return raw
-  return fallbackCountry === "BR" ? "brl" : "usd"
-}
-
-function isMissingCurrencyColumnError(
-  error?: {
-    code?: string | null
-    message?: string | null
-    details?: string | null
-  } | null
-) {
-  if (!error) return false
-  const normalized = `${String(error.message || "")} ${String(error.details || "")}`
-    .trim()
-    .toLowerCase()
-
-  return (
-    error.code === "42703" ||
-    error.code === "PGRST204" ||
-    normalized.includes("orders.currency") ||
-    (normalized.includes("currency") &&
-      normalized.includes("orders") &&
-      normalized.includes("schema cache")) ||
-    (normalized.includes("column") &&
-      normalized.includes("currency") &&
-      normalized.includes("orders"))
-  )
 }
 
 function buildOrderEmailHtml(params: {
@@ -198,16 +163,7 @@ async function sendOrderEmail(params: {
   }
 }
 
-function buildShippingAddress(details: ShippingDetails) {
-  if (!details?.address) return "Address not provided"
-
-  const { line1, line2, city, state, postal_code, country } = details.address
-  return [line1, line2, `${city}, ${state} ${postal_code}`, country]
-    .filter(Boolean)
-    .join("<br />")
-}
-
-function buildAddressFromCustomerDetails(details: CustomerDetails) {
+function buildAddressHtml(details: ShippingDetails | CustomerDetails) {
   if (!details?.address) return "Address not provided"
 
   const { line1, line2, city, state, postal_code, country } = details.address
@@ -227,15 +183,21 @@ export async function POST(req: Request) {
     )
   }
 
-  try {
-    const payload = await req.text()
-    const stripe = getStripe()
-    const event = stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      webhookSecret
-    )
+  const payload = await req.text()
+  const stripe = getStripe()
 
+  let event: Stripe.Event
+  try {
+    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret)
+  } catch (err) {
+    console.error("Stripe webhook signature verification failed", err)
+    return NextResponse.json(
+      { ok: false, error: "Invalid signature." },
+      { status: 400 }
+    )
+  }
+
+  try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
       const sessionWithShipping =
@@ -249,8 +211,7 @@ export async function POST(req: Request) {
         normalizeShippingCountry(session.metadata?.shippingCountry) ||
         DEFAULT_SHIPPING_COUNTRY
       const orderCurrency = normalizeOrderCurrency(
-        session.metadata?.currency || session.currency,
-        shippingCountry
+        session.metadata?.currency || session.currency
       )
 
       if (rawItems) {
@@ -444,9 +405,9 @@ export async function POST(req: Request) {
               session.customer_details?.name ||
               "Unknown",
             shippingAddress:
-              buildShippingAddress(shippingDetails) !== "Address not provided"
-                ? buildShippingAddress(shippingDetails)
-                : buildAddressFromCustomerDetails(
+              buildAddressHtml(shippingDetails) !== "Address not provided"
+                ? buildAddressHtml(shippingDetails)
+                : buildAddressHtml(
                     (session.customer_details as CustomerDetails) || null
                   ),
             shippingCost:
@@ -463,10 +424,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error("Stripe webhook error", error)
-    return NextResponse.json(
-      { ok: false, error: "Webhook failed." },
-      { status: 400 }
-    )
+    // Return 200 so Stripe does not endlessly retry on internal processing errors.
+    // The event was validly signed and received; the failure is on our side.
+    console.error("Stripe webhook processing error", error)
+    return NextResponse.json({ received: true, error: "Processing error logged." })
   }
 }

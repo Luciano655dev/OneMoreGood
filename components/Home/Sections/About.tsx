@@ -8,6 +8,7 @@ import {
   Users,
   X,
   ArrowRight,
+  type LucideIcon,
 } from "lucide-react"
 
 import SectionTitle from "../Objects/SectionTitle"
@@ -20,6 +21,23 @@ import colors from "@/components/colors"
 export default function About() {
   const [photoOpen, setPhotoOpen] = useState(false)
   const COMMUNITY_IMAGE = "/Instagram Photo from SnapInsta (1).jpg"
+  const values: Array<{ title: string; desc: string; Icon: LucideIcon }> = [
+    {
+      title: "Mission",
+      desc: "Build a reliable online store where real product sales can fund a sustainable business and a portion of net-profit donations.",
+      Icon: Sparkles,
+    },
+    {
+      title: "Vision",
+      desc: "Grow a product brand that serves customers well and consistently shares part of its success with practical community support.",
+      Icon: Users,
+    },
+    {
+      title: "Values",
+      desc: "Clear customer expectations, transparent giving, accountable partnerships, and respect for the communities being served.",
+      Icon: ShieldCheck,
+    },
+  ]
 
   // Close on ESC
   useEffect(() => {
@@ -36,7 +54,7 @@ export default function About() {
       <SectionTitle
         kicker="About"
         title="Who we are"
-        desc="OneMoreGood is a purpose-led shop. Instituto Educacional Semear is the first organization currently being supported through our profit commitment."
+        desc="OneMoreGood is an online brand built around product sales and transparent giving. Instituto Educacional Semear is the first organization we support through part of our profits."
       />
 
       <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -53,53 +71,36 @@ export default function About() {
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                OneMoreGood exists to sell simple products and turn most of the
-                profit into support for organizations already doing frontline
-                work. People buy something they actually want, and that
-                purchase helps us send real support to the featured
-                organization.
+                OneMoreGood exists to sell simple products people actually want
+                to buy. Customers place product orders, we fulfill those
+                orders, and the business uses part of its profits to support
+                organizations already doing meaningful frontline work.
               </p>
 
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                The goal is to make the model easier to understand: people buy
-                a product they actually want, the purpose stays visible, and
-                the business is built to send profit toward real local work.
+                Orders on OneMoreGood are merchandise purchases. Our charitable
+                giving happens at the company level after covering inventory,
+                shipping, operations, and other business costs.
               </p>
 
               <div
                 className="grid sm:grid-cols-3 gap-4"
                 style={{ borderTop: `2px solid ${colors.ink}`, paddingTop: 14 }}
               >
-                {[
-                  [
-                    "Mission",
-                    "Build a purpose-led store where product sales generate profit that can be donated to trusted organizations.",
-                    Sparkles,
-                  ],
-                  [
-                    "Vision",
-                    "Grow a brand that can keep directing meaningful profit toward practical community support.",
-                    Users,
-                  ],
-                  [
-                    "Values",
-                    "Transparency, practical help, accountable partnerships, and respect for the communities being served.",
-                    ShieldCheck,
-                  ],
-                ].map(([t, d, Icon]: any) => (
-                  <div key={t} className="min-w-0">
+                {values.map(({ title, desc, Icon }) => (
+                  <div key={title} className="min-w-0">
                     <div className="font-black flex items-center gap-2">
                       <Icon size={18} />
-                      {t}
+                      {title}
                     </div>
                     <div
                       className="mt-2 text-sm"
                       style={{ color: colors.muted }}
                     >
-                      {d}
+                      {desc}
                     </div>
                   </div>
                 ))}
@@ -112,19 +113,19 @@ export default function About() {
                 {[
                   [
                     "How OneMoreGood works",
-                    "We sell fun socks and donate most of the resulting profit to the featured organization.",
+                    "We sell fun socks through our online checkout and donate part of company profits to the featured organization.",
                   ],
                   [
                     "Current featured organization",
-                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is currently featured and receives support from our profit commitment.",
+                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is currently featured and may receive donations funded by the business.",
                   ],
                   [
                     "Why this model matters",
-                    "Small organizations often need unrestricted support they can actually use for infrastructure, materials, and day-to-day improvements.",
+                    "Small organizations often need unrestricted support, and a product business can contribute without confusing customer purchases with direct charitable giving.",
                   ],
                   [
                     "What comes next",
-                    "As OneMoreGood grows, more organizations can be featured while the mission stays simple and easy to understand.",
+                    "As OneMoreGood grows, we can expand the catalog, serve more customers, and support more organizations while keeping the business model easy to understand.",
                   ],
                 ].map(([t, d], idx) => (
                   <div

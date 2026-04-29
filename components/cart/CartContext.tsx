@@ -58,8 +58,7 @@ function inferCountryFromNavigator(): ShippingCountry {
       (value) =>
         value === "PT-BR" ||
         value.endsWith("-BR") ||
-        value.includes("_BR") ||
-        value.includes("BR")
+        value === "BR"
     )
   ) {
     return "BR"

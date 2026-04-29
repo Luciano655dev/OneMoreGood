@@ -15,7 +15,7 @@ import {
   formatOrderStatus,
   getOrderDetail,
   getStatusColors,
-  moneyFromCents,
+  formatOrderMoney,
 } from "@/lib/admin/orders"
 import { updateOrderAction } from "../actions"
 
@@ -227,7 +227,7 @@ export default async function AdminOrderDetailPage({
                     Subtotal
                   </div>
                   <div className="mt-1 font-black">
-                    {moneyFromCents(order.subtotal_cents, order.currency)}
+                    {formatOrderMoney(order.subtotal_cents, order.currency)}
                   </div>
                 </div>
                 <div>
@@ -238,7 +238,7 @@ export default async function AdminOrderDetailPage({
                     Promo
                   </div>
                   <div className="mt-1 font-black">
-                    {moneyFromCents(order.promo_savings_cents, order.currency)}
+                    {formatOrderMoney(order.promo_savings_cents, order.currency)}
                   </div>
                 </div>
                 <div>
@@ -249,7 +249,7 @@ export default async function AdminOrderDetailPage({
                     Shipping
                   </div>
                   <div className="mt-1 font-black">
-                    {moneyFromCents(order.shipping_cents, order.currency)}
+                    {formatOrderMoney(order.shipping_cents, order.currency)}
                   </div>
                 </div>
                 <div>
@@ -260,7 +260,7 @@ export default async function AdminOrderDetailPage({
                     Total
                   </div>
                   <div className="mt-1 text-lg font-black">
-                    {moneyFromCents(order.total_cents, order.currency)}
+                    {formatOrderMoney(order.total_cents, order.currency)}
                   </div>
                 </div>
               </div>
@@ -285,7 +285,7 @@ export default async function AdminOrderDetailPage({
                     </div>
                     <div className="font-black">Qty {item.quantity}</div>
                     <div className="font-black">
-                      {moneyFromCents(item.unit_price_cents, order.currency)}
+                      {formatOrderMoney(item.unit_price_cents, order.currency)}
                     </div>
                   </div>
                 ))}

@@ -46,8 +46,8 @@ export default function Impact() {
     <section id="impact" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
         kicker="Impact"
-        title="What profit with purpose can unlock"
-        desc="The current goal is to help Instituto Semear operate with more strength, flexibility, and local support."
+        title="What this business model can support"
+        desc="The goal is to run a healthy online store and use part of its profits to help Instituto Semear with practical local needs."
       />
 
       <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -63,15 +63,15 @@ export default function Impact() {
               {[
                 [
                   "Operational breathing room",
-                  "Purpose-driven profit can help cover practical needs that are hard to fund through restricted programs alone.",
+                  "Donations funded by the business can help cover practical needs that are hard to fund through restricted programs alone.",
                 ],
                 [
                   "Better learning conditions",
-                  "Support can contribute to materials, structure, and day-to-day improvements that strengthen the environment children experience.",
+                  "Donations can contribute to materials, structure, and day-to-day improvements that strengthen the environment children experience.",
                 ],
                 [
-                  "Community trust",
-                  "Visible profit-sharing tied to a real partner can make it easier for supporters to understand where money goes and why it matters.",
+                  "Clear customer expectations",
+                  "A straightforward retail model makes it easier for customers to understand that they are buying products while the business separately handles its charitable giving.",
                 ],
                 [
                   "More partner opportunities",
@@ -79,7 +79,7 @@ export default function Impact() {
                 ],
                 [
                   "Direct accountability",
-                  "OneMoreGood can share updates on the partner relationship, profit commitment, and what support is meant to improve.",
+                  "OneMoreGood can share updates on the partner relationship, donation model, and what support is meant to improve.",
                 ],
               ].map(([t, d], idx) => (
                 <li
@@ -111,8 +111,9 @@ export default function Impact() {
               }}
             >
               Sustainability is planned through product sales, thoughtful
-              pricing, repeat customers, strategic collaborations, and direct
-              supporter relationships.
+              pricing, repeat customers, strategic collaborations, and an
+              online retail operation that can support both the business and future
+              donations.
             </div>
           </RoughBorder>
         </div>
@@ -128,7 +129,7 @@ export default function Impact() {
             <div style={{ color: colors.muted }}>
               These photos illustrate the local context around Instituto
               Semear, the organization currently being supported through
-              OneMoreGood's profit commitment.
+              OneMoreGood&apos;s giving model.
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-4">

@@ -13,7 +13,7 @@ import {
   getOrderCurrencyForMarket,
   getStatusColors,
   listOrders,
-  moneyFromCents,
+  formatOrderMoney,
   type DailySocksPoint,
   type OrderMarket,
   type OrderSort,
@@ -135,19 +135,19 @@ function MarketSummaryCards({
         </div>
         <div className="flex items-center justify-between gap-3">
           <span style={{ color: colors.muted }}>Revenue</span>
-          <span>{moneyFromCents(summary.grossRevenueCents, currency)}</span>
+          <span>{formatOrderMoney(summary.grossRevenueCents, currency)}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span style={{ color: colors.muted }}>Products</span>
-          <span>{moneyFromCents(summary.productsSubtotalCents, currency)}</span>
+          <span>{formatOrderMoney(summary.productsSubtotalCents, currency)}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span style={{ color: colors.muted }}>Shipping</span>
-          <span>{moneyFromCents(summary.shippingCollectedCents, currency)}</span>
+          <span>{formatOrderMoney(summary.shippingCollectedCents, currency)}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span style={{ color: colors.muted }}>Promo</span>
-          <span>{moneyFromCents(summary.promoSavingsCents, currency)}</span>
+          <span>{formatOrderMoney(summary.promoSavingsCents, currency)}</span>
         </div>
       </div>
     </div>
@@ -296,17 +296,17 @@ export default async function AdminOrdersPage({
             />
             <StatCard
               label="Brazil sales subtotal"
-              value={moneyFromCents(brSalesSubtotalCents, "brl")}
+              value={formatOrderMoney(brSalesSubtotalCents, "brl")}
               bg={colors.paper}
             />
             <StatCard
               label="US sales subtotal"
-              value={moneyFromCents(usSalesSubtotalCents, "usd")}
+              value={formatOrderMoney(usSalesSubtotalCents, "usd")}
               bg={colors.paper}
             />
             <StatCard
               label="Subtotal combined (US + BR/6)"
-              value={moneyFromCents(combinedSubtotalCents, "usd")}
+              value={formatOrderMoney(combinedSubtotalCents, "usd")}
               bg={colors.paper}
             />
           </div>
@@ -743,7 +743,7 @@ export default async function AdminOrdersPage({
                                 Total
                               </div>
                               <div className="mt-1 font-black">
-                                {moneyFromCents(order.total_cents, order.currency)}
+                                {formatOrderMoney(order.total_cents, order.currency)}
                               </div>
                             </div>
                             <div>
@@ -754,7 +754,7 @@ export default async function AdminOrdersPage({
                                 Shipping
                               </div>
                               <div className="mt-1 font-black">
-                                {moneyFromCents(
+                                {formatOrderMoney(
                                   order.shipping_cents,
                                   order.currency
                                 )}

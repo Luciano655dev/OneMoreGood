@@ -59,7 +59,7 @@ export default function Contact() {
         <SectionTitle
           kicker="Contact"
           title="Contact us about the brand"
-          desc="Reach out about collaborations, wholesale ideas, product questions, or the OneMoreGood mission and Instituto Semear."
+          desc="Reach out about orders, shipping, wholesale ideas, product questions, or OneMoreGood's net-profit donation model with Instituto Semear."
         />
 
         <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">

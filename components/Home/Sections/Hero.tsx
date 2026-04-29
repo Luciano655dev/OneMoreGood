@@ -23,7 +23,7 @@ export default function Hero() {
         <div className="grid md:grid-cols-12 gap-8 items-start">
           <div className="md:col-span-7">
             <div data-reveal className="reveal hidden md:flex flex-wrap gap-2">
-              <StampChip icon={ShieldCheck} text="Shop with a purpose" />
+              <StampChip icon={ShieldCheck} text="Online shop" />
               <StampChip
                 icon={Users}
                 text="Instituto Semear"
@@ -52,14 +52,15 @@ export default function Hero() {
               className="reveal mt-6 text-lg leading-relaxed max-w-2xl"
               style={{ color: colors.muted }}
             >
-              OneMoreGood is a shop built around useful products and visible
-              impact. We sell fun socks and dedicate most of our profit to
-              Instituto Educacional Semear in Santa Terezinha, Pernambuco.
+              OneMoreGood is an online shop selling fun socks and other
+              everyday products. Every order is a standard merchandise
+              purchase, and we donate part of our profits to Instituto
+              Educacional Semear in Santa Terezinha, Pernambuco.
             </p>
 
             <div data-reveal className="reveal mt-8 flex flex-wrap gap-3">
               <HandButton variant="solid" onClick={() => router.push("/shop")}>
-                Shop with purpose <ArrowRight size={18} />
+                Shop the collection <ArrowRight size={18} />
               </HandButton>
               <HandButton variant="ghost" onClick={() => setVideoOpen(true)}>
                 Watch intro video <Play size={18} />
@@ -73,9 +74,18 @@ export default function Hero() {
               className="reveal grid sm:grid-cols-3 gap-4 text-sm"
             >
               {[
-                ["Good products, clear purpose", "Every order helps turn our profit into support for meaningful local work."],
-                ["Instituto Semear receives support", "Current featured organization in Santa Terezinha."],
-                ["Profits are meant to travel further", "The goal is stronger structure, supplies, and local capacity."],
+                [
+                  "Real products",
+                  "Customers are shopping for physical merchandise through the site.",
+                ],
+                [
+                  "Company-level giving",
+                  "OneMoreGood donates part of its profits after order fulfillment and operating costs.",
+                ],
+                [
+                  "Featured organization",
+                  "Instituto Semear is the current organization we support and document publicly.",
+                ],
               ].map(([t, d]) => (
                 <div key={t}>
                   <div className="font-black">{t}</div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import {
   BRAZIL_UNIT_PRICE_CENTS,
+  PROMO_UNIT_PRICE_CENTS,
   SHIPPING_DELIVERY_MAX_DAYS,
   SHIPPING_DELIVERY_MIN_DAYS,
   calculateCartTotals,
@@ -21,6 +22,18 @@ function isValidEmail(email: string) {
 
 export async function POST(req: Request) {
   try {
+    const shippingCountry = detectShippingCountryFromHeaders(req.headers)
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `Online payment is temporarily unavailable. Please contact us directly at lucianomenezes655@gmail.com or Instagram @lucianohlmenezes to place your ${getShippingCountryLabel(
+          shippingCountry
+        )} order.`,
+      },
+      { status: 503 }
+    )
+
     const body = await req.json()
     const email = String(body.email || "")
       .trim()
@@ -34,7 +47,6 @@ export async function POST(req: Request) {
     }
 
     const items = Array.isArray(body.items) ? body.items : []
-    const shippingCountry = detectShippingCountryFromHeaders(req.headers)
 
     if (items.length === 0) {
       return NextResponse.json(
@@ -66,9 +78,12 @@ export async function POST(req: Request) {
         )
       }
 
-      if (typeof product.max_qnt === "number" && qty > product.max_qnt) {
+      const currentProduct = product!
+      const maxQty = currentProduct.max_qnt ?? Number.POSITIVE_INFINITY
+
+      if (qty > maxQty) {
         return NextResponse.json(
-          { ok: false, error: `Too many for ${product.title}.` },
+          { ok: false, error: `Too many for ${currentProduct.title}.` },
           { status: 400 }
         )
       }
@@ -139,7 +154,7 @@ export async function POST(req: Request) {
         entries.push({
           price_data: {
             currency,
-            unit_amount: 700,
+            unit_amount: PROMO_UNIT_PRICE_CENTS,
             product_data: {
               name: `${product.title} (2 for $14 promo)`,
               description: product.description,

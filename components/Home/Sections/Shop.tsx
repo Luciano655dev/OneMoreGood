@@ -37,9 +37,18 @@ export default function Shop() {
       <div className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Shop"
-          title="Products with a purpose"
-          desc="Choose a pair of socks and help OneMoreGood donate most of the profit to Instituto Educacional Semear."
+          title="A shop with a clear give-back model"
+          desc="Online payment is paused for now. If you want to buy a pair of socks, contact us directly and we will arrange the order manually."
         />
+
+        <div
+          className="mt-5 max-w-3xl text-sm font-black"
+          style={{ color: colors.muted }}
+        >
+          Contact: lucianomenezes655@gmail.com or Instagram
+          @lucianohlmenezes. Customer payments go toward the products ordered,
+          and any charitable contribution is made separately by OneMoreGood.
+        </div>
 
         <div className="mt-10 grid md:grid-cols-3 gap-6">
           {products.map((product, i) => (
@@ -108,7 +117,7 @@ export default function Shop() {
                 className="mt-3 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                + US promo available (2 for $14) • Brazil: R$25 each
+                + Regular retail purchase • US promo available (2 for $14) • Brazil: R$25 each
               </div>
             </RoughBorder>
           ))}

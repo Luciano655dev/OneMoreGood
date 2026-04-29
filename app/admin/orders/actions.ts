@@ -11,31 +11,7 @@ import {
 } from "@/lib/admin/orders"
 import { getStoredProductMap } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
-
-function isMissingCurrencyColumnError(
-  error?: {
-    code?: string | null
-    message?: string | null
-    details?: string | null
-  } | null
-) {
-  if (!error) return false
-  const normalized = `${String(error.message || "")} ${String(error.details || "")}`
-    .trim()
-    .toLowerCase()
-
-  return (
-    error.code === "42703" ||
-    error.code === "PGRST204" ||
-    normalized.includes("orders.currency") ||
-    (normalized.includes("currency") &&
-      normalized.includes("orders") &&
-      normalized.includes("schema cache")) ||
-    (normalized.includes("column") &&
-      normalized.includes("currency") &&
-      normalized.includes("orders"))
-  )
-}
+import { isMissingCurrencyColumnError } from "@/lib/supabase/errors"
 
 function appendQueryParam(path: string, key: string, value: string) {
   const separator = path.includes("?") ? "&" : "?"

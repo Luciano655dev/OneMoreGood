@@ -10,31 +10,31 @@ export default function HowItWorks() {
       <SectionTitle
         kicker="Methodology"
         title="How the model works"
-        desc="OneMoreGood sells products with a clear purpose and directs most of its profit to support the featured organization."
+        desc="OneMoreGood sells products, fulfills customer orders, and donates part of company profits."
       />
 
       <div className="mt-10 grid md:grid-cols-3 gap-6">
         {[
           {
             n: "01",
-            t: "Sell fun socks",
-            d: "People buy products they actually want, making support feel simple, direct, and easy to understand.",
+            t: "Sell real products",
+            d: "Customers come to OneMoreGood to buy socks and place merchandise orders through our online shop.",
             icon: BookOpen,
             tone: colors.sand,
             rot: -0.5,
           },
           {
             n: "02",
-            t: "Donate most of the profit",
-            d: "After the sale, most profit is set aside for the featured organization already doing real local work.",
+            t: "Fulfill the order",
+            d: "We process payment, manage the order, and deliver the product to the customer.",
             icon: Heart,
             tone: colors.paper,
             rot: 0.4,
           },
           {
             n: "03",
-            t: "Keep the purpose visible",
-            d: "We share the partner story, local context, and mission clearly so people can see where the support is meant to go.",
+            t: "Share part of profits",
+            d: "After business costs and fulfillment, OneMoreGood donates part of its profits to the current featured organization.",
             icon: ShieldCheck,
             tone: colors.sand,
             rot: -0.2,
