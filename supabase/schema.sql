@@ -6,11 +6,27 @@ create table if not exists public.products (
   description text,
   tags text[] not null default '{}',
   inventory_quantity integer not null default 0,
+  inventory_quantity_us integer not null default 0,
+  inventory_quantity_br integer not null default 0,
   is_active boolean not null default true,
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.products
+add column if not exists inventory_quantity_us integer not null default 0;
+
+alter table public.products
+add column if not exists inventory_quantity_br integer not null default 0;
+
+update public.products
+set
+  inventory_quantity_us = coalesce(inventory_quantity_us, inventory_quantity, 0),
+  inventory_quantity_br = coalesce(inventory_quantity_br, inventory_quantity, 0)
+where inventory_quantity_us is null
+   or inventory_quantity_br is null
+   or (inventory_quantity_us = 0 and inventory_quantity_br = 0 and inventory_quantity <> 0);
 
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),

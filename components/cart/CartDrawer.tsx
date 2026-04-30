@@ -7,6 +7,7 @@ import colors from "../colors"
 import Portal from "./Portal"
 import ProgressiveImage from "../Home/Objects/ProgressiveImage"
 import {
+  DEFAULT_SHIPPING_COUNTRY,
   calculateCartTotals,
   formatMoneyFromCents,
   getTotalItemCount,
@@ -14,9 +15,17 @@ import {
   getUnitPriceCentsForCountry,
   refundPolicySummary,
   shippingPolicySummary,
+  type ShippingCountry,
 } from "@/lib/commerce"
 
-export default function CartDrawer() {
+type StockMap = Record<string, number>
+type StockByCountry = Record<ShippingCountry, StockMap>
+
+export default function CartDrawer({
+  stockByCountry,
+}: {
+  stockByCountry?: StockByCountry
+}) {
   const {
     isOpen,
     closeCart,
@@ -54,6 +63,10 @@ export default function CartDrawer() {
   const popButtonClass =
     "cursor-pointer transition duration-150 ease-out hover:-translate-y-0.5 hover:brightness-[0.98] active:translate-y-px"
   const disabledButtonClass = "disabled:translate-y-0 disabled:brightness-100"
+  const activeStock =
+    stockByCountry?.[shippingCountry] ||
+    stockByCountry?.[DEFAULT_SHIPPING_COUNTRY] ||
+    {}
 
   if (!isOpen) return null
 
@@ -134,108 +147,115 @@ export default function CartDrawer() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {items.map(({ product, qty }) => (
-                  <div
-                    key={product.id}
-                    className="p-3"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                      boxShadow: `3px 3px 0 ${colors.ink}`,
-                    }}
-                  >
-                    <div className="flex gap-3">
-                      <div
-                        className="h-16 w-16 overflow-hidden"
-                        style={{
-                          background: colors.sand,
-                          border: `2px solid ${colors.ink}`,
-                        }}
-                      >
-                        <ProgressiveImage
-                          src={product.image}
-                          alt={product.title}
-                          width={320}
-                          height={320}
-                          sizes="64px"
-                          quality={60}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
+                {items.map(({ product, qty }) => {
+                  const availableStock = activeStock[product.id]
+                  const canIncrease =
+                    typeof availableStock !== "number" || qty < availableStock
 
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-black truncate">
-                          {product.title}
-                        </div>
+                  return (
+                    <div
+                      key={product.id}
+                      className="p-3"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                        boxShadow: `3px 3px 0 ${colors.ink}`,
+                      }}
+                    >
+                      <div className="flex gap-3">
                         <div
-                          className="mt-1 text-sm font-black"
-                          style={{ color: colors.accent }}
+                          className="h-16 w-16 overflow-hidden"
+                          style={{
+                            background: colors.sand,
+                            border: `2px solid ${colors.ink}`,
+                          }}
                         >
-                          {formatMoneyFromCents(
-                            getUnitPriceCentsForCountry(
-                              product,
-                              shippingCountry
-                            ),
-                            shippingCountry
-                          )}
+                          <ProgressiveImage
+                            src={product.image}
+                            alt={product.title}
+                            width={320}
+                            height={320}
+                            sizes="64px"
+                            quality={60}
+                            className="h-full w-full object-cover"
+                          />
                         </div>
 
-                        <div className="mt-3 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <button
-                              className={`px-3 py-2 text-xs font-black ${popButtonClass} ${disabledButtonClass}`}
-                              style={{
-                                background: colors.paper,
-                                border: `2px solid ${colors.ink}`,
-                                boxShadow: `2px 2px 0 ${colors.ink}`,
-                              }}
-                              onClick={() => setQty(product.id, qty - 1)}
-                              aria-label={`Decrease quantity of ${product.title}`}
-                            >
-                              −
-                            </button>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-black truncate">
+                            {product.title}
+                          </div>
+                          <div
+                            className="mt-1 text-sm font-black"
+                            style={{ color: colors.accent }}
+                          >
+                            {formatMoneyFromCents(
+                              getUnitPriceCentsForCountry(
+                                product,
+                                shippingCountry
+                              ),
+                              shippingCountry
+                            )}
+                          </div>
 
-                            <div
-                              className="px-3 py-2 text-xs font-black"
-                              style={{
-                                background: colors.sand,
-                                border: `2px solid ${colors.ink}`,
-                              }}
-                            >
-                              {qty}
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <button
+                                className={`px-3 py-2 text-xs font-black ${popButtonClass} ${disabledButtonClass}`}
+                                style={{
+                                  background: colors.paper,
+                                  border: `2px solid ${colors.ink}`,
+                                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                                }}
+                                onClick={() => setQty(product.id, qty - 1)}
+                                aria-label={`Decrease quantity of ${product.title}`}
+                              >
+                                −
+                              </button>
+
+                              <div
+                                className="px-3 py-2 text-xs font-black"
+                                style={{
+                                  background: colors.sand,
+                                  border: `2px solid ${colors.ink}`,
+                                }}
+                              >
+                                {qty}
+                              </div>
+
+                              <button
+                                className={`px-3 py-2 text-xs font-black ${popButtonClass} ${disabledButtonClass}`}
+                                style={{
+                                  background: colors.paper,
+                                  border: `2px solid ${colors.ink}`,
+                                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                                }}
+                                onClick={() => setQty(product.id, qty + 1)}
+                                disabled={!canIncrease}
+                                aria-label={`Increase quantity of ${product.title}`}
+                              >
+                                +
+                              </button>
                             </div>
 
                             <button
-                              className={`px-3 py-2 text-xs font-black ${popButtonClass} ${disabledButtonClass}`}
+                              className={`px-3 py-2 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
                               style={{
-                                background: colors.paper,
+                                background: colors.clay,
+                                color: colors.paper,
                                 border: `2px solid ${colors.ink}`,
                                 boxShadow: `2px 2px 0 ${colors.ink}`,
                               }}
-                              onClick={() => setQty(product.id, qty + 1)}
-                              aria-label={`Increase quantity of ${product.title}`}
+                              onClick={() => removeFromCart(product.id)}
                             >
-                              +
+                              Remove
                             </button>
                           </div>
-
-                          <button
-                            className={`px-3 py-2 text-xs font-black uppercase tracking-widest ${popButtonClass} ${disabledButtonClass}`}
-                            style={{
-                              background: colors.clay,
-                              color: colors.paper,
-                              border: `2px solid ${colors.ink}`,
-                              boxShadow: `2px 2px 0 ${colors.ink}`,
-                            }}
-                            onClick={() => removeFromCart(product.id)}
-                          >
-                            Remove
-                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
 
                 <button
                   onClick={clearCart}

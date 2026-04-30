@@ -149,6 +149,7 @@ export default async function AdminNewManualOrderPage({
                 <div>
                   <Label>Order market</Label>
                   <select
+                    id="manual-order-market"
                     name="market"
                     defaultValue="US"
                     className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
@@ -229,7 +230,8 @@ export default async function AdminNewManualOrderPage({
                       id: product.id,
                       title: product.title,
                       price: product.price,
-                      inventory_quantity: product.inventory_quantity,
+                      inventory_quantity_us: product.inventory_quantity_us,
+                      inventory_quantity_br: product.inventory_quantity_br,
                     }))}
                   />
                 )}

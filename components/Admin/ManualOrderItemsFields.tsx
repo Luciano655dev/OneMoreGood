@@ -1,14 +1,16 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import colors from "@/components/colors"
+import { BRAZIL_UNIT_PRICE_CENTS } from "@/lib/commerce"
 
 type ProductOption = {
   id: string
   title: string
   price: number
-  inventory_quantity: number
+  inventory_quantity_us: number
+  inventory_quantity_br: number
 }
 
 type Row = {
@@ -25,10 +27,30 @@ export default function ManualOrderItemsFields({
 }: {
   products: ProductOption[]
 }) {
+  const [market, setMarket] = useState<"US" | "BR">("US")
   const [rows, setRows] = useState<Row[]>([
     { id: 1, productId: "", qty: 1, unitPrice: "0.00" },
   ])
   const nextIdRef = useRef(2)
+
+  useEffect(() => {
+    const select = document.getElementById("manual-order-market")
+    if (!(select instanceof HTMLSelectElement)) return
+
+    const syncMarket = () => {
+      setMarket(select.value === "BR" ? "BR" : "US")
+    }
+
+    syncMarket()
+    select.addEventListener("change", syncMarket)
+    return () => select.removeEventListener("change", syncMarket)
+  }, [])
+
+  function getDefaultUnitPrice(product: ProductOption) {
+    return market === "BR"
+      ? (BRAZIL_UNIT_PRICE_CENTS / 100).toFixed(2)
+      : product.price.toFixed(2)
+  }
 
   function addRow() {
     setRows((current) => {
@@ -77,7 +99,7 @@ export default function ManualOrderItemsFields({
               updateRow(row.id, {
                 productId: nextProductId,
                 unitPrice: selectedProduct
-                  ? selectedProduct.price.toFixed(2)
+                  ? getDefaultUnitPrice(selectedProduct)
                   : row.unitPrice,
               })
             }}
@@ -90,8 +112,15 @@ export default function ManualOrderItemsFields({
             <option value="">No item</option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.title} - price {product.price.toFixed(2)} (stock:{" "}
-                {product.inventory_quantity})
+                {product.title} - price{" "}
+                {market === "BR"
+                  ? (BRAZIL_UNIT_PRICE_CENTS / 100).toFixed(2)
+                  : product.price.toFixed(2)}{" "}
+                (stock:{" "}
+                {market === "BR"
+                  ? `BR ${product.inventory_quantity_br}`
+                  : `US ${product.inventory_quantity_us}`}
+                )
               </option>
             ))}
           </select>

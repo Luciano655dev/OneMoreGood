@@ -43,31 +43,13 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
 
-function inferCountryFromNavigator(): ShippingCountry {
-  if (typeof navigator === "undefined") return DEFAULT_SHIPPING_COUNTRY
-
-  const localeHints = [
-    navigator.language,
-    ...(Array.isArray(navigator.languages) ? navigator.languages : []),
-  ]
-    .map((value) => String(value || "").toUpperCase())
-    .filter(Boolean)
-
-  if (
-    localeHints.some(
-      (value) =>
-        value === "PT-BR" ||
-        value.endsWith("-BR") ||
-        value === "BR"
-    )
-  ) {
-    return "BR"
-  }
-
-  return DEFAULT_SHIPPING_COUNTRY
-}
-
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  initialShippingCountry = DEFAULT_SHIPPING_COUNTRY,
+}: {
+  children: React.ReactNode
+  initialShippingCountry?: ShippingCountry
+}) {
   const [items, setItems] = useState<CartItem[]>(() => {
     if (typeof window === "undefined") return []
     try {
@@ -81,7 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   })
   const [isOpen, setIsOpen] = useState(false)
   const [shippingCountry, setShippingCountry] = useState<ShippingCountry>(
-    () => inferCountryFromNavigator()
+    () => initialShippingCountry
   )
 
   // Save to localStorage

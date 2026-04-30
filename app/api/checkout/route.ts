@@ -13,7 +13,7 @@ import {
   priceToCents,
 } from "@/lib/commerce"
 import { detectShippingCountryFromHeaders } from "@/lib/geo-country"
-import { getStoredProducts } from "@/lib/products"
+import { getInventoryForCountry, getStoredProducts } from "@/lib/products"
 import { getBaseUrl, getStripe } from "@/lib/stripe"
 
 function isValidEmail(email: string) {
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
 
     for (const item of normalizedItems) {
       const product = productMap.get(item.productId)!
-      const available = product.inventory_quantity
+      const available = getInventoryForCountry(product, shippingCountry)
 
       if (available < item.qty) {
         return NextResponse.json(

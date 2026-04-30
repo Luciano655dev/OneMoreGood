@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
+import {
+  getInventoryForCountry,
+  type StoredProduct,
+} from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 
 function isNextRedirectError(error: unknown) {
@@ -33,11 +37,22 @@ export async function updateStockAction(formData: FormData) {
     const productIds = formData
       .getAll("product_id")
       .map((value) => String(value || "").trim())
-    const stockQuantities = formData
-      .getAll("stock_qty")
+    const productActiveValues = formData
+      .getAll("product_active")
+      .map((value) => String(value || "").trim())
+    const stockQuantitiesUs = formData
+      .getAll("stock_qty_us")
+      .map((value) => String(value || "").trim())
+    const stockQuantitiesBr = formData
+      .getAll("stock_qty_br")
       .map((value) => String(value || "").trim())
 
-    const rowCount = Math.max(productIds.length, stockQuantities.length)
+    const rowCount = Math.max(
+      productIds.length,
+      productActiveValues.length,
+      stockQuantitiesUs.length,
+      stockQuantitiesBr.length
+    )
 
     const supabase = getSupabaseAdmin()
     let updatedCount = 0
@@ -47,15 +62,21 @@ export async function updateStockAction(formData: FormData) {
       const productId = productIds[index] || ""
       if (!productId) continue
 
-      const nextQty = parseWholeNumber(
-        stockQuantities[index] || "",
-        "Stock quantity",
+      const nextQtyUs = parseWholeNumber(
+        stockQuantitiesUs[index] || "",
+        "U.S. stock quantity",
         rowNumber
       )
+      const nextQtyBr = parseWholeNumber(
+        stockQuantitiesBr[index] || "",
+        "Brazil stock quantity",
+        rowNumber
+      )
+      const nextIsActive = (productActiveValues[index] || "1") === "1"
 
       const { data: product, error: productError } = await supabase
         .from("products")
-        .select("id,title,inventory_quantity")
+        .select("*")
         .eq("id", productId)
         .maybeSingle()
 
@@ -66,15 +87,27 @@ export async function updateStockAction(formData: FormData) {
         throw new Error(`Product not found: ${productId}`)
       }
 
-      const currentQty = Number(product.inventory_quantity || 0)
+      const storedProduct = product as StoredProduct
+      const currentQtyUs = getInventoryForCountry(storedProduct, "US")
+      const currentQtyBr = getInventoryForCountry(storedProduct, "BR")
+      const currentIsActive = storedProduct.is_active !== false
 
-      if (nextQty === currentQty) {
+      if (
+        nextQtyUs === currentQtyUs &&
+        nextQtyBr === currentQtyBr &&
+        nextIsActive === currentIsActive
+      ) {
         continue
       }
 
       const { error: updateError } = await supabase
         .from("products")
-        .update({ inventory_quantity: nextQty })
+        .update({
+          inventory_quantity: nextQtyUs,
+          inventory_quantity_us: nextQtyUs,
+          inventory_quantity_br: nextQtyBr,
+          is_active: nextIsActive,
+        })
         .eq("id", productId)
 
       if (updateError) {

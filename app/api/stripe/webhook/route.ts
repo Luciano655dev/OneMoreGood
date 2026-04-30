@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { Resend } from "resend"
 import type Stripe from "stripe"
 
-import { getStoredProducts } from "@/lib/products"
+import {
+  getInventoryForCountry,
+  getInventoryUpdateForCountry,
+  getStoredProducts,
+} from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 import { isMissingCurrencyColumnError } from "@/lib/supabase/errors"
 import { getStripe } from "@/lib/stripe"
@@ -221,6 +225,13 @@ export async function POST(req: Request) {
         }>
         const storedProducts = await getStoredProducts()
         const productMap = new Map(storedProducts.map((product) => [product.id, product]))
+        const qtyByProduct = new Map<string, number>()
+        for (const item of normalizedItems) {
+          qtyByProduct.set(
+            item.productId,
+            (qtyByProduct.get(item.productId) || 0) + item.qty
+          )
+        }
         const items = normalizedItems.map((item) => ({
           title: productMap.get(item.productId)?.title || item.productId,
           qty: item.qty,
@@ -375,19 +386,24 @@ export async function POST(req: Request) {
               }
             }
 
-            for (const item of normalizedItems) {
-              const product = productMap.get(item.productId)
+            for (const [productId, totalQty] of qtyByProduct.entries()) {
+              const product = productMap.get(productId)
               if (!product) continue
 
               const nextInventory = Math.max(
                 0,
-                Number(product.inventory_quantity || 0) - item.qty
+                getInventoryForCountry(product, shippingCountry) - totalQty
               )
 
               const { error: inventoryError } = await supabase
                 .from("products")
-                .update({ inventory_quantity: nextInventory })
-                .eq("id", item.productId)
+                .update({
+                  ...getInventoryUpdateForCountry(shippingCountry, nextInventory),
+                  ...(shippingCountry === "US"
+                    ? { inventory_quantity: nextInventory }
+                    : {}),
+                })
+                .eq("id", productId)
 
               if (inventoryError) {
                 console.error("Supabase inventory update failed", inventoryError)

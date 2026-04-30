@@ -9,7 +9,11 @@ import {
   getOrderCurrencyForMarket,
   normalizeOrderMarket,
 } from "@/lib/admin/orders"
-import { getStoredProductMap } from "@/lib/products"
+import {
+  getInventoryForCountry,
+  getInventoryUpdateForCountry,
+  getStoredProductMap,
+} from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 import { isMissingCurrencyColumnError } from "@/lib/supabase/errors"
 
@@ -309,7 +313,7 @@ async function createManualOrder(formData: FormData) {
       throw new Error(`Unknown product: ${productId}`)
     }
 
-    if (Number(product.inventory_quantity || 0) < totalQty) {
+    if (getInventoryForCountry(product, market) < totalQty) {
       throw new Error(`Not enough stock for ${product.title}.`)
     }
   }
@@ -395,14 +399,20 @@ async function createManualOrder(formData: FormData) {
     throw new Error(itemsError.message || "Could not save manual order items.")
   }
 
-  for (const item of lineItems) {
-    const product = productMap.get(item.productId)!
-    const nextInventory = Math.max(0, Number(product.inventory_quantity || 0) - item.qty)
+  for (const [productId, totalQty] of qtyByProduct.entries()) {
+    const product = productMap.get(productId)!
+    const nextInventory = Math.max(
+      0,
+      getInventoryForCountry(product, market) - totalQty
+    )
 
     const { error: inventoryError } = await supabase
       .from("products")
-      .update({ inventory_quantity: nextInventory })
-      .eq("id", item.productId)
+      .update({
+        ...getInventoryUpdateForCountry(market, nextInventory),
+        ...(market === "US" ? { inventory_quantity: nextInventory } : {}),
+      })
+      .eq("id", productId)
 
     if (inventoryError) {
       throw new Error(
@@ -414,6 +424,8 @@ async function createManualOrder(formData: FormData) {
   revalidatePath("/admin/orders")
   revalidatePath(`/admin/orders/${orderRow.id}`)
   revalidatePath("/admin/orders/new")
+  revalidatePath("/admin/stock")
+  revalidatePath("/shop")
 
   return orderRow.id
 }

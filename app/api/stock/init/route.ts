@@ -20,7 +20,9 @@ export async function POST() {
       description: product.description ?? null,
       tags: product.tags ?? [],
       inventory_quantity: product.max_qnt ?? 20,
-      is_active: true,
+      inventory_quantity_us: product.max_qnt ?? 20,
+      inventory_quantity_br: product.max_qnt ?? 20,
+      is_active: !product.is_test_product,
       sort_order: index,
     }))
 

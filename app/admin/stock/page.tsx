@@ -30,7 +30,7 @@ export default async function AdminStockPage({
   const saved = params.saved === "1"
   const updatedCount = Number(params.updated || 0)
   const error = params.error?.trim() || null
-  const products = await getStoredProducts()
+  const products = await getStoredProducts({ includeInactive: true })
 
   return (
     <div style={{ background: colors.paper, color: colors.ink }}>
@@ -40,7 +40,7 @@ export default async function AdminStockPage({
           <SectionTitle
             kicker="Admin"
             title="Stock manager"
-            desc="Adjust inventory for each sock option by editing the stock number directly."
+            desc="Adjust U.S. and Brazil inventory separately, and control whether a product is visible in the shop."
           />
 
           <div className="flex flex-wrap gap-3">
@@ -67,7 +67,7 @@ export default async function AdminStockPage({
               color: colors.ink,
             }}
           >
-            Stock updated for {updatedCount} product
+            Product settings updated for {updatedCount} product
             {updatedCount === 1 ? "" : "s"}.
           </div>
         ) : null}
@@ -95,14 +95,14 @@ export default async function AdminStockPage({
                   border: `2px dashed ${colors.ink}`,
                 }}
               >
-                No active products found.
+                No products found.
               </div>
             ) : (
               <form action={updateStockAction} className="grid gap-4">
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_180px]"
+                    className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_360px]"
                     style={{
                       background: colors.paper,
                       border: `2px solid ${colors.ink}`,
@@ -116,24 +116,68 @@ export default async function AdminStockPage({
                         ID: {product.id}
                       </div>
                       <div className="mt-2 text-sm font-black">
-                        Current stock: {product.inventory_quantity}
+                        Catalog: {product.is_active === false ? "Hidden" : "Visible"}
                       </div>
+                      <div className="mt-2 text-sm font-black">
+                        Current stock: US {product.inventory_quantity_us} • BR{" "}
+                        {product.inventory_quantity_br}
+                      </div>
+                      {product.id === "sock-test-checkout" ? (
+                        <div className="mt-2 text-xs" style={{ color: colors.muted }}>
+                          Internal test product. Hide it to remove it from the public
+                          shop completely.
+                        </div>
+                      ) : null}
                     </div>
 
-                    <div>
-                      <Label>Stock quantity</Label>
-                      <input
-                        name="stock_qty"
-                        type="number"
-                        min="0"
-                        step="1"
-                        defaultValue={product.inventory_quantity}
-                        className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                        style={{
-                          background: colors.sand,
-                          border: `2px solid ${colors.ink}`,
-                        }}
-                      />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <Label>Catalog visibility</Label>
+                        <select
+                          name="product_active"
+                          defaultValue={product.is_active === false ? "0" : "1"}
+                          className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                          style={{
+                            background: colors.sand,
+                            border: `2px solid ${colors.ink}`,
+                          }}
+                        >
+                          <option value="1">Visible in shop</option>
+                          <option value="0">Hidden from shop</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <Label>U.S. stock</Label>
+                        <input
+                          name="stock_qty_us"
+                          type="number"
+                          min="0"
+                          step="1"
+                          defaultValue={product.inventory_quantity_us}
+                          className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                          style={{
+                            background: colors.sand,
+                            border: `2px solid ${colors.ink}`,
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Brazil stock</Label>
+                        <input
+                          name="stock_qty_br"
+                          type="number"
+                          min="0"
+                          step="1"
+                          defaultValue={product.inventory_quantity_br}
+                          className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                          style={{
+                            background: colors.sand,
+                            border: `2px solid ${colors.ink}`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

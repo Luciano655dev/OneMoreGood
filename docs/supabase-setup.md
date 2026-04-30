@@ -3,7 +3,7 @@
 This project can now use Supabase as the source of truth for:
 
 - products
-- inventory quantities
+- U.S. and Brazil inventory quantities
 - order history
 - order items
 
@@ -51,11 +51,11 @@ into the `products` table.
 ## 4. How the app behaves after Supabase is configured
 
 - `/api/products` reads products from Supabase
-- `/api/stock` reads inventory from Supabase
+- `/api/stock` reads country-specific inventory from Supabase
 - checkout validates inventory against Supabase
 - successful Stripe webhook writes the order into Supabase
 - successful Stripe webhook writes `order_items` rows
-- successful Stripe webhook decrements `products.inventory_quantity`
+- successful Stripe webhook decrements the matching country inventory field
 
 ## 5. What to edit after setup
 
@@ -66,7 +66,8 @@ Inventory and product data should be edited in Supabase:
 - `products.image`
 - `products.description`
 - `products.tags`
-- `products.inventory_quantity`
+- `products.inventory_quantity_us`
+- `products.inventory_quantity_br`
 - `products.is_active`
 
 The static file remains useful as a seed/fallback, but Supabase becomes the operational source of truth once configured.

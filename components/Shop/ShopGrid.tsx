@@ -6,10 +6,15 @@ import CartDrawer from "../cart/CartDrawer"
 import ShopItem from "./ShopItem"
 import Filters from "./Filters"
 import colors from "../colors"
-import { formatMoneyFromCents } from "@/lib/commerce"
+import {
+  DEFAULT_SHIPPING_COUNTRY,
+  formatMoneyFromCents,
+  type ShippingCountry,
+} from "@/lib/commerce"
 import type { Product } from "@/types"
 
 type StockMap = Record<string, number>
+type StockByCountry = Record<ShippingCountry, StockMap>
 
 function CartButton() {
   const { totalQty, toggleOpen } = useCart()
@@ -87,12 +92,14 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 
 function InnerShop({
   products,
-  stock,
+  stockByCountry,
 }: {
   products: Product[]
-  stock: StockMap
+  stockByCountry: StockByCountry
 }) {
   const { shippingCountry } = useCart()
+  const activeStock =
+    stockByCountry[shippingCountry] || stockByCountry[DEFAULT_SHIPPING_COUNTRY]
 
   const [query, setQuery] = useState("")
   const [activeTag, setActiveTag] = useState("All")
@@ -113,18 +120,26 @@ function InnerShop({
     const q = deferredQuery.trim().toLowerCase()
     const tag = deferredTag.toLowerCase()
 
-    return products.filter((p: Product) => {
-      const title = (p.title || "").toLowerCase()
-      const desc = (p.description || "").toLowerCase()
+    return products
+      .filter((p: Product) => {
+        const title = (p.title || "").toLowerCase()
+        const desc = (p.description || "").toLowerCase()
 
-      const matchesQ = !q || title.includes(q) || desc.includes(q)
-      const matchesTag =
-        deferredTag === "All" ||
-        (p.tags || []).some((t: string) => t.toLowerCase() === tag)
+        const matchesQ = !q || title.includes(q) || desc.includes(q)
+        const matchesTag =
+          deferredTag === "All" ||
+          (p.tags || []).some((t: string) => t.toLowerCase() === tag)
 
-      return matchesQ && matchesTag
-    })
-  }, [products, deferredQuery, deferredTag])
+        return matchesQ && matchesTag
+      })
+      .sort((a, b) => {
+        const aOut = typeof activeStock[a.id] === "number" && activeStock[a.id] <= 0
+        const bOut = typeof activeStock[b.id] === "number" && activeStock[b.id] <= 0
+
+        if (aOut === bOut) return 0
+        return aOut ? 1 : -1
+      })
+  }, [products, deferredQuery, deferredTag, activeStock])
 
   const resultsLabel = useMemo(() => {
     const n = visibleProducts.length
@@ -211,7 +226,7 @@ function InnerShop({
                 <ShopItem
                   key={p.id}
                   {...p}
-                  stockQuantity={stock[p.id]}
+                  stockQuantity={activeStock[p.id]}
                   priority={index < 3}
                 />
               ))}
@@ -225,16 +240,18 @@ function InnerShop({
 
 export default function ShopPage({
   initialProducts,
-  initialStock,
+  initialStockByCountry,
+  initialShippingCountry,
 }: {
   initialProducts: Product[]
-  initialStock: StockMap
+  initialStockByCountry: StockByCountry
+  initialShippingCountry: ShippingCountry
 }) {
   return (
-    <CartProvider>
-      <InnerShop products={initialProducts} stock={initialStock} />
+    <CartProvider initialShippingCountry={initialShippingCountry}>
+      <InnerShop products={initialProducts} stockByCountry={initialStockByCountry} />
       <CartButton />
-      <CartDrawer />
+      <CartDrawer stockByCountry={initialStockByCountry} />
     </CartProvider>
   )
 }
