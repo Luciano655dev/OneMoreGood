@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react"
 import { useCart } from "../cart/CartContext"
-import { useStock } from "@/app/hooks/useStock"
+import ProgressiveImage from "../Home/Objects/ProgressiveImage"
 import colors from "../colors"
 import {
   formatMoneyFromCents,
@@ -17,10 +17,11 @@ type ShopItemProps = {
   price: number
   description?: string
   max_qnt?: number
+  stockQuantity?: number
+  priority?: boolean
 }
 
-function getBadge(loading: boolean, qtyLeft?: number) {
-  if (loading) return null
+function getBadge(qtyLeft?: number) {
   if (typeof qtyLeft !== "number") return null
   if (qtyLeft <= 0) return "Out of stock"
   if (qtyLeft <= 5) return `${qtyLeft} left`
@@ -34,10 +35,11 @@ export default function ShopItem({
   price,
   description,
   max_qnt,
+  stockQuantity,
+  priority = false,
 }: ShopItemProps) {
   const [open, setOpen] = useState(false)
   const { addToCart, openCart, items, shippingCountry } = useCart()
-  const { stock, loading: stockLoading } = useStock()
 
   // Modal UX: ESC closes + lock scroll
   useEffect(() => {
@@ -62,16 +64,13 @@ export default function ShopItem({
     return found?.qty ?? 0
   }, [items, id])
 
-  const qtyLeft = stock[id]
-  const hasQty = !stockLoading && typeof qtyLeft === "number"
+  const qtyLeft = stockQuantity
+  const hasQty = typeof qtyLeft === "number"
   const out = hasQty && qtyLeft <= 0
   const remaining = hasQty ? Math.max(0, qtyLeft - inCartQty) : null
   const atLimit = hasQty && remaining === 0 && !out
 
-  const badge = useMemo(
-    () => getBadge(stockLoading, qtyLeft),
-    [stockLoading, qtyLeft]
-  )
+  const badge = useMemo(() => getBadge(qtyLeft), [qtyLeft])
 
   const unitPriceCents = useMemo(
     () =>
@@ -132,9 +131,14 @@ export default function ShopItem({
               border: `2px solid ${colors.ink}`,
             }}
           >
-            <img
+            <ProgressiveImage
               src={image}
               alt={title}
+              width={1200}
+              height={1200}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              priority={priority}
+              quality={68}
               className="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
             />
 
@@ -279,9 +283,15 @@ export default function ShopItem({
                     border: `2px solid ${colors.ink}`,
                   }}
                 >
-                  <img
+                  <ProgressiveImage
                     src={image}
                     alt={title}
+                    width={1600}
+                    height={1600}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority={open}
+                    loading="eager"
+                    quality={82}
                     className="h-72 w-full object-cover md:h-full"
                   />
                 </div>
@@ -301,9 +311,7 @@ export default function ShopItem({
                   className="mt-2 text-xs font-black uppercase tracking-widest"
                   style={{ color: out ? colors.clay : colors.muted }}
                 >
-                  {stockLoading
-                    ? "Checking stock…"
-                    : !hasQty
+                  {!hasQty
                     ? "Stock unavailable"
                     : out
                     ? "Out of stock"

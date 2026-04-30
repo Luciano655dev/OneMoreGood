@@ -5,6 +5,7 @@ import { useMemo, useState } from "react"
 import { useCart } from "./CartContext"
 import colors from "../colors"
 import Portal from "./Portal"
+import ProgressiveImage from "../Home/Objects/ProgressiveImage"
 import {
   calculateCartTotals,
   formatMoneyFromCents,
@@ -151,9 +152,13 @@ export default function CartDrawer() {
                           border: `2px solid ${colors.ink}`,
                         }}
                       >
-                        <img
+                        <ProgressiveImage
                           src={product.image}
                           alt={product.title}
+                          width={320}
+                          height={320}
+                          sizes="64px"
+                          quality={60}
                           className="h-full w-full object-cover"
                         />
                       </div>

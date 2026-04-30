@@ -5,10 +5,11 @@ import { CartProvider, useCart } from "../cart/CartContext"
 import CartDrawer from "../cart/CartDrawer"
 import ShopItem from "./ShopItem"
 import Filters from "./Filters"
-import { useProducts } from "@/data/useProducts"
 import colors from "../colors"
 import { formatMoneyFromCents } from "@/lib/commerce"
 import type { Product } from "@/types"
+
+type StockMap = Record<string, number>
 
 function CartButton() {
   const { totalQty, toggleOpen } = useCart()
@@ -49,47 +50,6 @@ function CartButton() {
   )
 }
 
-function ShopSkeleton() {
-  return (
-    <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div
-          key={i}
-          className="p-3"
-          style={{
-            background: colors.paper,
-            border: `2px solid ${colors.ink}`,
-            boxShadow: `3px 3px 0 ${colors.ink}`,
-          }}
-        >
-          <div
-            className="h-44 w-full"
-            style={{
-              background: colors.sand,
-              border: `2px solid ${colors.ink}`,
-              opacity: 0.7,
-            }}
-          />
-          <div className="mt-3 space-y-2">
-            <div
-              className="h-3 w-24"
-              style={{ background: colors.sand, opacity: 0.6 }}
-            />
-            <div
-              className="h-5 w-3/4"
-              style={{ background: colors.sand, opacity: 0.6 }}
-            />
-            <div
-              className="h-4 w-20"
-              style={{ background: colors.sand, opacity: 0.6 }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function EmptyState({ onClear }: { onClear: () => void }) {
   return (
     <div className="mt-14 grid place-items-center">
@@ -125,8 +85,13 @@ function EmptyState({ onClear }: { onClear: () => void }) {
   )
 }
 
-function InnerShop() {
-  const { products, loading, error } = useProducts()
+function InnerShop({
+  products,
+  stock,
+}: {
+  products: Product[]
+  stock: StockMap
+}) {
   const { shippingCountry } = useCart()
 
   const [query, setQuery] = useState("")
@@ -230,21 +195,7 @@ function InnerShop() {
             </span>
           </div>
 
-          {error ? (
-            <div
-              className="mt-10 text-center text-sm font-black uppercase tracking-wider"
-              style={{ color: colors.clay }}
-              role="alert"
-            >
-              {String(error)}
-            </div>
-          ) : (
-            <></>
-          )}
-
-          {loading ? (
-            <ShopSkeleton />
-          ) : visibleProducts.length === 0 ? (
+          {visibleProducts.length === 0 ? (
             <EmptyState
               onClear={() => {
                 setQuery("")
@@ -256,8 +207,13 @@ function InnerShop() {
               id="shop-grid"
               className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
             >
-              {visibleProducts.map((p) => (
-                <ShopItem key={p.id} {...p} />
+              {visibleProducts.map((p, index) => (
+                <ShopItem
+                  key={p.id}
+                  {...p}
+                  stockQuantity={stock[p.id]}
+                  priority={index < 3}
+                />
               ))}
             </div>
           )}
@@ -267,10 +223,16 @@ function InnerShop() {
   )
 }
 
-export default function ShopPage() {
+export default function ShopPage({
+  initialProducts,
+  initialStock,
+}: {
+  initialProducts: Product[]
+  initialStock: StockMap
+}) {
   return (
     <CartProvider>
-      <InnerShop />
+      <InnerShop products={initialProducts} stock={initialStock} />
       <CartButton />
       <CartDrawer />
     </CartProvider>
