@@ -9,8 +9,8 @@ export default function HowItWorks() {
     <section id="how" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
         kicker="Methodology"
-        title="How the model works"
-        desc="OneMoreGood sells products, fulfills customer orders, and donates part of company profits."
+        title="How the ecommerce model works"
+        desc="OneMoreGood is designed as a straightforward store with a clear purpose behind the brand."
       />
 
       <div className="mt-10 grid md:grid-cols-3 gap-6">
@@ -33,8 +33,8 @@ export default function HowItWorks() {
           },
           {
             n: "03",
-            t: "Share part of profits",
-            d: "After business costs and fulfillment, OneMoreGood donates part of its profits to the current featured organization.",
+            t: "Keep the purpose visible",
+            d: "The brand stays tied to real local context so the business feels grounded, documented, and more personal than generic ecommerce.",
             icon: ShieldCheck,
             tone: colors.sand,
             rot: -0.2,

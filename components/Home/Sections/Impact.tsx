@@ -46,8 +46,8 @@ export default function Impact() {
     <section id="impact" className="max-w-7xl mx-auto px-6 py-14">
       <SectionTitle
         kicker="Impact"
-        title="What this business model can support"
-        desc="The goal is to run a healthy online store and use part of its profits to help Instituto Semear with practical local needs."
+        title="Why purpose matters in ecommerce"
+        desc="The goal is to build a healthy online store that still feels human, specific, and connected to a real place."
       />
 
       <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -62,24 +62,24 @@ export default function Impact() {
             <ul className="space-y-4" style={{ color: colors.muted }}>
               {[
                 [
-                  "Operational breathing room",
-                  "Donations funded by the business can help cover practical needs that are hard to fund through restricted programs alone.",
+                  "Stronger brand identity",
+                  "A store with real-world context is easier to remember than another generic product grid with no point of view.",
                 ],
                 [
-                  "Better learning conditions",
-                  "Donations can contribute to materials, structure, and day-to-day improvements that strengthen the environment children experience.",
+                  "More meaningful storytelling",
+                  "Photos, video, and local context make the brand feel lived-in and specific instead of abstract.",
                 ],
                 [
                   "Clear customer expectations",
-                  "A straightforward retail model makes it easier for customers to understand that they are buying products while the business separately handles its charitable giving.",
+                  "Customers understand they are shopping in a normal ecommerce flow with products, prices, shipping, and service.",
                 ],
                 [
-                  "More partner opportunities",
-                  "A clear commerce model creates room for collaborations and additional featured organizations over time.",
+                  "Room for thoughtful partnerships",
+                  "A clear commercial model creates space for collaborations, featured stories, and future product drops without muddying the offer.",
                 ],
                 [
                   "Direct accountability",
-                  "OneMoreGood can share updates on the partner relationship, donation model, and what support is meant to improve.",
+                  "OneMoreGood can keep showing the context behind the brand so customers can judge the story by what they actually see.",
                 ],
               ].map(([t, d], idx) => (
                 <li
@@ -112,8 +112,8 @@ export default function Impact() {
             >
               Sustainability is planned through product sales, thoughtful
               pricing, repeat customers, strategic collaborations, and an
-              online retail operation that can support both the business and future
-              donations.
+              online retail operation that keeps the brand commercially clear
+              while still carrying a visible purpose.
             </div>
           </RoughBorder>
         </div>
@@ -128,8 +128,8 @@ export default function Impact() {
           >
             <div style={{ color: colors.muted }}>
               These photos illustrate the local context around Instituto
-              Semear, the organization currently being supported through
-              OneMoreGood&apos;s giving model.
+              Semear and the broader environment that shapes OneMoreGood&apos;s
+              perspective as a purpose-led ecommerce brand.
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-4">

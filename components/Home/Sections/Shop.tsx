@@ -37,7 +37,7 @@ export default function Shop() {
       <div className="max-w-7xl mx-auto px-6 py-14">
         <SectionTitle
           kicker="Shop"
-          title="A shop with a clear give-back model"
+          title="An ecommerce store with a clear point of view"
           desc="Online payment is paused for now. If you want to buy a pair of socks, contact us directly and we will arrange the order manually."
         />
 
@@ -47,7 +47,7 @@ export default function Shop() {
         >
           Contact: lucianomenezes655@gmail.com or Instagram
           @lucianohlmenezes. Customer payments go toward the products ordered,
-          and any charitable contribution is made separately by OneMoreGood.
+          the order experience, and the store itself.
         </div>
 
         <div className="mt-10 grid md:grid-cols-3 gap-6">

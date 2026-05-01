@@ -24,17 +24,17 @@ export default function About() {
   const values: Array<{ title: string; desc: string; Icon: LucideIcon }> = [
     {
       title: "Mission",
-      desc: "Build a reliable online store where real product sales can fund a sustainable business and a portion of net-profit donations.",
+      desc: "Build a reliable ecommerce brand where great products, clear operations, and real-world context all matter.",
       Icon: Sparkles,
     },
     {
       title: "Vision",
-      desc: "Grow a product brand that serves customers well and consistently shares part of its success with practical community support.",
+      desc: "Grow a product company customers return to because the merchandise is fun, the experience is clear, and the story feels real.",
       Icon: Users,
     },
     {
       title: "Values",
-      desc: "Clear customer expectations, transparent giving, accountable partnerships, and respect for the communities being served.",
+      desc: "Clear customer expectations, accountable partnerships, transparent storytelling, and respect for local communities.",
       Icon: ShieldCheck,
     },
   ]
@@ -54,7 +54,7 @@ export default function About() {
       <SectionTitle
         kicker="About"
         title="Who we are"
-        desc="OneMoreGood is an online brand built around product sales and transparent giving. Instituto Educacional Semear is the first organization we support through part of our profits."
+        desc="OneMoreGood is an online brand built around product sales, clear retail communication, and a documented local connection to Santa Terezinha."
       />
 
       <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -73,17 +73,17 @@ export default function About() {
               >
                 OneMoreGood exists to sell simple products people actually want
                 to buy. Customers place product orders, we fulfill those
-                orders, and the business uses part of its profits to support
-                organizations already doing meaningful frontline work.
+                orders, and the brand is shaped by a purpose that stays visible
+                beyond the checkout flow.
               </p>
 
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                Orders on OneMoreGood are merchandise purchases. Our charitable
-                giving happens at the company level after covering inventory,
-                shipping, operations, and other business costs.
+                Orders on OneMoreGood are normal merchandise purchases. The
+                point is to build an ecommerce business that feels intentional,
+                grounded, and connected to more than just conversion.
               </p>
 
               <div
@@ -113,19 +113,19 @@ export default function About() {
                 {[
                   [
                     "How OneMoreGood works",
-                    "We sell fun socks through our online checkout and donate part of company profits to the featured organization.",
+                    "We sell fun socks through a straightforward online shop with real products, fulfillment, and customer service.",
                   ],
                   [
-                    "Current featured organization",
-                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is currently featured and may receive donations funded by the business.",
+                    "Current local connection",
+                    "Instituto Educacional Semear in Santa Terezinha, Pernambuco, is part of the local context that gives the brand its perspective.",
                   ],
                   [
                     "Why this model matters",
-                    "Small organizations often need unrestricted support, and a product business can contribute without confusing customer purchases with direct charitable giving.",
+                    "A purpose-led store feels more human than generic ecommerce because customers can see the place, people, and point of view behind it.",
                   ],
                   [
                     "What comes next",
-                    "As OneMoreGood grows, we can expand the catalog, serve more customers, and support more organizations while keeping the business model easy to understand.",
+                    "As OneMoreGood grows, the catalog, partnerships, and customer experience can all expand without losing the brand&apos;s personality.",
                   ],
                 ].map(([t, d], idx) => (
                   <div
@@ -157,7 +157,7 @@ export default function About() {
           <RoughBorder
             bg={colors.sand}
             rotate={-0.3}
-            label="Where the help goes"
+            label="Where it’s rooted"
             delay={140}
           >
             <div className="flex flex-col">
@@ -183,9 +183,9 @@ export default function About() {
                   Area of operation
                 </div>
                 <div className="mt-2 text-sm" style={{ color: colors.muted }}>
-                  Instituto Semear is based in Santa Terezinha (PE). OneMoreGood
-                  is currently built around supporting that organization through
-                  profits generated by product sales.
+                  Instituto Semear is based in Santa Terezinha (PE). That local
+                  setting helps give OneMoreGood a point of view, a reference
+                  point, and a reason to stay specific rather than generic.
                 </div>
 
                 <div
@@ -201,7 +201,7 @@ export default function About() {
                     style={{ color: colors.muted }}
                   >
                     <li>How OneMoreGood sells products with a purpose</li>
-                    <li>Who Instituto Semear is and where support goes</li>
+                    <li>What local context shapes the brand</li>
                     <li>Ways to contact us about collaborations or questions</li>
                   </ul>
                 </div>
@@ -221,8 +221,9 @@ export default function About() {
                 </div>
 
                 <div className="mt-2 text-sm" style={{ color: colors.muted }}>
-                  These photos show the local context around Instituto Semear,
-                  the organization currently being supported through OneMoreGood.
+                  These photos show the local context around Instituto Semear
+                  and the broader environment that gives OneMoreGood its
+                  purpose and perspective.
                 </div>
 
                 {/* clickable preview */}

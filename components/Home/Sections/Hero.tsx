@@ -24,11 +24,7 @@ export default function Hero() {
           <div className="md:col-span-7">
             <div data-reveal className="reveal hidden md:flex flex-wrap gap-2">
               <StampChip icon={ShieldCheck} text="Online shop" />
-              <StampChip
-                icon={Users}
-                text="Instituto Semear"
-                tone={colors.paper}
-              />
+              <StampChip icon={Users} text="Purpose-led brand" tone={colors.paper} />
               <StampChip icon={Sparkles} text="Santa Terezinha, PE" />
             </div>
 
@@ -53,9 +49,9 @@ export default function Hero() {
               style={{ color: colors.muted }}
             >
               OneMoreGood is an online shop selling fun socks and other
-              everyday products. Every order is a standard merchandise
-              purchase, and we donate part of our profits to Instituto
-              Educacional Semear in Santa Terezinha, Pernambuco.
+              everyday products. It is built as an ecommerce brand with a
+              clear point of view, real merchandise, and a grounded connection
+              to Santa Terezinha, Pernambuco.
             </p>
 
             <div data-reveal className="reveal mt-8 flex flex-wrap gap-3">
@@ -79,12 +75,12 @@ export default function Hero() {
                   "Customers are shopping for physical merchandise through the site.",
                 ],
                 [
-                  "Company-level giving",
-                  "OneMoreGood donates part of its profits after order fulfillment and operating costs.",
+                  "Clear retail model",
+                  "Every order is a normal product purchase with straightforward pricing, fulfillment, and customer expectations.",
                 ],
                 [
-                  "Featured organization",
-                  "Instituto Semear is the current organization we support and document publicly.",
+                  "Local context",
+                  "The brand stays connected to real people and real places in Santa Terezinha instead of feeling like generic ecommerce.",
                 ],
               ].map(([t, d]) => (
                 <div key={t}>
@@ -107,8 +103,8 @@ export default function Hero() {
                 className="mt-2 text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                A local video update showing the project environment and the
-                day-to-day community context in Santa Terezinha.
+                A local video update showing the environment, daily rhythm, and
+                community context that shape the brand&apos;s purpose.
               </p>
 
               <div
@@ -147,7 +143,7 @@ export default function Hero() {
                 className="mt-5 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Featured partner • Brazil
+                Local context • Brazil
               </div>
             </RoughBorder>
           </div>
@@ -173,7 +169,7 @@ export default function Hero() {
               }}
             >
               <div className="text-sm font-black uppercase tracking-widest">
-                Proof video • full transparency
+                Brand context • full video
               </div>
               <button
                 className="btnInk p-2"

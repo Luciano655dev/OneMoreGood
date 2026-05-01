@@ -59,7 +59,7 @@ export default function Contact() {
         <SectionTitle
           kicker="Contact"
           title="Contact us about the brand"
-          desc="Reach out about orders, shipping, wholesale ideas, product questions, or OneMoreGood's net-profit donation model with Instituto Semear."
+          desc="Reach out about orders, shipping, wholesale ideas, product questions, partnerships, or OneMoreGood&apos;s purpose-led ecommerce model."
         />
 
         <div className="mt-10 grid md:grid-cols-12 gap-8 items-start">
@@ -131,8 +131,8 @@ export default function Contact() {
                 >
                   <Building2 size={18} className="mt-0.5 shrink-0" />
                   <span>
-                    Current partner: Instituto Educacional Semear, Santa
-                    Terezinha and nearby communities in Sertão do Pajeú
+                    Featured local connection: Instituto Educacional Semear,
+                    Santa Terezinha and nearby communities in Sertão do Pajeú
                   </span>
                 </div>
               </div>
@@ -176,7 +176,7 @@ export default function Contact() {
                 <textarea
                   name="message"
                   required
-                  placeholder="Tell us what you need: collaboration, retail question, product idea, press, or mission-related question"
+                  placeholder="Tell us what you need: collaboration, retail question, product idea, press, or brand-related question"
                   className="px-3 py-3 font-black h-28"
                   style={{
                     background: colors.paper,
