@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 
 import FormSubmitButton from "@/components/Admin/FormSubmitButton"
 import colors from "@/components/colors"
@@ -102,7 +103,7 @@ export default async function AdminStockPage({
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_360px]"
+                    className="grid gap-4 p-4 lg:grid-cols-[132px_minmax(0,1fr)_360px]"
                     style={{
                       background: colors.paper,
                       border: `2px solid ${colors.ink}`,
@@ -110,6 +111,24 @@ export default async function AdminStockPage({
                     }}
                   >
                     <input type="hidden" name="product_id" value={product.id} />
+                    <div
+                      className="w-28 self-start overflow-hidden sm:w-32 lg:w-full"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    >
+                      <div className="relative aspect-square w-full">
+                        <Image
+                          src={product.image}
+                          alt={product.title}
+                          fill
+                          sizes="(max-width: 1024px) 128px, 132px"
+                          className="object-cover"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <div className="font-black">{product.title}</div>
                       <div className="mt-1 text-xs" style={{ color: colors.muted }}>

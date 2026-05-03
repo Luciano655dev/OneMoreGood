@@ -11,6 +11,21 @@ export type StoredProduct = Product & {
   sort_order?: number
 }
 
+type ProductRow = {
+  id: string
+  title: string
+  price: number | string
+  image: string
+  description?: string | null
+  max_qnt?: number | string | null
+  tags?: string[] | null
+  inventory_quantity?: number | string | null
+  inventory_quantity_us?: number | string | null
+  inventory_quantity_br?: number | string | null
+  is_active?: boolean | null
+  sort_order?: number | string | null
+}
+
 function getDefaultIsActive(product: Product) {
   return !product.is_test_product
 }
@@ -27,14 +42,40 @@ export function getFallbackProducts(): StoredProduct[] {
   })) as StoredProduct[]
 }
 
-function mapRowToProduct(row: any): StoredProduct {
+function normalizeInventoryValues(
+  row: Pick<
+    ProductRow,
+    "inventory_quantity" | "inventory_quantity_us" | "inventory_quantity_br"
+  >
+) {
   const inventoryQuantity = Number(row.inventory_quantity ?? 0)
-  const inventoryQuantityUs = Number(
+  let inventoryQuantityUs = Number(
     row.inventory_quantity_us ?? row.inventory_quantity ?? 0
   )
-  const inventoryQuantityBr = Number(
+  let inventoryQuantityBr = Number(
     row.inventory_quantity_br ?? row.inventory_quantity ?? 0
   )
+
+  // Legacy rows may still have only the shared inventory column populated.
+  if (
+    inventoryQuantity > 0 &&
+    inventoryQuantityUs === 0 &&
+    inventoryQuantityBr === 0
+  ) {
+    inventoryQuantityUs = inventoryQuantity
+    inventoryQuantityBr = inventoryQuantity
+  }
+
+  return {
+    inventoryQuantity,
+    inventoryQuantityUs,
+    inventoryQuantityBr,
+  }
+}
+
+export function mapRowToProduct(row: ProductRow): StoredProduct {
+  const { inventoryQuantity, inventoryQuantityUs, inventoryQuantityBr } =
+    normalizeInventoryValues(row)
 
   return {
     id: row.id,

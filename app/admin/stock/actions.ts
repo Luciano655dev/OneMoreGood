@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 
 import {
   getInventoryForCountry,
+  mapRowToProduct,
   type StoredProduct,
 } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
@@ -47,15 +48,17 @@ export async function updateStockAction(formData: FormData) {
       .getAll("stock_qty_br")
       .map((value) => String(value || "").trim())
 
-    const rowCount = Math.max(
-      productIds.length,
-      productActiveValues.length,
-      stockQuantitiesUs.length,
-      stockQuantitiesBr.length
-    )
+    const rowCount = productIds.length
+    if (
+      productActiveValues.length < rowCount ||
+      stockQuantitiesUs.length < rowCount ||
+      stockQuantitiesBr.length < rowCount
+    ) {
+      throw new Error("Stock form is missing one or more product values.")
+    }
 
     const supabase = getSupabaseAdmin()
-    let updatedCount = 0
+    const submittedRows = []
 
     for (let index = 0; index < rowCount; index += 1) {
       const rowNumber = index + 1
@@ -74,28 +77,51 @@ export async function updateStockAction(formData: FormData) {
       )
       const nextIsActive = (productActiveValues[index] || "1") === "1"
 
-      const { data: product, error: productError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
-        .maybeSingle()
+      submittedRows.push({
+        productId,
+        nextQtyUs,
+        nextQtyBr,
+        nextIsActive,
+      })
+    }
 
-      if (productError) {
-        throw new Error(productError.message || `Could not load product ${productId}.`)
-      }
+    if (submittedRows.length === 0) {
+      redirect("/admin")
+    }
+
+    const { data: products, error: productsError } = await supabase
+      .from("products")
+      .select("*")
+      .in(
+        "id",
+        submittedRows.map((row) => row.productId)
+      )
+
+    if (productsError) {
+      throw new Error(productsError.message || "Could not load products.")
+    }
+
+    const productMap = new Map(
+      (products ?? []).map((product) => [
+        String(product.id),
+        mapRowToProduct(product as StoredProduct),
+      ])
+    )
+
+    for (const row of submittedRows) {
+      const product = productMap.get(row.productId)
       if (!product) {
-        throw new Error(`Product not found: ${productId}`)
+        throw new Error(`Product not found: ${row.productId}`)
       }
 
-      const storedProduct = product as StoredProduct
-      const currentQtyUs = getInventoryForCountry(storedProduct, "US")
-      const currentQtyBr = getInventoryForCountry(storedProduct, "BR")
-      const currentIsActive = storedProduct.is_active !== false
+      const currentQtyUs = getInventoryForCountry(product, "US")
+      const currentQtyBr = getInventoryForCountry(product, "BR")
+      const currentIsActive = product.is_active !== false
 
       if (
-        nextQtyUs === currentQtyUs &&
-        nextQtyBr === currentQtyBr &&
-        nextIsActive === currentIsActive
+        row.nextQtyUs === currentQtyUs &&
+        row.nextQtyBr === currentQtyBr &&
+        row.nextIsActive === currentIsActive
       ) {
         continue
       }
@@ -103,24 +129,24 @@ export async function updateStockAction(formData: FormData) {
       const { error: updateError } = await supabase
         .from("products")
         .update({
-          inventory_quantity: nextQtyUs,
-          inventory_quantity_us: nextQtyUs,
-          inventory_quantity_br: nextQtyBr,
-          is_active: nextIsActive,
+          inventory_quantity: row.nextQtyUs,
+          inventory_quantity_us: row.nextQtyUs,
+          inventory_quantity_br: row.nextQtyBr,
+          is_active: row.nextIsActive,
         })
-        .eq("id", productId)
+        .eq("id", row.productId)
 
       if (updateError) {
         throw new Error(updateError.message || `Could not update ${product.title}.`)
       }
-
-      updatedCount += 1
     }
 
+    revalidatePath("/admin")
+    revalidatePath("/admin/orders")
     revalidatePath("/admin/stock")
     revalidatePath("/admin/orders/new")
     revalidatePath("/shop")
-    redirect(`/admin/stock?saved=1&updated=${updatedCount}`)
+    redirect("/admin/orders")
   } catch (error) {
     if (isNextRedirectError(error)) throw error
     const message =
