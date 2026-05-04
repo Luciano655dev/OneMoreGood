@@ -30,16 +30,28 @@ function getDefaultIsActive(product: Product) {
   return !product.is_test_product
 }
 
-export function getFallbackProducts(): StoredProduct[] {
-  return PRODUCTS.map((product, index) => ({
-    ...product,
-    max_qnt: product.max_qnt ?? 20,
-    inventory_quantity: product.max_qnt ?? 20,
-    inventory_quantity_us: product.max_qnt ?? 20,
-    inventory_quantity_br: product.max_qnt ?? 20,
+function mapCatalogProductToRow(product: Product, index: number): ProductRow {
+  const defaultInventory = product.max_qnt ?? 20
+
+  return {
+    id: product.id,
+    title: product.title,
+    price: product.price,
+    image: product.image,
+    description: product.description ?? null,
+    tags: product.tags ?? [],
+    inventory_quantity: defaultInventory,
+    inventory_quantity_us: defaultInventory,
+    inventory_quantity_br: defaultInventory,
     is_active: getDefaultIsActive(product),
     sort_order: index,
-  })) as StoredProduct[]
+  }
+}
+
+export function getFallbackProducts(): StoredProduct[] {
+  return PRODUCTS.map((product, index) =>
+    mapRowToProduct(mapCatalogProductToRow(product, index))
+  )
 }
 
 function normalizeInventoryValues(
@@ -145,23 +157,40 @@ export async function getStoredProducts({
   }
 
   const supabase = getSupabaseAdmin()
-  let query = supabase
+  const { data, error } = await supabase
     .from("products")
     .select("*")
     .order("sort_order", { ascending: true })
     .order("title", { ascending: true })
 
-  if (!includeInactive) {
-    query = query.eq("is_active", true)
-  }
-
-  const { data, error } = await query
-
   if (error) {
     throw error
   }
 
-  return (data ?? []).map(mapRowToProduct)
+  const rows = (data ?? []) as ProductRow[]
+  const existingIds = new Set(rows.map((row) => row.id))
+  const missingRows = PRODUCTS.map((product, index) =>
+    existingIds.has(product.id) ? null : mapCatalogProductToRow(product, index)
+  ).filter((row): row is ProductRow => row !== null)
+
+  if (missingRows.length > 0) {
+    const { error: upsertError } = await supabase.from("products").upsert(missingRows)
+    if (upsertError) {
+      throw upsertError
+    }
+  }
+
+  const mergedProducts = [...rows, ...missingRows]
+    .map(mapRowToProduct)
+    .sort((a, b) => {
+      const sortDelta = (a.sort_order ?? 0) - (b.sort_order ?? 0)
+      if (sortDelta !== 0) return sortDelta
+      return a.title.localeCompare(b.title)
+    })
+
+  return includeInactive
+    ? mergedProducts
+    : mergedProducts.filter((product) => product.is_active !== false)
 }
 
 export async function getStoredProductMap() {
