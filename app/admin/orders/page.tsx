@@ -7,6 +7,7 @@ import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
   ADMIN_ORDERS_PAGE_SIZE,
+  getOrderDisplayName,
   normalizeChartMarketFilter,
   ORDER_STATUSES,
   formatOrderMarketLabel,
@@ -805,12 +806,14 @@ export default async function AdminOrdersPage({
                         <div className="p-4">
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
-                              <div className="text-lg font-black">{order.order_id}</div>
+                              <div className="text-lg font-black">
+                                {getOrderDisplayName(order)}
+                              </div>
                               <div
                                 className="mt-1 text-sm"
                                 style={{ color: colors.muted }}
                               >
-                                {order.customer_email}
+                                {order.order_id}
                               </div>
                             </div>
                             <span

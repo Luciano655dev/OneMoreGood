@@ -9,6 +9,7 @@ import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
   ORDER_MARKETS,
   formatOrderCurrencyLabel,
+  getOrderDisplayName,
   formatOrderMarketLabel,
   ORDER_STATUSES,
   formatAddress,
@@ -92,7 +93,7 @@ export default async function AdminOrderDetailPage({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SectionTitle
             kicker="Admin"
-            title={order.order_id}
+            title={getOrderDisplayName(order)}
             titleAccessory={<CopyOrderIdButton value={order.order_id} />}
             desc="Update shipping progress, tracking, notes, and final completion from one place."
           />
@@ -148,7 +149,12 @@ export default async function AdminOrderDetailPage({
                   >
                     Customer
                   </div>
-                  <div className="mt-1 font-black">{order.customer_email}</div>
+                  <div className="mt-1 font-black">
+                    {order.shipping_name || "Name not available"}
+                  </div>
+                  <div className="mt-1 text-sm" style={{ color: colors.muted }}>
+                    {order.customer_email}
+                  </div>
                 </div>
                 <div>
                   <div
@@ -381,6 +387,20 @@ export default async function AdminOrderDetailPage({
                   <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
                     Market keeps currency and shipping country aligned.
                   </p>
+                </div>
+
+                <div>
+                  <Label>Customer name</Label>
+                  <input
+                    name="customer_name"
+                    defaultValue={order.shipping_name || ""}
+                    placeholder="Customer name"
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.sand,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  />
                 </div>
 
                 <div>

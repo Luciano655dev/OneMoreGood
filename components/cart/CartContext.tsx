@@ -7,11 +7,11 @@ import React, {
   useMemo,
   useState,
 } from "react"
+import { useDetectedShippingCountry } from "@/app/hooks/useDetectedShippingCountry"
 import type { Product } from "@/types"
 import {
   CART_STORAGE_KEY,
   DEFAULT_SHIPPING_COUNTRY,
-  isSupportedShippingCountry,
   type ShippingCountry,
 } from "@/lib/commerce"
 
@@ -62,9 +62,7 @@ export function CartProvider({
     }
   })
   const [isOpen, setIsOpen] = useState(false)
-  const [shippingCountry, setShippingCountry] = useState<ShippingCountry>(
-    () => initialShippingCountry
-  )
+  const shippingCountry = useDetectedShippingCountry(initialShippingCountry)
 
   // Save to localStorage
   useEffect(() => {
@@ -74,30 +72,6 @@ export function CartProvider({
       // ignore
     }
   }, [items])
-
-  useEffect(() => {
-    let cancelled = false
-
-    const loadCountry = async () => {
-      try {
-        const res = await fetch("/api/geo-country", { cache: "no-store" })
-        if (!res.ok) return
-        const data = (await res.json()) as { country?: string }
-        const detectedCountry = String(data.country || "").toUpperCase()
-        if (!isSupportedShippingCountry(detectedCountry)) return
-        if (cancelled) return
-        setShippingCountry(detectedCountry)
-      } catch {
-        // ignore
-      }
-    }
-
-    loadCountry()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   // ESC to close drawer
   useEffect(() => {

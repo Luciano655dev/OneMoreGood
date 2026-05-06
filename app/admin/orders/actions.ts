@@ -77,6 +77,7 @@ export async function updateOrderAction(formData: FormData) {
     }
     const market = normalizeOrderMarket(marketRaw)
     const currency = getOrderCurrencyForMarket(market)
+    const customerName = String(formData.get("customer_name") || "").trim()
     const trackingNumber = String(formData.get("tracking_number") || "").trim()
     const trackingCarrier = String(formData.get("tracking_carrier") || "").trim()
     const notes = String(formData.get("notes") || "").trim()
@@ -112,6 +113,7 @@ export async function updateOrderAction(formData: FormData) {
     const payloadWithCurrency = {
       status,
       currency,
+      shipping_name: customerName || null,
       shipping_address: nextShippingAddress,
       tracking_number: trackingNumber || null,
       tracking_carrier: trackingCarrier || null,
@@ -128,6 +130,7 @@ export async function updateOrderAction(formData: FormData) {
         .from("orders")
         .update({
           status,
+          shipping_name: customerName || null,
           shipping_address: nextShippingAddress,
           tracking_number: trackingNumber || null,
           tracking_carrier: trackingCarrier || null,
@@ -274,6 +277,9 @@ async function createManualOrder(formData: FormData) {
   }
 
   const customerName = String(formData.get("customer_name") || "").trim()
+  if (!customerName) {
+    throw new Error("Customer name is required.")
+  }
   const rawEmail = String(formData.get("customer_email") || "")
     .trim()
     .toLowerCase()

@@ -222,14 +222,15 @@ export default async function AdminNewManualOrderPage({
 
               <FormSection
                 title="2. Customer details"
-                desc="These fields are optional, but useful for keeping order history clean."
+                desc="Customer name is required so the order list stays readable and searchable."
               >
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <Label>Customer name</Label>
                     <input
                       name="customer_name"
-                      placeholder="Optional"
+                      required
+                      placeholder="Required"
                       className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
                       style={{
                         background: colors.paper,

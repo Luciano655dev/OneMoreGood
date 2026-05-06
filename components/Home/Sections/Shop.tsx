@@ -3,24 +3,42 @@ import RoughBorder from "../Objects/RoughBorder"
 import SockIcon from "../Objects/SockIcon"
 import ProgressiveImage from "../Objects/ProgressiveImage"
 import colors from "@/components/colors"
+import { useDetectedShippingCountry } from "@/app/hooks/useDetectedShippingCountry"
+import {
+  formatMoneyFromCents,
+  getUnitPriceCentsForCountry,
+  PROMO_PAIR_PRICE_CENTS,
+} from "@/lib/commerce"
+import type { Product } from "@/types"
 import { useRouter } from "next/navigation"
 
 export default function Shop() {
   const router = useRouter()
+  const shippingCountry = useDetectedShippingCountry()
 
-  const products = [
+  const products: Array<
+    Product & {
+      mainTag: string
+    }
+  > = [
     {
+      id: "flying-money-socks",
       title: "Flying Money Socks",
+      price: 7.99,
       image: "/products/FlyingMoneySocks.png",
       mainTag: "PREMIUM SOCKS",
     },
     {
+      id: "chicken-leg-socks",
       title: "Chicken Leg Socks",
+      price: 7.99,
       image: "/products/ChickenLegSocks.png",
       mainTag: "PREMIUM SOCKS",
     },
     {
+      id: "duff-simpsons-socks",
       title: "DUFF Simpsons Socks",
+      price: 7.99,
       image: "/products/DuffSimpsonsSocks.png",
       mainTag: "PREMIUM SOCKS",
     },
@@ -95,7 +113,12 @@ export default function Shop() {
 
               {/* ACTION */}
               <div className="mt-4 flex items-center justify-between">
-                <div className="font-black">US: $7.99 • BR: R$25</div>
+                <div className="font-black">
+                  {formatMoneyFromCents(
+                    getUnitPriceCentsForCountry(product, shippingCountry),
+                    shippingCountry
+                  )}
+                </div>
 
                 <button
                   type="button"
@@ -117,7 +140,12 @@ export default function Shop() {
                 className="mt-3 text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                + Regular retail purchase • US promo available (2 for $14) • Brazil: R$25 each
+                {shippingCountry === "BR"
+                  ? "Brazil pricing for your location"
+                  : `US promo available: 2 pairs for ${formatMoneyFromCents(
+                      PROMO_PAIR_PRICE_CENTS,
+                      shippingCountry
+                    )}`}
               </div>
             </RoughBorder>
           ))}

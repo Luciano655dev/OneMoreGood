@@ -296,6 +296,20 @@ export function formatOrderMoney(
   }).format(cents / 100)
 }
 
+export function getOrderDisplayName(order: {
+  shipping_name?: string | null
+  customer_email?: string | null
+  order_id?: string | null
+}) {
+  const shippingName = String(order.shipping_name || "").trim()
+  if (shippingName) return shippingName
+
+  const customerEmail = String(order.customer_email || "").trim()
+  if (customerEmail) return customerEmail
+
+  return String(order.order_id || "").trim() || "Unknown customer"
+}
+
 export function normalizeOrderStatus(status: string): OrderStatus | string {
   return ORDER_STATUSES.includes(status as OrderStatus)
     ? (status as OrderStatus)
