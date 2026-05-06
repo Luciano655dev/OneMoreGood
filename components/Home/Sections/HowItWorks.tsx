@@ -45,7 +45,7 @@ export default function HowItWorks() {
             <RoughBorder
               key={s.n}
               bg={s.tone}
-              rotate={s.rot}
+              rotate={0}
               label={`Step ${s.n}`}
               delay={idx * 120}
               className="h-full"

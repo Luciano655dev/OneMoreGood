@@ -35,6 +35,6 @@ export const metadata: Metadata = {
   description:
     "Shop products with a purpose. OneMoreGood is an ecommerce brand with a grounded local point of view.",
   icons: {
-    icon: "/Logo.png",
+    icon: "/brand/Logo.png",
   },
 }

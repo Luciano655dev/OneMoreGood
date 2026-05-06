@@ -66,7 +66,7 @@ export default function Contact() {
           <div className="md:col-span-5">
             <RoughBorder
               bg={colors.paper}
-              rotate={-0.2}
+              rotate={0}
               label="Direct"
               delay={60}
             >
@@ -142,7 +142,7 @@ export default function Contact() {
           <div className="md:col-span-7">
             <RoughBorder
               bg={colors.sand}
-              rotate={0.2}
+              rotate={0}
               label="Message"
               delay={140}
             >

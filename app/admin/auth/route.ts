@@ -1,7 +1,10 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
-import { ADMIN_AUTH_COOKIE, isAdminPasswordValid } from "@/lib/admin/auth"
+import {
+  ADMIN_AUTH_COOKIE,
+  isAdminPasswordValid,
+} from "@/lib/admin/auth"
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))

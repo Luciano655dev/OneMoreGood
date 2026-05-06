@@ -11,8 +11,9 @@ import RoughBorder from "../Objects/RoughBorder"
 import colors from "@/components/colors"
 
 export default function Hero() {
-  const INTRO_VIDEO_URL = "/Instagram Photo Download.mp4"
-  const INTRO_VIDEO_POSTER = "/Instagram Photo Download (5).jpg"
+  const INTRO_VIDEO_URL = "/community/videos/Instagram Photo Download.mp4"
+  const INTRO_VIDEO_POSTER =
+    "/community/photos/Instagram Photo Download (5).jpg"
 
   const [videoOpen, setVideoOpen] = useState(false)
   const router = useRouter()
@@ -94,7 +95,7 @@ export default function Hero() {
           <div className="md:col-span-5">
             <RoughBorder
               bg={colors.sand}
-              rotate={-0.6}
+              rotate={0}
               label="Featured proof"
               delay={120}
             >

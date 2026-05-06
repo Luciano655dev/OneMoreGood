@@ -2,8 +2,12 @@ import ShopPage from "@/components/Shop/ShopGrid"
 import colors from "@/components/colors"
 import { detectShippingCountryFromHeaders } from "@/lib/geo-country"
 import type { ShippingCountry } from "@/lib/commerce"
-import { getFallbackProducts, getStoredProducts } from "@/lib/products"
-import { buildStockMapForCountry } from "@/lib/products"
+import {
+  buildStockMapForCountry,
+  getFallbackProducts,
+  getStoredProducts,
+  toStorefrontProduct,
+} from "@/lib/products"
 import { headers } from "next/headers"
 
 export const dynamic = "force-dynamic"
@@ -17,16 +21,7 @@ export default async function Page() {
     storedProducts = getFallbackProducts()
   }
 
-  const initialProducts = storedProducts.map(
-    ({
-      inventory_quantity,
-      inventory_quantity_us,
-      inventory_quantity_br,
-      is_active,
-      sort_order,
-      ...product
-    }) => product
-  )
+  const initialProducts = storedProducts.map(toStorefrontProduct)
   const requestHeaders = await headers()
   const initialShippingCountry = detectShippingCountryFromHeaders(
     requestHeaders

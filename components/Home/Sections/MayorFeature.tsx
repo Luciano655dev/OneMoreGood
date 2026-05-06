@@ -21,8 +21,9 @@ import RoughBorder from "../Objects/RoughBorder"
 
 export default function MayorFeature() {
   const LOCAL_VIDEO_URL =
-    "/SnapInsta.to_AQN2ocmLoqPbaZ5m8X33axudFj0rcjHijbJcQDbFP5yH96cOgZmQqr59xlzE2aisErPQpvD1WXoA4_67xt5uzByUitIBo0DJM02yJr4.mp4"
-  const LOCAL_VIDEO_POSTER = "/Instagram Photo Download (4).jpg"
+    "/community/videos/SnapInsta.to_AQN2ocmLoqPbaZ5m8X33axudFj0rcjHijbJcQDbFP5yH96cOgZmQqr59xlzE2aisErPQpvD1WXoA4_67xt5uzByUitIBo0DJM02yJr4.mp4"
+  const LOCAL_VIDEO_POSTER =
+    "/community/photos/Instagram Photo Download (4).jpg"
 
   const router = useRouter()
   const [videoOpen, setVideoOpen] = useState(false)
@@ -76,7 +77,7 @@ export default function MayorFeature() {
           <div className="md:col-span-8">
             <RoughBorder
               bg={colors.paper}
-              rotate={0.2}
+              rotate={0}
               label="Local video"
               delay={80}
             >
@@ -134,7 +135,7 @@ export default function MayorFeature() {
           <div className="md:col-span-4">
             <RoughBorder
               bg={colors.paper}
-              rotate={-0.2}
+              rotate={0}
               label="Do something"
               delay={160}
             >

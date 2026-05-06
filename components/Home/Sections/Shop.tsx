@@ -55,7 +55,7 @@ export default function Shop() {
             <RoughBorder
               key={i}
               bg={colors.paper}
-              rotate={i === 2 ? 0.3 : -0.2}
+              rotate={0}
               label="Product"
               delay={i * 80}
             >

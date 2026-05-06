@@ -5,8 +5,7 @@ import { redirect } from "next/navigation"
 
 import {
   getInventoryForCountry,
-  mapRowToProduct,
-  type StoredProduct,
+  getStoredProductMap,
 } from "@/lib/products"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 
@@ -89,24 +88,7 @@ export async function updateStockAction(formData: FormData) {
       redirect("/admin")
     }
 
-    const { data: products, error: productsError } = await supabase
-      .from("products")
-      .select("*")
-      .in(
-        "id",
-        submittedRows.map((row) => row.productId)
-      )
-
-    if (productsError) {
-      throw new Error(productsError.message || "Could not load products.")
-    }
-
-    const productMap = new Map(
-      (products ?? []).map((product) => [
-        String(product.id),
-        mapRowToProduct(product as StoredProduct),
-      ])
-    )
+    const productMap = await getStoredProductMap({ includeInactive: true })
 
     for (const row of submittedRows) {
       const product = productMap.get(row.productId)

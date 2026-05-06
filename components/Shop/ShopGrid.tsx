@@ -188,7 +188,7 @@ function InnerShop({
 
         <div className="max-w-7xl mx-auto px-6 pb-20">
           <div
-            className="mt-6 flex items-center justify-between"
+            className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between"
             style={{ color: colors.muted }}
           >
             <span
@@ -198,7 +198,7 @@ function InnerShop({
               {resultsLabel}
             </span>
             <span
-              className="text-xs font-black uppercase tracking-widest px-3 py-2"
+              className="w-full px-3 py-2 text-xs font-black uppercase tracking-widest sm:w-auto"
               style={{
                 background: colors.sand,
                 border: `2px solid ${colors.ink}`,

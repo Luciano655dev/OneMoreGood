@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
 
-import { getStoredProducts } from "@/lib/products"
+import { getStoredProducts, toStorefrontProduct } from "@/lib/products"
 
 export async function GET() {
   try {
     const products = await getStoredProducts()
-    return NextResponse.json({ products })
+    return NextResponse.json({ products: products.map(toStorefrontProduct) })
   } catch (error) {
     console.error("Products GET error", error)
     return NextResponse.json(

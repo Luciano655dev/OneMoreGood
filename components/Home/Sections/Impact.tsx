@@ -12,19 +12,19 @@ import colors from "@/components/colors"
 export default function Impact() {
   const photos = [
     {
-      src: "/Instagram Downloaded Photo (2).jpg",
+      src: "/community/photos/Instagram Downloaded Photo (2).jpg",
       alt: "Community photo from Santa Terezinha",
     },
     {
-      src: "/Instagram Photo Download.jpg",
+      src: "/community/photos/Instagram Photo Download.jpg",
       alt: "Children and families in Santa Terezinha",
     },
     {
-      src: "/Instagram Downloaded Photo.jpg",
+      src: "/community/photos/Instagram Downloaded Photo.jpg",
       alt: "Project activity in the community",
     },
     {
-      src: "/SnapInsta.to_429582745_233489003092030_8040928632059551510_n.jpg",
+      src: "/community/photos/SnapInsta.to_429582745_233489003092030_8040928632059551510_n.jpg",
       alt: "Supporters and local community moment",
     },
   ]
@@ -55,7 +55,7 @@ export default function Impact() {
         <div className="md:col-span-6">
           <RoughBorder
             bg={colors.paper}
-            rotate={0.2}
+            rotate={0}
             label="Impact expected"
             delay={60}
           >
@@ -122,7 +122,7 @@ export default function Impact() {
         <div className="md:col-span-6">
           <RoughBorder
             bg={colors.sand}
-            rotate={-0.2}
+            rotate={0}
             label="Community context"
             delay={140}
           >

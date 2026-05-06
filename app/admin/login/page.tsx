@@ -24,14 +24,16 @@ export default async function AdminLoginPage({
       style={{ background: colors.paper, color: colors.ink }}
     >
       <PageGridBackground />
-      <section className="mx-auto flex min-h-[calc(100vh-220px)] max-w-3xl flex-col justify-center px-4 py-12 md:px-6 md:py-16">
-        <SectionTitle
-          kicker="Admin"
-          title="Protected dashboard"
-          desc="Enter the admin password to access orders, shipping updates, and tracking controls."
-        />
+      <section className="mx-auto flex min-h-[calc(100vh-220px)] max-w-3xl flex-col items-center justify-center px-4 py-12 md:px-6 md:py-16">
+        <div className="w-full max-w-xl text-center">
+          <SectionTitle
+            kicker="Admin"
+            title="Protected dashboard"
+            desc="Enter the admin password to access orders, shipping updates, and tracking controls."
+          />
+        </div>
 
-        <div className="mt-8 max-w-xl">
+        <div className="mt-8 w-full max-w-xl">
           <RoughBorder bg={colors.sand} label="Admin login">
             <form action="/admin/auth" method="post" className="grid gap-4">
               <div>

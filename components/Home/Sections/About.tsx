@@ -20,7 +20,7 @@ import colors from "@/components/colors"
 
 export default function About() {
   const [photoOpen, setPhotoOpen] = useState(false)
-  const COMMUNITY_IMAGE = "/Instagram Photo from SnapInsta (1).jpg"
+  const COMMUNITY_IMAGE = "/community/photos/Instagram Photo from SnapInsta (1).jpg"
   const values: Array<{ title: string; desc: string; Icon: LucideIcon }> = [
     {
       title: "Mission",
@@ -62,7 +62,7 @@ export default function About() {
         <div className="md:col-span-7">
           <RoughBorder
             bg={colors.paper}
-            rotate={0.4}
+            rotate={0}
             label="Quem Somos"
             delay={60}
           >
@@ -156,7 +156,7 @@ export default function About() {
         <div className="md:col-span-5">
           <RoughBorder
             bg={colors.sand}
-            rotate={-0.3}
+            rotate={0}
             label="Where it’s rooted"
             delay={140}
           >

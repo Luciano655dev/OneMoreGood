@@ -27,7 +27,17 @@ function money(n: number) {
   }).format(n)
 }
 
-function HandSlider({ value, min, max, onChange }: any) {
+function HandSlider({
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  value: number
+  min: number
+  max: number
+  onChange: (value: number) => void
+}) {
   return (
     <div className="w-full">
       <input
@@ -122,7 +132,7 @@ export default function DonateSection() {
           <div className="md:col-span-7">
             <RoughBorder
               bg={colors.sand}
-              rotate={0.25}
+              rotate={0}
               label="Choose"
               delay={80}
             >
@@ -245,7 +255,7 @@ export default function DonateSection() {
           <div className="md:col-span-5">
             <RoughBorder
               bg={colors.paper}
-              rotate={-0.2}
+              rotate={0}
               label="Promise"
               delay={160}
             >

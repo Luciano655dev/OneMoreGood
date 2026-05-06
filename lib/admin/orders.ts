@@ -94,6 +94,8 @@ export type DailySocksPoint = {
   socks: number
 }
 
+export const ADMIN_ORDERS_PAGE_SIZE = 50
+
 type ShippingAddressLike =
   | {
       country?: string | null
@@ -372,6 +374,8 @@ export async function listOrders(params: {
   startDate?: string
   endDate?: string
   chartMarket?: ChartMarketFilter
+  page?: number
+  pageSize?: number
 }) {
   const chartRange = resolveChartRange({
     rangeDays: params.rangeDays,
@@ -380,6 +384,8 @@ export async function listOrders(params: {
   })
 
   const chartMarket = params.chartMarket || "all"
+  const pageSize = Math.max(1, Math.floor(params.pageSize || ADMIN_ORDERS_PAGE_SIZE))
+  const requestedPage = Math.max(1, Math.floor(params.page || 1))
 
   if (!isSupabaseConfigured()) {
     return {
@@ -430,122 +436,122 @@ export async function listOrders(params: {
       rangeDays: chartRange.rangeDays,
       rangeStartDate: chartRange.startDateKey,
       rangeEndDate: chartRange.endDateKey,
+      page: 1,
+      pageSize,
+      totalOrderPages: 1,
+      totalFilteredOrders: 0,
     }
   }
 
   const supabase = getSupabaseAdmin()
   const search = params.search?.trim()
-
-  let ordersQuery = supabase.from("orders").select(
+  const selectWithCurrency =
     "id, order_id, customer_email, status, currency, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, created_at, updated_at"
-  )
+  const selectWithoutCurrency =
+    "id, order_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, created_at, updated_at"
 
-  if (search) {
-    ordersQuery = ordersQuery.or(
-      `order_id.ilike.%${search}%,customer_email.ilike.%${search}%,shipping_name.ilike.%${search}%`
-    )
-  }
-
-  if (params.status && params.status !== "all") {
-    ordersQuery = ordersQuery.eq("status", params.status)
-  }
-
-  switch (params.sort) {
-    case "oldest":
-      ordersQuery = ordersQuery.order("created_at", { ascending: true })
-      break
-    case "total_desc":
-      ordersQuery = ordersQuery
-        .order("total_cents", { ascending: false })
-        .order("created_at", {
-          ascending: false,
-        })
-      break
-    case "total_asc":
-      ordersQuery = ordersQuery
-        .order("total_cents", { ascending: true })
-        .order("created_at", {
-          ascending: false,
-        })
-      break
-    case "status":
-      ordersQuery = ordersQuery
-        .order("status", { ascending: true })
-        .order("created_at", {
-          ascending: false,
-        })
-      break
-    case "newest":
-    default:
-      ordersQuery = ordersQuery.order("created_at", { ascending: false })
-      break
-  }
-
-  const ordersWithCurrencyResult = await ordersQuery
-  let orderRows = ordersWithCurrencyResult.data as OrderListQueryRow[] | null
-  let ordersError = ordersWithCurrencyResult.error as {
-    code?: string | null
-    message?: string | null
-  } | null
-  if (ordersError && isMissingCurrencyColumnError(ordersError)) {
-    let fallbackOrdersQuery = supabase.from("orders").select(
-      "id, order_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, created_at, updated_at"
-    )
+  async function fetchOrderPage(paramsForFetch: {
+    withCurrency: boolean
+    pageNumber: number
+  }) {
+    const from = (paramsForFetch.pageNumber - 1) * pageSize
+    const to = from + pageSize - 1
+    let query = paramsForFetch.withCurrency
+      ? supabase.from("orders").select(selectWithCurrency, { count: "exact" })
+      : supabase.from("orders").select(selectWithoutCurrency, { count: "exact" })
 
     if (search) {
-      fallbackOrdersQuery = fallbackOrdersQuery.or(
+      query = query.or(
         `order_id.ilike.%${search}%,customer_email.ilike.%${search}%,shipping_name.ilike.%${search}%`
       )
     }
 
     if (params.status && params.status !== "all") {
-      fallbackOrdersQuery = fallbackOrdersQuery.eq("status", params.status)
+      query = query.eq("status", params.status)
     }
 
     switch (params.sort) {
       case "oldest":
-        fallbackOrdersQuery = fallbackOrdersQuery.order("created_at", {
-          ascending: true,
-        })
+        query = query.order("created_at", { ascending: true })
         break
       case "total_desc":
-        fallbackOrdersQuery = fallbackOrdersQuery
+        query = query
           .order("total_cents", { ascending: false })
-          .order("created_at", {
-            ascending: false,
-          })
+          .order("created_at", { ascending: false })
         break
       case "total_asc":
-        fallbackOrdersQuery = fallbackOrdersQuery
+        query = query
           .order("total_cents", { ascending: true })
-          .order("created_at", {
-            ascending: false,
-          })
+          .order("created_at", { ascending: false })
         break
       case "status":
-        fallbackOrdersQuery = fallbackOrdersQuery
+        query = query
           .order("status", { ascending: true })
-          .order("created_at", {
-            ascending: false,
-          })
+          .order("created_at", { ascending: false })
         break
       case "newest":
       default:
-        fallbackOrdersQuery = fallbackOrdersQuery.order("created_at", {
-          ascending: false,
-        })
+        query = query.order("created_at", { ascending: false })
         break
     }
 
-    const fallbackOrders = await fallbackOrdersQuery
-    orderRows = fallbackOrders.data as OrderListQueryRow[] | null
-    ordersError = fallbackOrders.error as {
-      code?: string | null
-      message?: string | null
-    } | null
+    query = query.range(from, to)
+
+    const result = await query
+    return {
+      data: result.data as OrderListQueryRow[] | null,
+      count: result.count ?? 0,
+      error: result.error as {
+        code?: string | null
+        message?: string | null
+      } | null,
+    }
+  }
+
+  const ordersWithCurrencyResult = await fetchOrderPage({
+    withCurrency: true,
+    pageNumber: requestedPage,
+  })
+  let orderRows = ordersWithCurrencyResult.data
+  let totalFilteredOrders = ordersWithCurrencyResult.count
+  let ordersError = ordersWithCurrencyResult.error
+  let usedFallbackOrderSelect = false
+  if (ordersError && isMissingCurrencyColumnError(ordersError)) {
+    const fallbackOrders = await fetchOrderPage({
+      withCurrency: false,
+      pageNumber: requestedPage,
+    })
+    orderRows = fallbackOrders.data
+    totalFilteredOrders = fallbackOrders.count
+    ordersError = fallbackOrders.error
+    usedFallbackOrderSelect = true
   }
   if (ordersError) {
     throw new Error(ordersError.message || "Could not load orders.")
+  }
+
+  const totalOrderPages = Math.max(1, Math.ceil(totalFilteredOrders / pageSize))
+  const page = Math.min(requestedPage, totalOrderPages)
+  if (page !== requestedPage && totalFilteredOrders > 0) {
+    const safePageResult = await fetchOrderPage({
+      withCurrency: !usedFallbackOrderSelect,
+      pageNumber: page,
+    })
+    orderRows = safePageResult.data
+    if (safePageResult.error && isMissingCurrencyColumnError(safePageResult.error)) {
+      const fallbackSafePageResult = await fetchOrderPage({
+        withCurrency: false,
+        pageNumber: page,
+      })
+      orderRows = fallbackSafePageResult.data
+      ordersError = fallbackSafePageResult.error
+    } else {
+      ordersError = safePageResult.error
+    }
+
+    if (ordersError) {
+      throw new Error(ordersError.message || "Could not load orders.")
+    }
   }
 
   const normalizedOrderRows = (orderRows || []) as OrderListQueryRow[]
@@ -726,6 +732,10 @@ export async function listOrders(params: {
     rangeDays: chartRange.rangeDays,
     rangeStartDate: chartRange.startDateKey,
     rangeEndDate: chartRange.endDateKey,
+    page,
+    pageSize,
+    totalOrderPages,
+    totalFilteredOrders,
   }
 }
 

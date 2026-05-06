@@ -6,6 +6,7 @@ import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import PageGridBackground from "@/components/Layout/PageGridBackground"
 import {
+  ADMIN_ORDERS_PAGE_SIZE,
   normalizeChartMarketFilter,
   ORDER_STATUSES,
   formatOrderMarketLabel,
@@ -166,6 +167,7 @@ export default async function AdminOrdersPage({
     from?: string
     to?: string
     chartMarket?: string
+    page?: string
   }>
 }) {
   const params = await searchParams
@@ -173,6 +175,8 @@ export default async function AdminOrdersPage({
   const q = params.q || ""
   const sort = params.sort || "newest"
   const chartMarket = normalizeChartMarketFilter(params.chartMarket)
+  const parsedPage = Number(params.page || 1)
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1
   const parsedRange = Number(params.days || params.range || 14)
   const requestedRangeDays = Number.isFinite(parsedRange) ? parsedRange : 14
   const {
@@ -183,6 +187,8 @@ export default async function AdminOrdersPage({
     rangeDays,
     rangeStartDate,
     rangeEndDate,
+    totalOrderPages,
+    totalFilteredOrders,
   } = await listOrders({
     status,
     search: q,
@@ -191,6 +197,8 @@ export default async function AdminOrdersPage({
     startDate: params.from,
     endDate: params.to,
     chartMarket,
+    page,
+    pageSize: ADMIN_ORDERS_PAGE_SIZE,
   })
   const { bars: chartBars, bucketSize } = buildChartBars(socksByDay)
   const maxSocksByBar = Math.max(1, ...chartBars.map((point) => point.socks))
@@ -230,6 +238,32 @@ export default async function AdminOrdersPage({
   const usSalesSubtotalCents = summaryByCurrency.usd.productsSubtotalCents
   const brSalesSubtotalCents = summaryByCurrency.brl.productsSubtotalCents
   const combinedSubtotalCents = Math.round(usSalesSubtotalCents + brSalesSubtotalCents / 6)
+  const listParams = new URLSearchParams()
+  if (q) listParams.set("q", q)
+  if (status !== "all") listParams.set("status", status)
+  if (sort !== "newest") listParams.set("sort", sort)
+  if (rangeDays) listParams.set("days", String(rangeDays))
+  if (rangeStartDate) listParams.set("from", rangeStartDate)
+  if (rangeEndDate) listParams.set("to", rangeEndDate)
+  if (chartMarket !== "all") listParams.set("chartMarket", chartMarket)
+
+  function getOrdersPageHref(targetPage: number) {
+    const nextParams = new URLSearchParams(listParams)
+    if (targetPage > 1) {
+      nextParams.set("page", String(targetPage))
+    } else {
+      nextParams.delete("page")
+    }
+
+    const query = nextParams.toString()
+    return query ? `/admin/orders?${query}` : "/admin/orders"
+  }
+
+  const hasPreviousPage = page > 1
+  const hasNextPage = page < totalOrderPages
+  const pageStart =
+    totalFilteredOrders === 0 ? 0 : (page - 1) * ADMIN_ORDERS_PAGE_SIZE + 1
+  const pageEnd = Math.min(page * ADMIN_ORDERS_PAGE_SIZE, totalFilteredOrders)
 
   return (
     <div style={{ background: colors.paper, color: colors.ink }}>
@@ -392,6 +426,7 @@ export default async function AdminOrdersPage({
             </div>
 
             <form className="mb-4 grid gap-3 md:grid-cols-[140px_220px_220px_220px_auto]">
+              <input type="hidden" name="page" value="1" />
               <input type="hidden" name="q" value={q} />
               <input type="hidden" name="status" value={status} />
               <input type="hidden" name="sort" value={sort} />
@@ -594,6 +629,7 @@ export default async function AdminOrdersPage({
         <div className="mt-8 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
           <RoughBorder bg={colors.sand} label="Filters">
             <form className="grid gap-4">
+              <input type="hidden" name="page" value="1" />
               <input type="hidden" name="chartMarket" value={chartMarket} />
               <div>
                 <label
@@ -679,6 +715,62 @@ export default async function AdminOrdersPage({
           </RoughBorder>
 
           <RoughBorder bg={colors.paper} label="Orders">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div
+                className="text-[11px] font-black uppercase tracking-widest"
+                style={{ color: colors.muted }}
+              >
+                {totalFilteredOrders === 0
+                  ? "No matching orders"
+                  : `Showing ${pageStart}-${pageEnd} of ${totalFilteredOrders} orders`}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={hasPreviousPage ? getOrdersPageHref(page - 1) : "#"}
+                  aria-disabled={!hasPreviousPage}
+                  className="px-3 py-2 text-[11px] font-black uppercase tracking-widest"
+                  style={{
+                    background: colors.paper,
+                    color: colors.ink,
+                    border: `2px solid ${colors.ink}`,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                    opacity: hasPreviousPage ? 1 : 0.45,
+                    pointerEvents: hasPreviousPage ? "auto" : "none",
+                  }}
+                >
+                  Previous
+                </Link>
+
+                <div
+                  className="px-3 py-2 text-[11px] font-black uppercase tracking-widest"
+                  style={{
+                    background: colors.sand,
+                    border: `2px solid ${colors.ink}`,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                  }}
+                >
+                  Page {page} of {totalOrderPages}
+                </div>
+
+                <Link
+                  href={hasNextPage ? getOrdersPageHref(page + 1) : "#"}
+                  aria-disabled={!hasNextPage}
+                  className="px-3 py-2 text-[11px] font-black uppercase tracking-widest"
+                  style={{
+                    background: colors.paper,
+                    color: colors.ink,
+                    border: `2px solid ${colors.ink}`,
+                    boxShadow: `2px 2px 0 ${colors.ink}`,
+                    opacity: hasNextPage ? 1 : 0.45,
+                    pointerEvents: hasNextPage ? "auto" : "none",
+                  }}
+                >
+                  Next
+                </Link>
+              </div>
+            </div>
+
             {orders.length === 0 ? (
               <div
                 className="p-4 text-sm"
@@ -805,6 +897,51 @@ export default async function AdminOrdersPage({
                 })}
               </div>
             )}
+
+            {orders.length > 0 ? (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <div
+                  className="text-[11px] font-black uppercase tracking-widest"
+                  style={{ color: colors.muted }}
+                >
+                  Page {page} of {totalOrderPages}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={hasPreviousPage ? getOrdersPageHref(page - 1) : "#"}
+                    aria-disabled={!hasPreviousPage}
+                    className="px-3 py-2 text-[11px] font-black uppercase tracking-widest"
+                    style={{
+                      background: colors.paper,
+                      color: colors.ink,
+                      border: `2px solid ${colors.ink}`,
+                      boxShadow: `2px 2px 0 ${colors.ink}`,
+                      opacity: hasPreviousPage ? 1 : 0.45,
+                      pointerEvents: hasPreviousPage ? "auto" : "none",
+                    }}
+                  >
+                    Previous
+                  </Link>
+
+                  <Link
+                    href={hasNextPage ? getOrdersPageHref(page + 1) : "#"}
+                    aria-disabled={!hasNextPage}
+                    className="px-3 py-2 text-[11px] font-black uppercase tracking-widest"
+                    style={{
+                      background: colors.paper,
+                      color: colors.ink,
+                      border: `2px solid ${colors.ink}`,
+                      boxShadow: `2px 2px 0 ${colors.ink}`,
+                      opacity: hasNextPage ? 1 : 0.45,
+                      pointerEvents: hasNextPage ? "auto" : "none",
+                    }}
+                  >
+                    Next
+                  </Link>
+                </div>
+              </div>
+            ) : null}
           </RoughBorder>
         </div>
       </section>
