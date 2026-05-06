@@ -43,6 +43,10 @@ function toDateTimeLocalValue(value: string) {
   )}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`
 }
 
+function toMoneyInputValue(cents: number) {
+  return (cents / 100).toFixed(2)
+}
+
 export default async function AdminOrderDetailPage({
   params,
   searchParams,
@@ -401,6 +405,67 @@ export default async function AdminOrderDetailPage({
                       border: `2px solid ${colors.ink}`,
                     }}
                   />
+                </div>
+
+                <div>
+                  <Label>Item values</Label>
+                  <div className="mt-2 grid gap-3">
+                    {order.order_items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="grid gap-3 p-3 md:grid-cols-[minmax(0,1fr)_140px]"
+                        style={{
+                          background: colors.paper,
+                          border: `2px solid ${colors.ink}`,
+                        }}
+                      >
+                        <input type="hidden" name="order_item_id" value={item.id} />
+                        <input
+                          type="hidden"
+                          name="order_item_title"
+                          value={item.title}
+                        />
+
+                        <div>
+                          <div className="font-black">{item.title}</div>
+                          <div
+                            className="mt-1 text-[11px] font-black uppercase tracking-widest"
+                            style={{ color: colors.muted }}
+                          >
+                            Qty {item.quantity} • line total{" "}
+                            {formatOrderMoney(
+                              item.unit_price_cents * item.quantity,
+                              order.currency
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div
+                            className="text-[11px] font-black uppercase tracking-widest"
+                            style={{ color: colors.muted }}
+                          >
+                            Value each
+                          </div>
+                          <input
+                            name="order_item_unit_price_dollars"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            defaultValue={toMoneyInputValue(item.unit_price_cents)}
+                            className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                            style={{
+                              background: colors.sand,
+                              border: `2px solid ${colors.ink}`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
+                    Saving recalculates subtotal and total from these item values.
+                  </p>
                 </div>
 
                 <div>
