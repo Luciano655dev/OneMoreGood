@@ -22,6 +22,17 @@ type Row = {
 
 const MAX_ROWS = 25
 
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <label
+      className="text-[11px] font-black uppercase tracking-widest"
+      style={{ color: colors.muted }}
+    >
+      {children}
+    </label>
+  )
+}
+
 export default function ManualOrderItemsFields({
   products,
 }: {
@@ -50,6 +61,10 @@ export default function ManualOrderItemsFields({
     return market === "BR"
       ? (BRAZIL_UNIT_PRICE_CENTS / 100).toFixed(2)
       : product.price.toFixed(2)
+  }
+
+  function getSelectedProduct(productId: string) {
+    return products.find((product) => product.id === productId) ?? null
   }
 
   function addRow() {
@@ -81,97 +96,157 @@ export default function ManualOrderItemsFields({
   }
 
   return (
-    <div className="mt-2 grid gap-2">
+    <div className="mt-3 grid gap-3">
       {rows.map((row, index) => (
         <div
           key={row.id}
-          className="grid gap-2 md:grid-cols-[minmax(0,1fr)_110px_140px_92px]"
+          className="grid gap-3 p-4"
+          style={{
+            background: colors.paper,
+            border: `2px solid ${colors.ink}`,
+            boxShadow: `2px 2px 0 ${colors.ink}`,
+          }}
         >
-          <select
-            name="product_id"
-            value={row.productId}
-            onChange={(event) => {
-              const nextProductId = event.target.value
-              const selectedProduct = products.find(
-                (product) => product.id === nextProductId
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-sm font-black">Item {index + 1}</div>
+            <button
+              type="button"
+              onClick={() => removeRow(row.id)}
+              disabled={rows.length <= 1}
+              className="px-3 py-2 text-[11px] font-black uppercase tracking-widest"
+              style={{
+                background: colors.sand,
+                border: `2px solid ${colors.ink}`,
+                boxShadow: `2px 2px 0 ${colors.ink}`,
+                opacity: rows.length <= 1 ? 0.55 : 1,
+              }}
+              aria-label={`Remove product row ${index + 1}`}
+            >
+              Remove
+            </button>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.8fr)_120px_160px]">
+            <div>
+              <Label>Sock</Label>
+              <select
+                name="product_id"
+                value={row.productId}
+                onChange={(event) => {
+                  const nextProductId = event.target.value
+                  const selectedProduct = getSelectedProduct(nextProductId)
+
+                  updateRow(row.id, {
+                    productId: nextProductId,
+                    unitPrice: selectedProduct
+                      ? getDefaultUnitPrice(selectedProduct)
+                      : row.unitPrice,
+                  })
+                }}
+                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                style={{
+                  background: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                }}
+              >
+                <option value="">Choose a sock</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label>Qty</Label>
+              <input
+                name="quantity"
+                type="number"
+                min="0"
+                value={row.qty}
+                onChange={(event) => {
+                  const nextValue = Number(event.target.value)
+                  updateRow(row.id, {
+                    qty: Number.isFinite(nextValue) ? nextValue : 0,
+                  })
+                }}
+                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                style={{
+                  background: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                }}
+              />
+            </div>
+
+            <div>
+              <Label>Unit price</Label>
+              <input
+                name="unit_price_dollars"
+                type="number"
+                min="0"
+                step="0.01"
+                value={row.unitPrice}
+                onChange={(event) =>
+                  updateRow(row.id, { unitPrice: event.target.value })
+                }
+                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                style={{
+                  background: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                }}
+              />
+            </div>
+          </div>
+
+          {(() => {
+            const selectedProduct = getSelectedProduct(row.productId)
+            if (!selectedProduct) {
+              return (
+                <div
+                  className="text-xs font-black uppercase tracking-widest"
+                  style={{ color: colors.muted }}
+                >
+                  Pick a sock to see current stock for this market.
+                </div>
               )
-
-              updateRow(row.id, {
-                productId: nextProductId,
-                unitPrice: selectedProduct
-                  ? getDefaultUnitPrice(selectedProduct)
-                  : row.unitPrice,
-              })
-            }}
-            className="w-full px-3 py-3 text-sm font-black outline-none"
-            style={{
-              background: colors.paper,
-              border: `2px solid ${colors.ink}`,
-            }}
-          >
-            <option value="">No item</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.title} - price{" "}
-                {market === "BR"
-                  ? (BRAZIL_UNIT_PRICE_CENTS / 100).toFixed(2)
-                  : product.price.toFixed(2)}{" "}
-                (stock:{" "}
-                {market === "BR"
-                  ? `BR ${product.inventory_quantity_br}`
-                  : `US ${product.inventory_quantity_us}`}
-                )
-              </option>
-            ))}
-          </select>
-
-          <input
-            name="quantity"
-            type="number"
-            min="0"
-            value={row.qty}
-            onChange={(event) => {
-              const nextValue = Number(event.target.value)
-              updateRow(row.id, { qty: Number.isFinite(nextValue) ? nextValue : 0 })
-            }}
-            className="w-full px-3 py-3 text-sm font-black outline-none"
-            style={{
-              background: colors.paper,
-              border: `2px solid ${colors.ink}`,
-            }}
-          />
-
-          <input
-            name="unit_price_dollars"
-            type="number"
-            min="0"
-            step="0.01"
-            value={row.unitPrice}
-            onChange={(event) =>
-              updateRow(row.id, { unitPrice: event.target.value })
             }
-            className="w-full px-3 py-3 text-sm font-black outline-none"
-            style={{
-              background: colors.paper,
-              border: `2px solid ${colors.ink}`,
-            }}
-          />
 
-          <button
-            type="button"
-            onClick={() => removeRow(row.id)}
-            disabled={rows.length <= 1}
-            className="w-full px-3 py-3 text-xs font-black uppercase tracking-widest"
-            style={{
-              background: colors.paper,
-              border: `2px solid ${colors.ink}`,
-              boxShadow: `2px 2px 0 ${colors.ink}`,
-              opacity: rows.length <= 1 ? 0.55 : 1,
-            }}
-            aria-label={`Remove product row ${index + 1}`}
-          >
-            Remove
-          </button>
+            const stock =
+              market === "BR"
+                ? selectedProduct.inventory_quantity_br
+                : selectedProduct.inventory_quantity_us
+            const defaultPrice =
+              market === "BR"
+                ? (BRAZIL_UNIT_PRICE_CENTS / 100).toFixed(2)
+                : selectedProduct.price.toFixed(2)
+
+            return (
+              <div
+                className="flex flex-wrap gap-2 text-xs font-black uppercase tracking-widest"
+                style={{ color: colors.muted }}
+              >
+                <span
+                  className="px-2 py-1"
+                  style={{
+                    background: colors.sand,
+                    border: `1.5px solid ${colors.ink}`,
+                  }}
+                >
+                  {market} stock: {stock}
+                </span>
+                <span
+                  className="px-2 py-1"
+                  style={{
+                    background: colors.sand,
+                    border: `1.5px solid ${colors.ink}`,
+                  }}
+                >
+                  Default price: {defaultPrice}
+                </span>
+              </div>
+            )
+          })()}
         </div>
       ))}
 
@@ -200,8 +275,8 @@ export default function ManualOrderItemsFields({
       </div>
 
       <p className="text-xs" style={{ color: colors.muted }}>
-        Set the exact unit price for each row. This is the final charged amount
-        per item (you can apply custom discounts here).
+        Choose the sock, set the quantity, and confirm the final unit price for
+        that sale.
       </p>
     </div>
   )

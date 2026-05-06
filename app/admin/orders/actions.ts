@@ -300,7 +300,7 @@ async function createManualOrder(formData: FormData) {
   }
 
   const lineItems = parseManualLineItems(formData)
-  const productMap = await getStoredProductMap()
+  const productMap = await getStoredProductMap({ includeInactive: true })
 
   const qtyByProduct = new Map<string, number>()
   for (const item of lineItems) {

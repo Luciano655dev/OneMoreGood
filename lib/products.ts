@@ -193,7 +193,11 @@ export async function getStoredProducts({
     : mergedProducts.filter((product) => product.is_active !== false)
 }
 
-export async function getStoredProductMap() {
-  const products = await getStoredProducts()
+export async function getStoredProductMap({
+  includeInactive = false,
+}: {
+  includeInactive?: boolean
+} = {}) {
+  const products = await getStoredProducts({ includeInactive })
   return new Map(products.map((product) => [product.id, product]))
 }

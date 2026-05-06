@@ -28,6 +28,37 @@ function Label({ children }: { children: React.ReactNode }) {
   )
 }
 
+function FormSection({
+  title,
+  desc,
+  children,
+}: {
+  title: string
+  desc?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="grid gap-4 p-4 md:p-5"
+      style={{
+        background: colors.paper,
+        border: `2px solid ${colors.ink}`,
+        boxShadow: `2px 2px 0 ${colors.ink}`,
+      }}
+    >
+      <div>
+        <div className="text-base font-black">{title}</div>
+        {desc ? (
+          <p className="mt-1 text-sm" style={{ color: colors.muted }}>
+            {desc}
+          </p>
+        ) : null}
+      </div>
+      {children}
+    </div>
+  )
+}
+
 export default async function AdminNewManualOrderPage({
   searchParams,
 }: {
@@ -35,7 +66,7 @@ export default async function AdminNewManualOrderPage({
 }) {
   const params = await searchParams
   const error = params.error?.trim() || null
-  const products = await getStoredProducts()
+  const products = await getStoredProducts({ includeInactive: true })
 
   return (
     <div style={{ background: colors.paper, color: colors.ink }}>
@@ -76,153 +107,166 @@ export default async function AdminNewManualOrderPage({
           </div>
         ) : null}
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <RoughBorder bg={colors.sand} label="Manual order form">
-            <form action={createManualOrderAction} className="grid gap-6">
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="md:col-span-1">
-                  <Label>Customer name</Label>
-                  <input
-                    name="customer_name"
-                    placeholder="Optional"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  />
+            <form action={createManualOrderAction} className="grid gap-5">
+              <FormSection
+                title="1. Sale details"
+                desc="Start with the order basics so stock, market, and totals use the right settings."
+              >
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <div>
+                    <Label>Order market</Label>
+                    <select
+                      id="manual-order-market"
+                      name="market"
+                      defaultValue="US"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    >
+                      {ORDER_MARKETS.map((market) => (
+                        <option key={market} value={market}>
+                          {formatOrderMarketLabel(market)}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
+                      Sets the currency and stock market for this sale.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>Payment method</Label>
+                    <select
+                      name="payment_method"
+                      defaultValue="cash"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="card reader">Card reader</option>
+                      <option value="bank transfer">Bank transfer</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label>Status</Label>
+                    <select
+                      name="status"
+                      defaultValue="completed"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    >
+                      {ORDER_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {formatOrderStatus(status)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label>Shipping amount</Label>
+                    <input
+                      name="shipping_dollars"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      defaultValue="0"
+                      placeholder="0.00"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Purchase date/time</Label>
+                    <input
+                      name="purchased_at"
+                      type="datetime-local"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 xl:col-span-1">
+                    <Label>Sale location</Label>
+                    <input
+                      name="sale_location"
+                      placeholder="Store booth, school event, pickup..."
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
                 </div>
+              </FormSection>
 
-                <div className="md:col-span-2">
-                  <Label>Customer email</Label>
-                  <input
-                    name="customer_email"
-                    type="email"
-                    placeholder="Optional (used for order history)"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  />
+              <FormSection
+                title="2. Customer details"
+                desc="These fields are optional, but useful for keeping order history clean."
+              >
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Customer name</Label>
+                    <input
+                      name="customer_name"
+                      placeholder="Optional"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Customer email</Label>
+                    <input
+                      name="customer_email"
+                      type="email"
+                      placeholder="Optional"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.paper,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
+              </FormSection>
 
-              <div className="grid gap-4 md:grid-cols-5">
-                <div>
-                  <Label>Status</Label>
-                  <select
-                    name="status"
-                    defaultValue="completed"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  >
-                    {ORDER_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {formatOrderStatus(status)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <Label>Payment method</Label>
-                  <select
-                    name="payment_method"
-                    defaultValue="cash"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  >
-                    <option value="cash">Cash</option>
-                    <option value="card reader">Card reader</option>
-                    <option value="bank transfer">Bank transfer</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label>Order market</Label>
-                  <select
-                    id="manual-order-market"
-                    name="market"
-                    defaultValue="US"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  >
-                    {ORDER_MARKETS.map((market) => (
-                      <option key={market} value={market}>
-                        {formatOrderMarketLabel(market)}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
-                    Market defines both payment currency and shipping country.
-                  </p>
-                </div>
-
-                <div>
-                  <Label>Shipping amount</Label>
-                  <input
-                    name="shipping_dollars"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    defaultValue="0"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <Label>Purchase date/time</Label>
-                  <input
-                    name="purchased_at"
-                    type="datetime-local"
-                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                    style={{
-                      background: colors.paper,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label>Sale location</Label>
-                <input
-                  name="sale_location"
-                  placeholder="Optional (ex: Store booth, school event, local pickup)"
-                  className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                  style={{
-                    background: colors.paper,
-                    border: `2px solid ${colors.ink}`,
-                  }}
-                />
-              </div>
-
-              <div>
-                <Label>Products and quantities</Label>
+              <FormSection
+                title="3. Items sold"
+                desc="Add one sock per row. You can adjust quantity and final unit price for each line."
+              >
                 {products.length === 0 ? (
                   <div
-                    className="mt-2 p-4 text-sm font-black"
+                    className="p-4 text-sm font-black"
                     style={{
                       background: colors.paper,
                       border: `2px dashed ${colors.ink}`,
                     }}
                   >
-                    No active products were found.
+                    No products were found.
                   </div>
                 ) : (
                   <ManualOrderItemsFields
@@ -235,24 +279,30 @@ export default async function AdminNewManualOrderPage({
                     }))}
                   />
                 )}
-              <p className="mt-2 text-xs" style={{ color: colors.muted }}>
-                Start with one row and add more only when needed. Maximum 25 product rows per manual order.
-              </p>
-              </div>
+                <p className="text-xs" style={{ color: colors.muted }}>
+                  Add extra rows only when needed. Maximum 25 item rows per
+                  order.
+                </p>
+              </FormSection>
 
-              <div>
-                <Label>Internal notes</Label>
-                <textarea
-                  name="notes"
-                  rows={5}
-                  placeholder="Optional notes about this offline sale"
-                  className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                  style={{
-                    background: colors.paper,
-                    border: `2px solid ${colors.ink}`,
-                  }}
-                />
-              </div>
+              <FormSection
+                title="4. Internal notes"
+                desc="Use this for anything staff should remember about the sale."
+              >
+                <div>
+                  <Label>Notes</Label>
+                  <textarea
+                    name="notes"
+                    rows={5}
+                    placeholder="Optional notes about this offline sale"
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.paper,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  />
+                </div>
+              </FormSection>
 
               <FormSubmitButton
                 idleLabel="Create manual order"
@@ -270,21 +320,60 @@ export default async function AdminNewManualOrderPage({
             </form>
           </RoughBorder>
 
-          <RoughBorder bg={colors.paper} label="How this works">
+          <RoughBorder bg={colors.paper} label="Quick guide">
             <div className="grid gap-4 text-sm" style={{ color: colors.muted }}>
-              <p>
-                This form is for offline sales only. It creates an order record directly in Supabase without Stripe.
-              </p>
-              <p>
-                Inventory is decremented using the selected quantities so your stock remains accurate.
-              </p>
-              <p>
-                Totals are calculated from the exact unit prices entered in this
-                form. Use those values to apply any custom offline discount.
-              </p>
-              <p>
-                If no customer email is provided, a placeholder email is saved so the order remains valid in history.
-              </p>
+              <div
+                className="p-4"
+                style={{
+                  background: colors.sand,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                }}
+              >
+                Pick the market first.
+                <div className="mt-1">
+                  That controls the stock numbers shown in each item row.
+                </div>
+              </div>
+              <div
+                className="p-4"
+                style={{
+                  background: colors.sand,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                }}
+              >
+                Unit price is the final charged amount.
+                <div className="mt-1">
+                  Change it directly if you gave a discount or special price.
+                </div>
+              </div>
+              <div
+                className="p-4"
+                style={{
+                  background: colors.sand,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                }}
+              >
+                Stock updates automatically after save.
+                <div className="mt-1">
+                  The quantities you log here are removed from inventory.
+                </div>
+              </div>
+              <div
+                className="p-4"
+                style={{
+                  background: colors.sand,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                }}
+              >
+                Customer info is optional.
+                <div className="mt-1">
+                  Add it when you want cleaner order history or follow-up.
+                </div>
+              </div>
             </div>
           </RoughBorder>
         </div>
