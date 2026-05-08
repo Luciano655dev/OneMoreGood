@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 
 import CopyOrderIdButton from "@/components/Admin/CopyOrderIdButton"
@@ -18,6 +19,7 @@ import {
   getStatusColors,
   formatOrderMoney,
 } from "@/lib/admin/orders"
+import { getStoredProductMap } from "@/lib/products"
 import { updateOrderAction } from "../actions"
 
 export const dynamic = "force-dynamic"
@@ -63,57 +65,57 @@ export default async function AdminOrderDetailPage({
   if (!order) {
     return (
       <div style={{ background: colors.paper, color: colors.ink }}>
-        <PageGridBackground />
-        <section className="mx-auto max-w-5xl px-4 py-12 md:px-6 md:py-16">
+      <PageGridBackground />
+      <section className="mx-auto max-w-5xl px-4 py-12 md:px-6 md:py-16">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
             kicker="Admin"
             title="Order not found"
             desc="This order could not be loaded from Supabase."
           />
-          <div className="mt-6">
-            <Link
-              href="/admin/orders"
-              className="inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
-              style={{
-                background: colors.paper,
-                border: `2px solid ${colors.ink}`,
-                boxShadow: `3px 3px 0 ${colors.ink}`,
-              }}
-            >
-              Back to orders
-            </Link>
-          </div>
+          <Link
+            href="/admin/orders"
+            className="inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
+            style={{
+              background: colors.paper,
+              border: `2px solid ${colors.ink}`,
+              boxShadow: `3px 3px 0 ${colors.ink}`,
+            }}
+          >
+            Back to orders
+          </Link>
+        </div>
         </section>
       </div>
     )
   }
 
   const tone = getStatusColors(order.status)
+  const productMap = await getStoredProductMap({ includeInactive: true })
 
   return (
     <div style={{ background: colors.paper, color: colors.ink }}>
       <PageGridBackground />
       <section className="mx-auto max-w-6xl px-4 py-12 md:px-6 md:py-16">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
             kicker="Admin"
             title={getOrderDisplayName(order)}
             titleAccessory={<CopyOrderIdButton value={order.order_id} />}
             desc="Update shipping progress, tracking, notes, and final completion from one place."
           />
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/admin/orders"
-              className="btnInteractive inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
-              style={{
-                background: colors.paper,
-                border: `2px solid ${colors.ink}`,
-                boxShadow: `3px 3px 0 ${colors.ink}`,
-              }}
-            >
-              Back to orders
-            </Link>
-          </div>
+
+          <Link
+            href="/admin/orders"
+            className="btnInteractive inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
+            style={{
+              background: colors.paper,
+              border: `2px solid ${colors.ink}`,
+              boxShadow: `3px 3px 0 ${colors.ink}`,
+            }}
+          >
+            Back to orders
+          </Link>
         </div>
 
         {saved ? (
@@ -278,27 +280,56 @@ export default async function AdminOrderDetailPage({
 
             <RoughBorder bg={colors.paper} label="Items">
               <div className="grid gap-3">
-                {order.order_items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid gap-2 p-4 md:grid-cols-[1fr_auto_auto]"
-                    style={{
-                      background: colors.sand,
-                      border: `2px solid ${colors.ink}`,
-                    }}
-                  >
-                    <div>
-                      <div className="font-black">{item.title}</div>
-                      <div className="mt-1 text-sm" style={{ color: colors.muted }}>
-                        Product ID: {item.product_id}
+                {order.order_items.map((item) => {
+                  const productImage = productMap.get(item.product_id)?.image
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="grid grid-cols-[88px_minmax(0,1fr)] gap-3 p-4"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    >
+                      <div
+                        className="relative aspect-square w-20 overflow-hidden"
+                        style={{
+                          background: colors.paper,
+                          border: `2px solid ${colors.ink}`,
+                          boxShadow: `2px 2px 0 ${colors.ink}`,
+                        }}
+                      >
+                        {productImage ? (
+                          <Image
+                            src={productImage}
+                            alt={item.title}
+                            fill
+                            sizes="80px"
+                            className="object-cover"
+                          />
+                        ) : null}
+                      </div>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-black">{item.title}</div>
+                          <div
+                            className="mt-1 text-sm"
+                            style={{ color: colors.muted }}
+                          >
+                            Product ID: {item.product_id}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="font-black">Qty {item.quantity}</div>
+                          <div className="font-black">
+                            {formatOrderMoney(item.unit_price_cents, order.currency)}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="font-black">Qty {item.quantity}</div>
-                    <div className="font-black">
-                      {formatOrderMoney(item.unit_price_cents, order.currency)}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </RoughBorder>
 

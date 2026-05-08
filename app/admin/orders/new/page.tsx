@@ -79,19 +79,17 @@ export default async function AdminNewManualOrderPage({
             desc="Create an order without Stripe payment for in-person, direct, or cash sales. Stock and order history are updated in Supabase."
           />
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/admin/orders"
-              className="btnInteractive inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
-              style={{
-                background: colors.paper,
-                border: `2px solid ${colors.ink}`,
-                boxShadow: `3px 3px 0 ${colors.ink}`,
-              }}
-            >
-              Back to orders
-            </Link>
-          </div>
+          <Link
+            href="/admin/orders"
+            className="btnInteractive inline-flex px-4 py-3 text-xs font-black uppercase tracking-widest"
+            style={{
+              background: colors.paper,
+              border: `2px solid ${colors.ink}`,
+              boxShadow: `3px 3px 0 ${colors.ink}`,
+            }}
+          >
+            Back to orders
+          </Link>
         </div>
 
         {error ? (
@@ -275,6 +273,7 @@ export default async function AdminNewManualOrderPage({
                       id: product.id,
                       title: product.title,
                       price: product.price,
+                      image: product.image,
                       inventory_quantity_us: product.inventory_quantity_us,
                       inventory_quantity_br: product.inventory_quantity_br,
                     }))}

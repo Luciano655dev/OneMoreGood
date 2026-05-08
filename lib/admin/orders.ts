@@ -94,6 +94,17 @@ export type DailySocksPoint = {
   socks: number
 }
 
+export type AdminOrdersDashboardParams = {
+  status: string
+  q: string
+  sort: OrderSort
+  days: number
+  from: string
+  to: string
+  chartMarket: ChartMarketFilter
+  page: number
+}
+
 export const ADMIN_ORDERS_PAGE_SIZE = 50
 
 type ShippingAddressLike =
@@ -253,6 +264,42 @@ export function normalizeChartMarketFilter(
   return "all"
 }
 
+export function normalizeAdminOrdersDashboardParams(params: {
+  status?: string | null
+  q?: string | null
+  sort?: string | null
+  range?: string | null
+  days?: string | null
+  from?: string | null
+  to?: string | null
+  chartMarket?: string | null
+  page?: string | null
+}): AdminOrdersDashboardParams {
+  const status = String(params.status || "all").trim() || "all"
+  const q = String(params.q || "").trim()
+  const sortInput = String(params.sort || "newest").trim()
+  const sort = (
+    ["newest", "oldest", "total_desc", "total_asc", "status"] as const
+  ).includes(sortInput as OrderSort)
+    ? (sortInput as OrderSort)
+    : "newest"
+  const parsedDays = Number(params.days || params.range || 14)
+  const days = Number.isFinite(parsedDays) ? parsedDays : 14
+  const parsedPage = Number(params.page || 1)
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1
+
+  return {
+    status,
+    q,
+    sort,
+    days,
+    from: String(params.from || "").trim(),
+    to: String(params.to || "").trim(),
+    chartMarket: normalizeChartMarketFilter(params.chartMarket),
+    page,
+  }
+}
+
 export function getOrderCurrencyForMarket(market: OrderMarket): OrderCurrency {
   return getCurrencyForCountry(market) as OrderCurrency
 }
@@ -380,81 +427,41 @@ export function getStatusColors(status: string) {
   }
 }
 
-export async function listOrders(params: {
+export type OrdersListData = {
+  orders: OrderListItem[]
+  page: number
+  pageSize: number
+  totalOrderPages: number
+  totalFilteredOrders: number
+}
+
+export type OrdersOverviewData = {
+  summary: SalesSummary
+  summaryByCurrency: SalesSummaryByCurrency
+  socksByDay: DailySocksPoint[]
+  rangeDays: number
+  rangeStartDate: string
+  rangeEndDate: string
+}
+
+export async function getOrdersListData(params: {
   search?: string
   status?: string
   sort?: OrderSort
-  rangeDays?: number
-  startDate?: string
-  endDate?: string
-  chartMarket?: ChartMarketFilter
   page?: number
   pageSize?: number
 }) {
-  const chartRange = resolveChartRange({
-    rangeDays: params.rangeDays,
-    startDate: params.startDate,
-    endDate: params.endDate,
-  })
-
-  const chartMarket = params.chartMarket || "all"
   const pageSize = Math.max(1, Math.floor(params.pageSize || ADMIN_ORDERS_PAGE_SIZE))
   const requestedPage = Math.max(1, Math.floor(params.page || 1))
 
   if (!isSupabaseConfigured()) {
     return {
       orders: [] as OrderListItem[],
-      statusCounts: new Map<string, number>(),
-      summary: {
-        totalOrders: 0,
-        countedOrders: 0,
-        totalItemsSold: 0,
-        testOrders: 0,
-        openOrders: 0,
-        completedOrders: 0,
-        shippedOrders: 0,
-        grossRevenueCents: 0,
-        productsSubtotalCents: 0,
-        shippingCollectedCents: 0,
-        promoSavingsCents: 0,
-      } satisfies SalesSummary,
-      summaryByCurrency: {
-        usd: {
-          totalOrders: 0,
-          countedOrders: 0,
-          totalItemsSold: 0,
-          testOrders: 0,
-          openOrders: 0,
-          completedOrders: 0,
-          shippedOrders: 0,
-          grossRevenueCents: 0,
-          productsSubtotalCents: 0,
-          shippingCollectedCents: 0,
-          promoSavingsCents: 0,
-        },
-        brl: {
-          totalOrders: 0,
-          countedOrders: 0,
-          totalItemsSold: 0,
-          testOrders: 0,
-          openOrders: 0,
-          completedOrders: 0,
-          shippedOrders: 0,
-          grossRevenueCents: 0,
-          productsSubtotalCents: 0,
-          shippingCollectedCents: 0,
-          promoSavingsCents: 0,
-        },
-      } satisfies SalesSummaryByCurrency,
-      socksByDay: [] as DailySocksPoint[],
-      rangeDays: chartRange.rangeDays,
-      rangeStartDate: chartRange.startDateKey,
-      rangeEndDate: chartRange.endDateKey,
       page: 1,
       pageSize,
       totalOrderPages: 1,
       totalFilteredOrders: 0,
-    }
+    } satisfies OrdersListData
   }
 
   const supabase = getSupabaseAdmin()
@@ -584,6 +591,79 @@ export async function listOrders(params: {
     ),
   })) as OrderListItem[]
 
+  return {
+    orders,
+    page,
+    pageSize,
+    totalOrderPages,
+    totalFilteredOrders,
+  } satisfies OrdersListData
+}
+
+export async function getOrdersOverviewData(params: {
+  rangeDays?: number
+  startDate?: string
+  endDate?: string
+  chartMarket?: ChartMarketFilter
+}) {
+  const chartRange = resolveChartRange({
+    rangeDays: params.rangeDays,
+    startDate: params.startDate,
+    endDate: params.endDate,
+  })
+  const chartMarket = params.chartMarket || "all"
+
+  if (!isSupabaseConfigured()) {
+    return {
+      summary: {
+        totalOrders: 0,
+        countedOrders: 0,
+        totalItemsSold: 0,
+        testOrders: 0,
+        openOrders: 0,
+        completedOrders: 0,
+        shippedOrders: 0,
+        grossRevenueCents: 0,
+        productsSubtotalCents: 0,
+        shippingCollectedCents: 0,
+        promoSavingsCents: 0,
+      } satisfies SalesSummary,
+      summaryByCurrency: {
+        usd: {
+          totalOrders: 0,
+          countedOrders: 0,
+          totalItemsSold: 0,
+          testOrders: 0,
+          openOrders: 0,
+          completedOrders: 0,
+          shippedOrders: 0,
+          grossRevenueCents: 0,
+          productsSubtotalCents: 0,
+          shippingCollectedCents: 0,
+          promoSavingsCents: 0,
+        },
+        brl: {
+          totalOrders: 0,
+          countedOrders: 0,
+          totalItemsSold: 0,
+          testOrders: 0,
+          openOrders: 0,
+          completedOrders: 0,
+          shippedOrders: 0,
+          grossRevenueCents: 0,
+          productsSubtotalCents: 0,
+          shippingCollectedCents: 0,
+          promoSavingsCents: 0,
+        },
+      } satisfies SalesSummaryByCurrency,
+      socksByDay: [] as DailySocksPoint[],
+      rangeDays: chartRange.rangeDays,
+      rangeStartDate: chartRange.startDateKey,
+      rangeEndDate: chartRange.endDateKey,
+    } satisfies OrdersOverviewData
+  }
+
+  const supabase = getSupabaseAdmin()
   const summarySelectWithCurrency =
     "status,currency,shipping_address,total_cents,subtotal_cents,shipping_cents,promo_savings_cents,created_at,order_items(quantity)"
   const summarySelectWithoutCurrency =
@@ -738,18 +818,45 @@ export async function listOrders(params: {
   }))
 
   return {
-    orders,
-    statusCounts,
     summary,
     summaryByCurrency,
     socksByDay,
     rangeDays: chartRange.rangeDays,
     rangeStartDate: chartRange.startDateKey,
     rangeEndDate: chartRange.endDateKey,
-    page,
-    pageSize,
-    totalOrderPages,
-    totalFilteredOrders,
+  } satisfies OrdersOverviewData
+}
+
+export async function listOrders(params: {
+  search?: string
+  status?: string
+  sort?: OrderSort
+  rangeDays?: number
+  startDate?: string
+  endDate?: string
+  chartMarket?: ChartMarketFilter
+  page?: number
+  pageSize?: number
+}) {
+  const [listData, overviewData] = await Promise.all([
+    getOrdersListData({
+      search: params.search,
+      status: params.status,
+      sort: params.sort,
+      page: params.page,
+      pageSize: params.pageSize,
+    }),
+    getOrdersOverviewData({
+      rangeDays: params.rangeDays,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      chartMarket: params.chartMarket,
+    }),
+  ])
+
+  return {
+    ...listData,
+    ...overviewData,
   }
 }
 
