@@ -154,7 +154,7 @@ function InnerShop({
       )} per sock • Brazil-only checkout`
     }
 
-    return "US pricing: 1 pair $7.99 • 2 pairs $14 • U.S.-only checkout"
+    return "US pricing: 1 pair $8 • 2 pairs $15 • U.S.-only checkout"
   }, [shippingCountry])
 
   return (

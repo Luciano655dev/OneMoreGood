@@ -14,7 +14,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-basketball",
     title: "Basketball Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BasketballSocks.png",
     description: "Sporty design. Comfy fit. Everyday durability.",
     max_qnt: 20,
@@ -23,7 +23,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-cactus",
     title: "Cactus Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/CactusSocks.png",
     description: "Desert vibes. Soft feel. Built for daily wear.",
     max_qnt: 20,
@@ -32,7 +32,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-chicken-leg",
     title: "Chicken Leg Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/ChickenLegSocks.png",
     description: "Bold graphic. Soft cotton blend. Stays comfy all day.",
     max_qnt: 20,
@@ -41,7 +41,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-dollar-sign",
     title: "Dollar Sign Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/DollarSignSocks.png",
     description: "Money look. Cozy fit. Clean stitch finish.",
     max_qnt: 20,
@@ -50,7 +50,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-duff-simpsons",
     title: "Duff Inspired Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/DuffSimpsonsSocks.png",
     description: "Retro pop style. Comfortable crew fit. Durable knit.",
     max_qnt: 20,
@@ -59,7 +59,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-flying-money",
     title: "Flying Money Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/FlyingMoneySocks.png",
     description: "Loud design. Soft feel. Holds up after washes.",
     max_qnt: 20,
@@ -68,7 +68,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-garry-spongebob",
     title: "Garry Sponge Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/GarrySpongebobSocks.png",
     description: "Sea-side cartoon vibe. Soft knit. Easy everyday wear.",
     max_qnt: 20,
@@ -77,7 +77,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-luigi",
     title: "Luigi Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/LuigiSocks.png",
     description: "Game-night energy. Comfy fit. Durable crew knit.",
     max_qnt: 20,
@@ -86,7 +86,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-mario",
     title: "Mario Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/MarioSocks.png",
     description: "Classic gamer look. Soft feel. Built for daily wear.",
     max_qnt: 20,
@@ -95,7 +95,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-mike-monster-sa",
     title: "Mike Monster Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/MikeMonsterSASocks.png",
     description: "Bright monster style. Breathable knit. All-day comfort.",
     max_qnt: 20,
@@ -104,7 +104,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-pizza",
     title: "Pizza Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/PizzaSocks.png",
     description: "Pizza drip. Soft cotton blend. Easy daily wear.",
     max_qnt: 20,
@@ -113,7 +113,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-plastic-duck",
     title: "Plastic Duck Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/PlasticDuckSocks.png",
     description: "Cute but clean. Comfy crew fit. Strong stitching.",
     max_qnt: 20,
@@ -122,7 +122,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-scooby-doo",
     title: "Scooby-Doo Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/ScoobyDooSocks.png",
     description: "Mystery-cartoon style. Soft fit. Holds up after washes.",
     max_qnt: 20,
@@ -131,7 +131,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-skeleton",
     title: "Skeleton Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/SkeletonSocks.png",
     description: "Spooky style. Breathable knit. Everyday comfort.",
     max_qnt: 20,
@@ -140,7 +140,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-skull",
     title: "Skull Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/SkullSocks.png",
     description: "Dark vibe. Soft fit. Built to last.",
     max_qnt: 20,
@@ -149,7 +149,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-spongebob",
     title: "Sponge Character Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/SpongebobSocks.png",
     description: "Bright cartoon color. Cozy feel. Great daily pair.",
     max_qnt: 20,
@@ -158,7 +158,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-star-wars",
     title: "Space Wars Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/StarWarsSocks.png",
     description: "Space theme. Comfy crew fit. Clean finish.",
     max_qnt: 20,
@@ -167,7 +167,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-sullivan-monster-sa",
     title: "Sullivan Monster Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/SullivanMonsterSASocks.png",
     description: "Big monster energy. Soft knit. Durable everyday comfort.",
     max_qnt: 20,
@@ -176,7 +176,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-woodpecker",
     title: "Woodpecker Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/WoodpeckerSocks.png",
     description: "Cartoon energy. Soft feel. Durable knit.",
     max_qnt: 20,
@@ -185,7 +185,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-bart-simpson",
     title: "Bart Simpson Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BartSimpsonSocks.png",
     description: "Mischief-heavy style. Soft knit. Easy everyday wear.",
     max_qnt: 20,
@@ -194,7 +194,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-beer",
     title: "Beer Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BeerSocks.png",
     description: "Party graphic. Cozy fit. Clean stitch finish.",
     max_qnt: 20,
@@ -203,7 +203,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-black-yellow",
     title: "Black Yellow Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BlackYellowSocks.png",
     description: "Bold contrast. Comfy feel. Built for daily wear.",
     max_qnt: 20,
@@ -212,7 +212,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-brazil-football",
     title: "Brazil Football Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BrazilFootballSocks.png",
     description: "Football energy. Soft knit. Match-day ready.",
     max_qnt: 20,
@@ -221,7 +221,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-brazil-white",
     title: "Brazil White Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BrazilWhiteSocks.png",
     description: "Clean national colors. Comfy fit. Everyday durability.",
     max_qnt: 20,
@@ -230,7 +230,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-brazil-yellow",
     title: "Brazil Yellow Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/BrazilYellowSocks.png",
     description: "Bright Brazil look. Soft feel. Stays comfy all day.",
     max_qnt: 20,
@@ -239,7 +239,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-cherry",
     title: "Cherry Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/CherrySocks.png",
     description: "Sweet graphic. Soft cotton blend. Easy daily pair.",
     max_qnt: 20,
@@ -248,7 +248,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-corinthians",
     title: "Corinthians Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/CorinthiansSocks.png",
     description: "Club-inspired style. Breathable knit. Match-day comfort.",
     max_qnt: 20,
@@ -257,7 +257,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-cow",
     title: "Cow Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/CowSocks.png",
     description: "Playful pattern. Cozy fit. Holds up after washes.",
     max_qnt: 20,
@@ -266,7 +266,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-donald",
     title: "Donald Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/DonaldSocks.png",
     description: "Classic cartoon vibe. Soft knit. Strong everyday comfort.",
     max_qnt: 20,
@@ -275,7 +275,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-hello-kitty",
     title: "Hello Kitty Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/HelloKittySocks.png",
     description: "Cute character look. Comfy crew fit. Clean finish.",
     max_qnt: 20,
@@ -284,7 +284,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-homer-simpson",
     title: "Homer Simpson Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/HomerSimpsonSocks.png",
     description: "Retro cartoon feel. Soft knit. Great daily pair.",
     max_qnt: 20,
@@ -293,7 +293,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-minions",
     title: "Minions Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/MinionsSocks.png",
     description: "Bright character style. Breathable knit. Everyday comfort.",
     max_qnt: 20,
@@ -302,7 +302,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-old-mickey",
     title: "Old Mickey Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/OldMickeySocks.png",
     description: "Vintage cartoon vibe. Soft feel. Durable crew knit.",
     max_qnt: 20,
@@ -311,7 +311,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-patrick",
     title: "Patrick Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/PatrickSocks.png",
     description: "Ocean cartoon energy. Comfy fit. Easy everyday wear.",
     max_qnt: 20,
@@ -320,7 +320,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-paw",
     title: "Paw Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/PawSocks.png",
     description: "Pet-friendly graphic. Soft knit. Cozy all day.",
     max_qnt: 20,
@@ -329,7 +329,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-rainbow",
     title: "Rainbow Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/RainbowSocks.png",
     description: "Color-forward style. Soft feel. Bright everyday pair.",
     max_qnt: 20,
@@ -338,7 +338,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-snoopy",
     title: "Snoopy Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/SnoopySocks.png",
     description: "Classic character look. Comfy crew fit. Durable knit.",
     max_qnt: 20,
@@ -347,7 +347,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-star",
     title: "Star Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/StarSocks.png",
     description: "Simple star pattern. Soft knit. Clean everyday style.",
     max_qnt: 20,
@@ -356,7 +356,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-stitch-full",
     title: "Stitch Full Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/StitchFullSocks.png",
     description: "Full-print character style. Breathable knit. All-day comfort.",
     max_qnt: 20,
@@ -365,7 +365,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "sock-stitch-little",
     title: "Stitch Little Socks",
-    price: 7.99,
+    price: 8,
     image: "/products/StitchLittleSocks.png",
     description: "Smaller character graphic. Soft feel. Easy daily wear.",
     max_qnt: 20,

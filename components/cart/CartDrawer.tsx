@@ -314,7 +314,7 @@ export default function CartDrawer({
 
               {hasItems && shippingCountry === "US" && (
                 <div className="flex items-center justify-between text-sm font-black">
-                  <span style={{ color: colors.muted }}>Promo (2 for $14)</span>
+                  <span style={{ color: colors.muted }}>Promo (2 for $15)</span>
                   <span style={{ color: colors.clay }}>
                     {promoSavingsCents > 0
                       ? `- ${formatMoneyFromCents(

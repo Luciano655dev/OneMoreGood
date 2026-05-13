@@ -17,8 +17,8 @@ export const BRAZIL_SHIPPING_RATE_LABEL = "Standard Brazil shipping"
 
 export const BRAZIL_UNIT_PRICE_CENTS = 2500 // R$25.00
 
-export const PROMO_PAIR_PRICE_CENTS = 1400 // US "2 for $14" promotion
-export const PROMO_UNIT_PRICE_CENTS = PROMO_PAIR_PRICE_CENTS / 2 // $7 per sock under promo
+export const PROMO_PAIR_PRICE_CENTS = 1500 // US "2 for $15" promotion
+export const PROMO_UNIT_PRICE_CENTS = PROMO_PAIR_PRICE_CENTS / 2 // $7.50 per sock when Stripe splits promo pairs
 
 export type SimpleCartItem = {
   productId: string

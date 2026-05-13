@@ -156,7 +156,7 @@ export async function POST(req: Request) {
             currency,
             unit_amount: PROMO_UNIT_PRICE_CENTS,
             product_data: {
-              name: `${product.title} (2 for $14 promo)`,
+              name: `${product.title} (2 for $15 promo)`,
               description: product.description,
               images: [imageUrl],
             },

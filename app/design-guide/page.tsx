@@ -334,7 +334,7 @@ export default function DesignGuidePage() {
                 </div>
                 <div className="mt-4 flex items-center justify-between">
                   <div className="font-black" style={{ color: colors.accent }}>
-                    $7.99
+                    $8.00
                   </div>
                   <button
                     type="button"
