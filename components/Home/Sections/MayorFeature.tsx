@@ -149,6 +149,13 @@ export default function MayorFeature() {
 
                 <HandButton
                   variant="ghost"
+                  onClick={() => router.push("/about")}
+                >
+                  About us <ArrowRight size={18} />
+                </HandButton>
+
+                <HandButton
+                  variant="ghost"
                   onClick={() => (window.location.hash = "#contact")}
                 >
                   Partner / volunteer <Users size={18} />

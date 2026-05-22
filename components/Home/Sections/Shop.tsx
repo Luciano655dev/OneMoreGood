@@ -7,7 +7,6 @@ import { useDetectedShippingCountry } from "@/app/hooks/useDetectedShippingCount
 import {
   formatMoneyFromCents,
   getUnitPriceCentsForCountry,
-  PROMO_PAIR_PRICE_CENTS,
 } from "@/lib/commerce"
 import type { Product } from "@/types"
 import { useRouter } from "next/navigation"
@@ -58,15 +57,6 @@ export default function Shop() {
           title="An ecommerce store with a clear point of view"
           desc="Online payment is paused for now. If you want to buy a pair of socks, contact us directly and we will arrange the order manually."
         />
-
-        <div
-          className="mt-5 max-w-3xl text-sm font-black"
-          style={{ color: colors.muted }}
-        >
-          Contact: lucianomenezes655@gmail.com or Instagram
-          @lucianohlmenezes. Customer payments go toward the products ordered,
-          the order experience, and the store itself.
-        </div>
 
         <div className="mt-10 grid md:grid-cols-3 gap-6">
           {products.map((product, i) => (
@@ -134,18 +124,6 @@ export default function Shop() {
                 >
                   Add
                 </button>
-              </div>
-
-              <div
-                className="mt-3 text-xs font-black uppercase tracking-widest"
-                style={{ color: colors.muted }}
-              >
-                {shippingCountry === "BR"
-                  ? "Brazil pricing for your location"
-                  : `US promo available: 2 pairs for ${formatMoneyFromCents(
-                      PROMO_PAIR_PRICE_CENTS,
-                      shippingCountry
-                    )}`}
               </div>
             </RoughBorder>
           ))}

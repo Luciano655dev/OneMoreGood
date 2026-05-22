@@ -59,8 +59,8 @@ export default function Hero() {
               <HandButton variant="solid" onClick={() => router.push("/shop")}>
                 Shop the collection <ArrowRight size={18} />
               </HandButton>
-              <HandButton variant="ghost" onClick={() => setVideoOpen(true)}>
-                Watch intro video <Play size={18} />
+              <HandButton variant="ghost" onClick={() => router.push("/about")}>
+                About us <ArrowRight size={18} />
               </HandButton>
             </div>
 
@@ -104,8 +104,8 @@ export default function Hero() {
                 className="mt-2 text-sm leading-relaxed"
                 style={{ color: colors.muted }}
               >
-                A local video update showing the environment, daily rhythm, and
-                community context that shape the brand&apos;s purpose.
+                Learn more about the team, where we come from, and how
+                OneMoreGood started as a project built together.
               </p>
 
               <div

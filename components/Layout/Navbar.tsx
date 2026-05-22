@@ -1,9 +1,10 @@
 "use client"
 import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import colors from "../colors"
 import { Heart, Menu, X } from "lucide-react"
 import HandButton from "../Home/Objects/HandButton"
-import { useRouter } from "next/navigation"
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -19,7 +20,7 @@ export default function Navbar() {
       }}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-3 jitter">
+        <Link href="/" className="flex items-center gap-3 jitter">
           <div
             className="w-10 h-10 flex items-center justify-center"
             style={{
@@ -41,15 +42,12 @@ export default function Navbar() {
               Shop with a purpose
             </div>
           </div>
-        </a>
+        </Link>
 
         <nav className="hidden md:flex items-center gap-7 text-sm font-black uppercase tracking-wider">
           {[
-            ["/#about", "About"],
-            ["/#how", "How"],
-            ["/#mayor", "Video"],
-            ["/#impact", "Impact"],
-            ["/#contact", "Contact"],
+            ["/", "Home"],
+            ["/about", "About Us"],
           ].map(([href, label]) => (
             <a key={label} href={href} className="hover:opacity-70">
               {label}
@@ -91,11 +89,8 @@ export default function Navbar() {
         >
           <div className="max-w-7xl mx-auto px-6 py-4 grid gap-3 text-sm font-black uppercase tracking-wider">
             {[
-              ["#about", "About"],
-              ["#how", "How"],
-              ["#mayor", "Video"],
-              ["#impact", "Impact"],
-              ["#contact", "Contact"],
+              ["/", "Home"],
+              ["/about", "About Us"],
             ].map(([href, label]) => (
               <a
                 key={href}
