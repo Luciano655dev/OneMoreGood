@@ -7,6 +7,7 @@ import {
   ORDER_MARKETS,
   ORDER_STATUSES,
   getOrderCurrencyForMarket,
+  getOrderMarketFromCurrency,
   normalizeOrderMarket,
 } from "@/lib/admin/orders"
 import {
@@ -46,18 +47,105 @@ function parseDateTimeLocalToIso(value: string) {
   return parsed.toISOString()
 }
 
-function mergeShippingAddressCountry(
-  source: unknown,
-  country: "US" | "BR"
-): Record<string, unknown> {
-  const base =
-    source && typeof source === "object" && !Array.isArray(source)
-      ? (source as Record<string, unknown>)
-      : {}
+function nullableTrimmedString(value: FormDataEntryValue | null) {
+  const trimmed = String(value || "").trim()
+  return trimmed || null
+}
+
+function buildShippingAddressFromFormData(
+  formData: FormData,
+  market: "US" | "BR"
+) {
+  const line1 = nullableTrimmedString(formData.get("shipping_line1"))
+  const line2 = nullableTrimmedString(formData.get("shipping_line2"))
+  const city = nullableTrimmedString(formData.get("shipping_city"))
+  const state = nullableTrimmedString(formData.get("shipping_state"))
+  const postalCode = nullableTrimmedString(formData.get("shipping_postal_code"))
+
   return {
-    ...base,
-    country,
+    ...(line1 ? { line1 } : {}),
+    ...(line2 ? { line2 } : {}),
+    ...(city ? { city } : {}),
+    ...(state ? { state } : {}),
+    ...(postalCode ? { postal_code: postalCode } : {}),
+    country: market,
   }
+}
+
+type EditedOrderItem = {
+  productId: string
+  title: string
+  quantity: number
+  unitPriceCents: number
+}
+
+const EDIT_ORDER_MAX_ROWS = 100
+
+function parseEditedOrderItems(formData: FormData): EditedOrderItem[] {
+  const productIds = formData
+    .getAll("order_item_product_id")
+    .map((value) => String(value || "").trim())
+  const titles = formData
+    .getAll("order_item_title")
+    .map((value) => String(value || "").trim())
+  const quantities = formData
+    .getAll("order_item_quantity")
+    .map((value) => String(value || "").trim())
+  const unitPrices = formData
+    .getAll("order_item_unit_price_dollars")
+    .map((value) => String(value || "").trim())
+
+  const maxLength = Math.max(
+    productIds.length,
+    titles.length,
+    quantities.length,
+    unitPrices.length
+  )
+
+  if (maxLength > EDIT_ORDER_MAX_ROWS) {
+    throw new Error(`Order update supports at most ${EDIT_ORDER_MAX_ROWS} item rows.`)
+  }
+
+  const items: EditedOrderItem[] = []
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const productId = productIds[index] || ""
+    const titleRaw = titles[index] || ""
+    const qtyRaw = quantities[index] || ""
+    const unitPriceRaw = unitPrices[index] || ""
+    const qty = Number(qtyRaw)
+
+    if (!productId && !titleRaw && (!qtyRaw || qty === 0) && !unitPriceRaw) {
+      continue
+    }
+
+    if (!productId) {
+      throw new Error(`Product ID is required on row ${index + 1}.`)
+    }
+
+    if (!Number.isInteger(qty) || qty <= 0) {
+      throw new Error(`Quantity must be a positive whole number on row ${index + 1}.`)
+    }
+
+    if (unitPriceRaw === "") {
+      throw new Error(`Unit price is required on row ${index + 1}.`)
+    }
+
+    const title = titleRaw || productId
+
+    items.push({
+      productId,
+      title,
+      quantity: qty,
+      unitPriceCents: parseAmountToCents(unitPriceRaw, `Unit price on row ${index + 1}`),
+    })
+  }
+
+  if (items.length === 0) {
+    throw new Error("Add at least one line item.")
+  }
+
+  return items
 }
 
 export async function updateOrderAction(formData: FormData) {
@@ -70,6 +158,7 @@ export async function updateOrderAction(formData: FormData) {
       throw new Error("Supabase is not configured.")
     }
 
+    const orderId = String(formData.get("order_id") || "").trim()
     const status = String(formData.get("status") || "").trim()
     const marketRaw = String(formData.get("market") || "").trim().toUpperCase()
     if (!ORDER_MARKETS.includes(marketRaw as (typeof ORDER_MARKETS)[number])) {
@@ -77,35 +166,94 @@ export async function updateOrderAction(formData: FormData) {
     }
     const market = normalizeOrderMarket(marketRaw)
     const currency = getOrderCurrencyForMarket(market)
+    const customerEmailRaw = String(formData.get("customer_email") || "")
+      .trim()
+      .toLowerCase()
     const customerName = String(formData.get("customer_name") || "").trim()
+    const shippingCents = parseAmountToCents(
+      String(formData.get("shipping_dollars") || "0"),
+      "Shipping"
+    )
+    const promoSavingsCents = parseAmountToCents(
+      String(formData.get("promo_savings_dollars") || "0"),
+      "Promo savings"
+    )
     const trackingNumber = String(formData.get("tracking_number") || "").trim()
     const trackingCarrier = String(formData.get("tracking_carrier") || "").trim()
+    const stripeCheckoutSessionId = nullableTrimmedString(
+      formData.get("stripe_checkout_session_id")
+    )
+    const stripePaymentIntentId = nullableTrimmedString(
+      formData.get("stripe_payment_intent_id")
+    )
     const notes = String(formData.get("notes") || "").trim()
     const purchasedAtInput = String(formData.get("purchased_at") || "").trim()
-    const itemPriceUpdates = parseOrderItemPriceUpdates(formData)
+    const editedItems = parseEditedOrderItems(formData)
 
     if (!id) {
       throw new Error("Order id is required.")
+    }
+
+    if (!orderId) {
+      throw new Error("Public order ID is required.")
     }
 
     if (!ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number])) {
       throw new Error("Invalid order status.")
     }
 
+    if (customerEmailRaw && !isValidEmail(customerEmailRaw)) {
+      throw new Error("Customer email is invalid.")
+    }
+
     const supabase = getSupabaseAdmin()
-    const { data: existingOrder, error: existingOrderError } = await supabase
+    const existingOrderSelectWithCurrency =
+      "order_id,customer_email,shipping_address,created_at,currency"
+    const existingOrderSelectWithoutCurrency =
+      "order_id,customer_email,shipping_address,created_at"
+    const existingOrderWithCurrency = await supabase
       .from("orders")
-      .select("shipping_address,created_at,shipping_cents,promo_savings_cents")
+      .select(existingOrderSelectWithCurrency)
       .eq("id", id)
       .maybeSingle()
+    let existingOrder = existingOrderWithCurrency.data as
+      | {
+          order_id?: string | null
+          customer_email?: string | null
+          shipping_address?: unknown
+          created_at?: string | null
+          currency?: string | null
+        }
+      | null
+    let existingOrderError = existingOrderWithCurrency.error
+    if (existingOrderError && isMissingCurrencyColumnError(existingOrderError)) {
+      const fallbackOrder = await supabase
+        .from("orders")
+        .select(existingOrderSelectWithoutCurrency)
+        .eq("id", id)
+        .maybeSingle()
+      existingOrder = fallbackOrder.data as
+        | {
+            order_id?: string | null
+            customer_email?: string | null
+            shipping_address?: unknown
+            created_at?: string | null
+          }
+        | null
+      existingOrderError = fallbackOrder.error
+    }
     if (existingOrderError) {
       throw new Error(existingOrderError.message)
+    }
+
+    if (!existingOrder) {
+      throw new Error("Order not found.")
     }
 
     const { data: existingOrderItems, error: existingOrderItemsError } =
       await supabase
         .from("order_items")
-        .select("id,title,quantity,unit_price_cents")
+        .select("id,product_id,title,quantity,unit_price_cents")
         .eq("order_id", id)
     if (existingOrderItemsError) {
       throw new Error(existingOrderItemsError.message)
@@ -114,66 +262,106 @@ export async function updateOrderAction(formData: FormData) {
     const existingOrderItemsList = Array.isArray(existingOrderItems)
       ? existingOrderItems
       : []
-    const existingOrderItemMap = new Map(
-      existingOrderItemsList.map((item) => [
-        String(item.id || "").trim(),
-        {
-          title: String(item.title || "").trim(),
-          quantity: Number(item.quantity || 0),
-          unitPriceCents: Number(item.unit_price_cents || 0),
-        },
-      ])
-    )
-
-    for (const item of itemPriceUpdates) {
-      if (!existingOrderItemMap.has(item.itemId)) {
-        throw new Error(`Order item not found for ${item.title}.`)
-      }
-    }
-
-    for (const item of itemPriceUpdates) {
-      const existingItem = existingOrderItemMap.get(item.itemId)
-      if (!existingItem || existingItem.unitPriceCents === item.unitPriceCents) {
-        continue
-      }
-
-      const { error: orderItemUpdateError } = await supabase
-        .from("order_items")
-        .update({
-          unit_price_cents: item.unitPriceCents,
-        })
-        .eq("id", item.itemId)
-        .eq("order_id", id)
-
-      if (orderItemUpdateError) {
-        throw new Error(orderItemUpdateError.message)
-      }
-    }
-
-    const updatedUnitPriceByItemId = new Map(
-      itemPriceUpdates.map((item) => [item.itemId, item.unitPriceCents])
-    )
-    const subtotalCents = existingOrderItemsList.reduce((sum, item) => {
-      const itemId = String(item.id || "").trim()
-      const quantity = Number(item.quantity || 0)
-      const unitPriceCents =
-        updatedUnitPriceByItemId.get(itemId) ?? Number(item.unit_price_cents || 0)
-      return sum + quantity * unitPriceCents
+    const subtotalCents = editedItems.reduce((sum, item) => {
+      return sum + item.quantity * item.unitPriceCents
     }, 0)
-    const shippingCents = Number(existingOrder?.shipping_cents || 0)
-    const promoSavingsCents = Number(existingOrder?.promo_savings_cents || 0)
     const totalCents = Math.max(0, subtotalCents - promoSavingsCents) + shippingCents
 
-    const nextShippingAddress = mergeShippingAddressCountry(
-      existingOrder?.shipping_address,
-      market
-    )
+    const existingMarket =
+      typeof existingOrder.currency === "string" &&
+      (existingOrder.currency === "usd" || existingOrder.currency === "brl")
+        ? getOrderMarketFromCurrency(existingOrder.currency)
+        : normalizeOrderMarket(
+            (existingOrder.shipping_address as { country?: string | null } | null)
+              ?.country
+          )
+    const nextShippingAddress = buildShippingAddressFromFormData(formData, market)
     const nextCreatedAtIso =
       parseDateTimeLocalToIso(purchasedAtInput) ||
       String(existingOrder?.created_at || "").trim() ||
       null
+    const nextCustomerEmail = customerEmailRaw || existingOrder.customer_email || null
+    const productMap = await getStoredProductMap({ includeInactive: true })
+    const inventoryDeltas = new Map<
+      string,
+      { us: number; br: number; title: string }
+    >()
+
+    const applyInventoryDelta = (
+      productId: string,
+      itemTitle: string,
+      targetMarket: "US" | "BR",
+      delta: number
+    ) => {
+      const product = productMap.get(productId)
+      if (!product) return
+
+      const current = inventoryDeltas.get(productId) ?? {
+        us: 0,
+        br: 0,
+        title: product.title || itemTitle || productId,
+      }
+      if (targetMarket === "BR") {
+        current.br += delta
+      } else {
+        current.us += delta
+      }
+      inventoryDeltas.set(productId, current)
+    }
+
+    for (const item of existingOrderItemsList) {
+      const productId = String(item.product_id || "").trim()
+      const quantity = Number(item.quantity || 0)
+      if (!productId || quantity <= 0) continue
+      applyInventoryDelta(
+        productId,
+        String(item.title || "").trim(),
+        existingMarket,
+        quantity
+      )
+    }
+
+    for (const item of editedItems) {
+      applyInventoryDelta(item.productId, item.title, market, -item.quantity)
+    }
+
+    for (const [productId, delta] of inventoryDeltas.entries()) {
+      const product = productMap.get(productId)
+      if (!product) continue
+
+      const nextUs = product.inventory_quantity_us + delta.us
+      const nextBr = product.inventory_quantity_br + delta.br
+      if (nextUs < 0 || nextBr < 0) {
+        throw new Error(`Not enough stock for ${delta.title}.`)
+      }
+    }
+
+    const replacementOrderItems = editedItems.map((item) => ({
+      order_id: id,
+      product_id: item.productId,
+      title: item.title,
+      quantity: item.quantity,
+      unit_price_cents: item.unitPriceCents,
+    }))
+
+    const { error: deleteItemsError } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", id)
+    if (deleteItemsError) {
+      throw new Error(deleteItemsError.message)
+    }
+
+    const { error: insertItemsError } = await supabase
+      .from("order_items")
+      .insert(replacementOrderItems)
+    if (insertItemsError) {
+      throw new Error(insertItemsError.message)
+    }
 
     const payloadWithCurrency = {
+      order_id: orderId,
+      customer_email: nextCustomerEmail,
       status,
       currency,
       subtotal_cents: subtotalCents,
@@ -184,6 +372,8 @@ export async function updateOrderAction(formData: FormData) {
       shipping_address: nextShippingAddress,
       tracking_number: trackingNumber || null,
       tracking_carrier: trackingCarrier || null,
+      stripe_checkout_session_id: stripeCheckoutSessionId,
+      stripe_payment_intent_id: stripePaymentIntentId,
       notes: notes || null,
       ...(nextCreatedAtIso ? { created_at: nextCreatedAtIso } : {}),
     }
@@ -196,6 +386,8 @@ export async function updateOrderAction(formData: FormData) {
       const { error: fallbackError } = await supabase
         .from("orders")
         .update({
+          order_id: orderId,
+          customer_email: nextCustomerEmail,
           status,
           subtotal_cents: subtotalCents,
           promo_savings_cents: promoSavingsCents,
@@ -205,6 +397,8 @@ export async function updateOrderAction(formData: FormData) {
           shipping_address: nextShippingAddress,
           tracking_number: trackingNumber || null,
           tracking_carrier: trackingCarrier || null,
+          stripe_checkout_session_id: stripeCheckoutSessionId,
+          stripe_payment_intent_id: stripePaymentIntentId,
           notes: notes || null,
           ...(nextCreatedAtIso ? { created_at: nextCreatedAtIso } : {}),
         })
@@ -216,8 +410,33 @@ export async function updateOrderAction(formData: FormData) {
       throw new Error(error.message)
     }
 
+    for (const [productId, delta] of inventoryDeltas.entries()) {
+      const product = productMap.get(productId)
+      if (!product) continue
+
+      const nextUs = product.inventory_quantity_us + delta.us
+      const nextBr = product.inventory_quantity_br + delta.br
+
+      const { error: inventoryError } = await supabase
+        .from("products")
+        .update({
+          inventory_quantity: nextUs,
+          inventory_quantity_us: nextUs,
+          inventory_quantity_br: nextBr,
+        })
+        .eq("id", productId)
+
+      if (inventoryError) {
+        throw new Error(
+          inventoryError.message || `Could not update inventory for ${delta.title}.`
+        )
+      }
+    }
+
     revalidatePath("/admin/orders")
     revalidatePath(`/admin/orders/${id}`)
+    revalidatePath("/admin/stock")
+    revalidatePath("/shop")
     redirect(appendQueryParam(returnTo, "saved", "1"))
   } catch (error) {
     if (isNextRedirectError(error)) {
@@ -237,12 +456,6 @@ type ManualLineItem = {
   unitPriceCents: number
 }
 
-type OrderItemPriceUpdate = {
-  itemId: string
-  title: string
-  unitPriceCents: number
-}
-
 const MANUAL_ORDER_MAX_ROWS = 25
 
 function isValidEmail(email: string) {
@@ -259,44 +472,6 @@ function parseAmountToCents(value: string, label = "Amount") {
   }
 
   return Math.round(amount * 100)
-}
-
-function parseOrderItemPriceUpdates(formData: FormData): OrderItemPriceUpdate[] {
-  const itemIds = formData.getAll("order_item_id").map((value) => String(value || "").trim())
-  const titles = formData
-    .getAll("order_item_title")
-    .map((value) => String(value || "").trim())
-  const unitPrices = formData
-    .getAll("order_item_unit_price_dollars")
-    .map((value) => String(value || "").trim())
-  const maxLength = Math.max(itemIds.length, titles.length, unitPrices.length)
-  const updates: OrderItemPriceUpdate[] = []
-
-  for (let index = 0; index < maxLength; index += 1) {
-    const itemId = itemIds[index] || ""
-    const title = titles[index] || `item ${index + 1}`
-    const unitPriceRaw = unitPrices[index] || ""
-
-    if (!itemId && !unitPriceRaw) {
-      continue
-    }
-
-    if (!itemId) {
-      throw new Error(`Missing order item id on row ${index + 1}.`)
-    }
-
-    if (unitPriceRaw === "") {
-      throw new Error(`Set a value for ${title}.`)
-    }
-
-    updates.push({
-      itemId,
-      title,
-      unitPriceCents: parseAmountToCents(unitPriceRaw, `Value for ${title}`),
-    })
-  }
-
-  return updates
 }
 
 function buildManualOrderId() {
@@ -439,9 +614,13 @@ async function createManualOrder(formData: FormData) {
     }
   }
 
-  const subtotalCents = lineItems.reduce((sum, item) => {
+  const calculatedSubtotalCents = lineItems.reduce((sum, item) => {
     return sum + item.unitPriceCents * item.qty
   }, 0)
+  const subtotalOverrideRaw = String(formData.get("subtotal_dollars") || "").trim()
+  const subtotalCents = subtotalOverrideRaw
+    ? parseAmountToCents(subtotalOverrideRaw, "Subtotal")
+    : calculatedSubtotalCents
 
   const promoSavingsCents = 0
 

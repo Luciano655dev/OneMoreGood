@@ -176,6 +176,7 @@ export default async function AdminNewManualOrderPage({
                   <div>
                     <Label>Shipping amount</Label>
                     <input
+                      id="manual-order-shipping"
                       name="shipping_dollars"
                       type="number"
                       min="0"

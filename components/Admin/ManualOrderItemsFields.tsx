@@ -31,6 +31,25 @@ type Row = {
 
 const MAX_ROWS = 25
 
+function parseAmountToCents(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return 0
+
+  const amount = Number(trimmed)
+  if (!Number.isFinite(amount) || amount < 0) return 0
+  return Math.round(amount * 100)
+}
+
+function formatMarketMoney(cents: number, market: "US" | "BR") {
+  const currency = market === "BR" ? "BRL" : "USD"
+  const locale = market === "BR" ? "pt-BR" : "en-US"
+
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+  }).format(cents / 100)
+}
+
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <label
@@ -48,6 +67,9 @@ export default function ManualOrderItemsFields({
   products: ProductOption[]
 }) {
   const [market, setMarket] = useState<"US" | "BR">("US")
+  const [shippingAmount, setShippingAmount] = useState("0")
+  const [manualSubtotalAmount, setManualSubtotalAmount] = useState("0.00")
+  const [hasManualSubtotalOverride, setHasManualSubtotalOverride] = useState(false)
   const [rows, setRows] = useState<Row[]>([
     { id: 1, productId: "", qty: 1, unitPrice: "0.00" },
   ])
@@ -68,6 +90,23 @@ export default function ManualOrderItemsFields({
     syncMarket()
     select.addEventListener("change", syncMarket)
     return () => select.removeEventListener("change", syncMarket)
+  }, [])
+
+  useEffect(() => {
+    const input = document.getElementById("manual-order-shipping")
+    if (!(input instanceof HTMLInputElement)) return
+
+    const syncShippingAmount = () => {
+      setShippingAmount(input.value)
+    }
+
+    syncShippingAmount()
+    input.addEventListener("input", syncShippingAmount)
+    input.addEventListener("change", syncShippingAmount)
+    return () => {
+      input.removeEventListener("input", syncShippingAmount)
+      input.removeEventListener("change", syncShippingAmount)
+    }
   }, [])
 
   useEffect(() => {
@@ -111,6 +150,31 @@ export default function ManualOrderItemsFields({
     })
   }, [products, deferredPickerQuery])
 
+  const calculatedSubtotalCents = useMemo(() => {
+    return rows.reduce((sum, row) => {
+      if (!row.productId || !Number.isInteger(row.qty) || row.qty <= 0) {
+        return sum
+      }
+
+      return sum + row.qty * parseAmountToCents(row.unitPrice)
+    }, 0)
+  }, [rows])
+
+  const shippingCents = useMemo(
+    () => parseAmountToCents(shippingAmount),
+    [shippingAmount]
+  )
+
+  const displayedSubtotalAmount = hasManualSubtotalOverride
+    ? manualSubtotalAmount
+    : (calculatedSubtotalCents / 100).toFixed(2)
+
+  const subtotalCents = hasManualSubtotalOverride
+    ? parseAmountToCents(manualSubtotalAmount)
+    : calculatedSubtotalCents
+
+  const totalCents = subtotalCents + shippingCents
+
   function addRow() {
     setRows((current) => {
       if (current.length >= MAX_ROWS) return current
@@ -145,6 +209,11 @@ export default function ManualOrderItemsFields({
       unitPrice: getDefaultUnitPrice(product),
     })
     setPickerRowId(null)
+  }
+
+  function resetSubtotalToCalculated() {
+    setHasManualSubtotalOverride(false)
+    setManualSubtotalAmount((calculatedSubtotalCents / 100).toFixed(2))
   }
 
   return (
@@ -465,6 +534,76 @@ export default function ManualOrderItemsFields({
         >
           {rows.length}/{MAX_ROWS} rows
         </span>
+      </div>
+
+      <div
+        className="grid gap-2 p-4"
+        style={{
+          background: colors.sand,
+          border: `2px solid ${colors.ink}`,
+          boxShadow: `2px 2px 0 ${colors.ink}`,
+        }}
+      >
+        <div className="flex items-center justify-between gap-3 text-sm font-black">
+          <span style={{ color: colors.muted }}>Items subtotal</span>
+          <span>{formatMarketMoney(calculatedSubtotalCents, market)}</span>
+        </div>
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3 text-sm font-black">
+            <span style={{ color: colors.muted }}>Subtotal to save</span>
+            {hasManualSubtotalOverride ? (
+              <button
+                type="button"
+                onClick={resetSubtotalToCalculated}
+                className="px-2 py-1 text-[11px] font-black uppercase tracking-widest"
+                style={{
+                  background: colors.paper,
+                  border: `1.5px solid ${colors.ink}`,
+                  boxShadow: `2px 2px 0 ${colors.ink}`,
+                }}
+              >
+                Use items subtotal
+              </button>
+            ) : null}
+          </div>
+          <input
+            name="subtotal_dollars"
+            type="number"
+            min="0"
+            step="0.01"
+            value={displayedSubtotalAmount}
+            onChange={(event) => {
+              const nextValue = event.target.value
+              if (nextValue.trim() === "") {
+                resetSubtotalToCalculated()
+                return
+              }
+
+              setHasManualSubtotalOverride(true)
+              setManualSubtotalAmount(nextValue)
+            }}
+            className="w-full px-3 py-3 text-sm font-black outline-none"
+            style={{
+              background: colors.paper,
+              border: `2px solid ${colors.ink}`,
+            }}
+          />
+          <div className="text-[11px]" style={{ color: colors.muted }}>
+            Edit this directly if the saved subtotal should differ from the sum of
+            the item rows.
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-3 text-sm font-black">
+          <span style={{ color: colors.muted }}>Shipping</span>
+          <span>{formatMarketMoney(shippingCents, market)}</span>
+        </div>
+        <div
+          className="flex items-center justify-between gap-3 border-t pt-2 text-base font-black"
+          style={{ borderColor: colors.ink }}
+        >
+          <span>Total</span>
+          <span>{formatMarketMoney(totalCents, market)}</span>
+        </div>
       </div>
 
       <p className="text-xs" style={{ color: colors.muted }}>

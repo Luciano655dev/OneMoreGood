@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import CopyOrderIdButton from "@/components/Admin/CopyOrderIdButton"
+import EditableOrderItemsFields from "@/components/Admin/EditableOrderItemsFields"
 import FormSubmitButton from "@/components/Admin/FormSubmitButton"
 import colors from "@/components/colors"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
@@ -102,7 +103,7 @@ export default async function AdminOrderDetailPage({
             kicker="Admin"
             title={getOrderDisplayName(order)}
             titleAccessory={<CopyOrderIdButton value={order.order_id} />}
-            desc="Update shipping progress, tracking, notes, and final completion from one place."
+            desc="Edit order metadata, line items, address details, tracking, and payment references from one place."
           />
 
           <Link
@@ -384,10 +385,25 @@ export default async function AdminOrderDetailPage({
                 <input type="hidden" name="return_to" value={`/admin/orders/${id}`} />
 
                 <div>
+                  <Label>Public order ID</Label>
+                  <input
+                    name="order_id"
+                    defaultValue={order.order_id}
+                    placeholder="OMG-..."
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.sand,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  />
+                </div>
+
+                <div>
                   <Label>Status</Label>
                   <select
                     name="status"
                     defaultValue={order.status}
+                    id="order-status"
                     className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
                     style={{
                       background: colors.sand,
@@ -405,6 +421,7 @@ export default async function AdminOrderDetailPage({
                 <div>
                   <Label>Order market</Label>
                   <select
+                    id="order-market"
                     name="market"
                     defaultValue={order.market}
                     className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
@@ -439,63 +456,75 @@ export default async function AdminOrderDetailPage({
                 </div>
 
                 <div>
-                  <Label>Item values</Label>
-                  <div className="mt-2 grid gap-3">
-                    {order.order_items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="grid gap-3 p-3 md:grid-cols-[minmax(0,1fr)_140px]"
-                        style={{
-                          background: colors.paper,
-                          border: `2px solid ${colors.ink}`,
-                        }}
-                      >
-                        <input type="hidden" name="order_item_id" value={item.id} />
-                        <input
-                          type="hidden"
-                          name="order_item_title"
-                          value={item.title}
-                        />
+                  <Label>Customer email</Label>
+                  <input
+                    name="customer_email"
+                    type="email"
+                    defaultValue={order.customer_email || ""}
+                    placeholder="customer@example.com"
+                    className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                    style={{
+                      background: colors.sand,
+                      border: `2px solid ${colors.ink}`,
+                    }}
+                  />
+                </div>
 
-                        <div>
-                          <div className="font-black">{item.title}</div>
-                          <div
-                            className="mt-1 text-[11px] font-black uppercase tracking-widest"
-                            style={{ color: colors.muted }}
-                          >
-                            Qty {item.quantity} • line total{" "}
-                            {formatOrderMoney(
-                              item.unit_price_cents * item.quantity,
-                              order.currency
-                            )}
-                          </div>
-                        </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Shipping amount</Label>
+                    <input
+                      id="order-shipping"
+                      name="shipping_dollars"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      defaultValue={toMoneyInputValue(order.shipping_cents)}
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
 
-                        <div>
-                          <div
-                            className="text-[11px] font-black uppercase tracking-widest"
-                            style={{ color: colors.muted }}
-                          >
-                            Value each
-                          </div>
-                          <input
-                            name="order_item_unit_price_dollars"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            defaultValue={toMoneyInputValue(item.unit_price_cents)}
-                            className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
-                            style={{
-                              background: colors.sand,
-                              border: `2px solid ${colors.ink}`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                  <div>
+                    <Label>Promo savings</Label>
+                    <input
+                      id="order-promo"
+                      name="promo_savings_dollars"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      defaultValue={toMoneyInputValue(order.promo_savings_cents)}
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Line items</Label>
+                  <div className="mt-2">
+                    <EditableOrderItemsFields
+                      products={Array.from(productMap.values()).map((product) => ({
+                        id: product.id,
+                        title: product.title,
+                        inventory_quantity_us: product.inventory_quantity_us,
+                        inventory_quantity_br: product.inventory_quantity_br,
+                      }))}
+                      initialItems={order.order_items}
+                      initialMarket={order.market}
+                      initialShippingCents={order.shipping_cents}
+                      initialPromoSavingsCents={order.promo_savings_cents}
+                    />
                   </div>
                   <p className="mt-1 text-[11px]" style={{ color: colors.muted }}>
-                    Saving recalculates subtotal and total from these item values.
+                    Saving recalculates subtotal and total from these rows and the
+                    shipping/promo fields above.
                   </p>
                 </div>
 
@@ -527,6 +556,36 @@ export default async function AdminOrderDetailPage({
                   />
                 </div>
 
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Checkout session ID</Label>
+                    <input
+                      name="stripe_checkout_session_id"
+                      defaultValue={order.stripe_checkout_session_id || ""}
+                      placeholder="cs_..."
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Payment intent ID</Label>
+                    <input
+                      name="stripe_payment_intent_id"
+                      defaultValue={order.stripe_payment_intent_id || ""}
+                      placeholder="pi_..."
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <Label>Purchase date/time</Label>
                   <input
@@ -539,6 +598,78 @@ export default async function AdminOrderDetailPage({
                       border: `2px solid ${colors.ink}`,
                     }}
                   />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label>Address line 1</Label>
+                    <input
+                      name="shipping_line1"
+                      defaultValue={order.shipping_address?.line1 || ""}
+                      placeholder="Street address"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Address line 2</Label>
+                    <input
+                      name="shipping_line2"
+                      defaultValue={order.shipping_address?.line2 || ""}
+                      placeholder="Apartment, suite..."
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>City</Label>
+                    <input
+                      name="shipping_city"
+                      defaultValue={order.shipping_address?.city || ""}
+                      placeholder="City"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>State / region</Label>
+                    <input
+                      name="shipping_state"
+                      defaultValue={order.shipping_address?.state || ""}
+                      placeholder="State"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Postal code</Label>
+                    <input
+                      name="shipping_postal_code"
+                      defaultValue={order.shipping_address?.postal_code || ""}
+                      placeholder="ZIP / postal code"
+                      className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                      style={{
+                        background: colors.sand,
+                        border: `2px solid ${colors.ink}`,
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -568,33 +699,6 @@ export default async function AdminOrderDetailPage({
                   }}
                 />
               </form>
-            </RoughBorder>
-
-            <RoughBorder bg={colors.sand} label="Payment refs">
-              <div className="grid gap-4 text-sm">
-                <div>
-                  <div
-                    className="text-[11px] font-black uppercase tracking-widest"
-                    style={{ color: colors.muted }}
-                  >
-                    Checkout session
-                  </div>
-                  <div className="mt-1 break-all font-black">
-                    {order.stripe_checkout_session_id || "Not saved"}
-                  </div>
-                </div>
-                <div>
-                  <div
-                    className="text-[11px] font-black uppercase tracking-widest"
-                    style={{ color: colors.muted }}
-                  >
-                    Payment intent
-                  </div>
-                  <div className="mt-1 break-all font-black">
-                    {order.stripe_payment_intent_id || "Not saved"}
-                  </div>
-                </div>
-              </div>
             </RoughBorder>
           </div>
         </div>
