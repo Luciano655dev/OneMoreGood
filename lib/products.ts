@@ -26,17 +26,17 @@ type ProductRow = {
   sort_order?: number | string | null
 }
 
-type ProductSyncRow = {
+type ProductSeedRow = {
   id: string
   title: string
   price: number
   image: string
   description: string | null
   tags: string[]
-  inventory_quantity?: number
-  inventory_quantity_us?: number
-  inventory_quantity_br?: number
-  is_active?: boolean
+  inventory_quantity: number
+  inventory_quantity_us: number
+  inventory_quantity_br: number
+  is_active: boolean
   sort_order: number
 }
 
@@ -66,10 +66,10 @@ function mapCatalogProductToStoredProduct(
   }
 }
 
-function mapCatalogProductToSyncRow(
+function mapCatalogProductToSeedRow(
   product: Product,
   index: number
-): ProductSyncRow {
+): ProductSeedRow {
   const defaultInventory = product.max_qnt ?? 20
 
   return {
@@ -107,7 +107,6 @@ function normalizeInventoryValues(
     row.inventory_quantity_br ?? row.inventory_quantity ?? 0
   )
 
-  // Legacy rows may still have only the shared inventory column populated.
   if (
     inventoryQuantity > 0 &&
     inventoryQuantityUs === 0 &&
@@ -162,87 +161,6 @@ export function toStorefrontProduct(product: StoredProduct): Product {
   }
 }
 
-function areTagsEqual(a: string[], b: string[]) {
-  if (a.length !== b.length) return false
-  return a.every((value, index) => value === b[index])
-}
-
-function shouldSyncCatalogMetadata(row: ProductRow, catalogRow: ProductSyncRow) {
-  return (
-    row.title !== catalogRow.title ||
-    Number(row.price) !== catalogRow.price ||
-    row.image !== catalogRow.image ||
-    (row.description ?? null) !== catalogRow.description ||
-    !areTagsEqual(Array.isArray(row.tags) ? row.tags : [], catalogRow.tags) ||
-    Number(row.sort_order ?? 0) !== catalogRow.sort_order
-  )
-}
-
-function mergeCatalogWithRow(
-  catalogProduct: StoredProduct,
-  row?: ProductRow
-): StoredProduct {
-  if (!row) {
-    return catalogProduct
-  }
-
-  const { inventoryQuantity, inventoryQuantityUs, inventoryQuantityBr } =
-    normalizeInventoryValues(row)
-
-  return {
-    ...catalogProduct,
-    inventory_quantity: inventoryQuantity,
-    inventory_quantity_us: inventoryQuantityUs,
-    inventory_quantity_br: inventoryQuantityBr,
-    is_active: row.is_active ?? catalogProduct.is_active,
-  }
-}
-
-async function syncCatalogProducts(rows: ProductRow[]) {
-  const supabase = getSupabaseAdmin()
-  const rowsById = new Map(rows.map((row) => [row.id, row]))
-  const missingRows: ProductSyncRow[] = []
-  const staleMetadataRows: Array<Omit<ProductSyncRow, "inventory_quantity" | "inventory_quantity_us" | "inventory_quantity_br" | "is_active">> =
-    []
-
-  PRODUCTS.forEach((product, index) => {
-    const catalogRow = mapCatalogProductToSyncRow(product, index)
-    const existingRow = rowsById.get(product.id)
-
-    if (!existingRow) {
-      missingRows.push(catalogRow)
-      return
-    }
-
-    if (shouldSyncCatalogMetadata(existingRow, catalogRow)) {
-      staleMetadataRows.push({
-        id: catalogRow.id,
-        title: catalogRow.title,
-        price: catalogRow.price,
-        image: catalogRow.image,
-        description: catalogRow.description,
-        tags: catalogRow.tags,
-        sort_order: catalogRow.sort_order,
-      })
-    }
-  })
-
-  if (missingRows.length > 0) {
-    const { error } = await supabase.from("products").upsert(missingRows)
-    if (error) throw error
-  }
-
-  if (staleMetadataRows.length > 0) {
-    const { error } = await supabase.from("products").upsert(staleMetadataRows)
-    if (error) throw error
-  }
-
-  return {
-    missingCount: missingRows.length,
-    metadataUpdateCount: staleMetadataRows.length,
-  }
-}
-
 export async function syncStoredProductsCatalog() {
   if (!isSupabaseConfigured()) {
     return {
@@ -252,18 +170,25 @@ export async function syncStoredProductsCatalog() {
   }
 
   const supabase = getSupabaseAdmin()
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .order("sort_order", { ascending: true })
-    .order("title", { ascending: true })
+  const { data, error } = await supabase.from("products").select("id")
+  if (error) throw error
 
-  if (error) {
-    throw error
+  const existingIds = new Set(
+    (data ?? []).map((row) => String((row as { id?: string }).id || "").trim())
+  )
+  const missingRows = PRODUCTS.map((product, index) =>
+    mapCatalogProductToSeedRow(product, index)
+  ).filter((row) => !existingIds.has(row.id))
+
+  if (missingRows.length > 0) {
+    const { error: upsertError } = await supabase.from("products").upsert(missingRows)
+    if (upsertError) throw upsertError
   }
 
-  const rows = (data ?? []) as ProductRow[]
-  return syncCatalogProducts(rows)
+  return {
+    missingCount: missingRows.length,
+    metadataUpdateCount: 0,
+  }
 }
 
 export function getInventoryForCountry(
@@ -323,19 +248,10 @@ export async function getStoredProducts({
     throw error
   }
 
-  const rows = (data ?? []) as ProductRow[]
-  await syncCatalogProducts(rows)
-  const rowsById = new Map(rows.map((row) => [row.id, row]))
-  const mergedProducts = PRODUCTS.map((product, index) =>
-    mergeCatalogWithRow(
-      mapCatalogProductToStoredProduct(product, index),
-      rowsById.get(product.id)
-    )
-  )
-
+  const products = ((data ?? []) as ProductRow[]).map(mapRowToProduct)
   return includeInactive
-    ? mergedProducts
-    : mergedProducts.filter((product) => product.is_active !== false)
+    ? products
+    : products.filter((product) => product.is_active !== false)
 }
 
 export async function getStoredProductMap({

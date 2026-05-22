@@ -13,6 +13,7 @@ import {
   priceToCents,
 } from "@/lib/commerce"
 import { detectShippingCountryFromHeaders } from "@/lib/geo-country"
+import { resolveProductImageUrl } from "@/lib/product-images"
 import { getInventoryForCountry, getStoredProducts } from "@/lib/products"
 import { getBaseUrl, getStripe } from "@/lib/stripe"
 
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
 
     const lineItems = normalizedItems.flatMap((item) => {
       const product = productMap.get(item.productId)!
-      const imageUrl = `${baseUrl}${product.image}`
+      const imageUrl = resolveProductImageUrl(product.image, baseUrl)
 
       if (shippingCountry === "BR") {
         return [

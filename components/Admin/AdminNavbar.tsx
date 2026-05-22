@@ -10,6 +10,7 @@ type AdminNavbarProps = {
 const links = [
   { href: "/admin/orders/new", label: "Log purchase", tone: "primary" },
   { href: "/admin/orders", label: "Orders", tone: "default" },
+  { href: "/admin/catalog", label: "Catalog", tone: "default" },
   { href: "/admin/stock", label: "Stock", tone: "default" },
 ]
 

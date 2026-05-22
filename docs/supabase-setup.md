@@ -3,6 +3,7 @@
 This project can now use Supabase as the source of truth for:
 
 - products
+- product image storage
 - U.S. and Brazil inventory quantities
 - order history
 - order items
@@ -20,7 +21,10 @@ Add these to `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
+SUPABASE_PRODUCT_IMAGES_BUCKET=product-images
 ```
+
+If you use the default bucket name `product-images`, the last line is optional.
 
 ## 2. Create the tables
 
@@ -34,7 +38,16 @@ This creates:
 - `orders`
 - `order_items`
 
-## 3. Seed products into Supabase
+## 3. Create the Storage bucket
+
+In Supabase Storage:
+
+- Create a bucket named `product-images`
+- Mark it as `Public`
+
+If you want a different bucket name, set `SUPABASE_PRODUCT_IMAGES_BUCKET` in `.env.local` to match.
+
+## 4. Seed products into Supabase
 
 After the schema exists and your env vars are set, start the app and call:
 
@@ -46,9 +59,23 @@ That route upserts the current catalog from:
 
 - [data/products.ts](/Users/lucianomenezes/Documents/GitHub/OneMoreGood/data/products.ts)
 
-into the `products` table.
+into the `products` table, but only for products that are still missing there.
 
-## 4. How the app behaves after Supabase is configured
+## 5. Migrate the existing local product images into Storage
+
+If your current `products.image` values still point to `/products/...`, run:
+
+```bash
+node --env-file=.env.local scripts/migrate-product-images-to-supabase.mjs
+```
+
+That uploads the current files from `public/products` into your Supabase Storage bucket and updates the `products.image` column to the public Storage URLs.
+
+## 6. Restart Next.js after env changes
+
+Because `next/image` needs the Supabase host in `next.config.ts`, restart the dev server after adding or changing the Supabase env vars.
+
+## 7. How the app behaves after Supabase is configured
 
 - `/api/products` reads products from Supabase
 - `/api/stock` reads country-specific inventory from Supabase
@@ -57,17 +84,16 @@ into the `products` table.
 - successful Stripe webhook writes `order_items` rows
 - successful Stripe webhook decrements the matching country inventory field
 
-## 5. What to edit after setup
+## 8. What to edit after setup
 
-Inventory and product data should be edited in Supabase:
+Product data should be edited from the admin dashboard:
 
-- `products.title`
-- `products.price`
-- `products.image`
-- `products.description`
-- `products.tags`
-- `products.inventory_quantity_us`
-- `products.inventory_quantity_br`
-- `products.is_active`
+- Go to `/admin/catalog`
+- Add new items
+- Upload/replace product images
+- Edit title, price, description, tags, stock, sort order, and visibility
+- Remove products from the shop
 
-The static file remains useful as a seed/fallback, but Supabase becomes the operational source of truth once configured.
+Inventory can still be adjusted from `/admin/stock` for faster stock-only updates.
+
+The static file remains useful as a one-time seed/fallback, but Supabase becomes the operational source of truth once configured.
