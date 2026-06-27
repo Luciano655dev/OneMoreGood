@@ -143,6 +143,11 @@ function InnerShop({
         return matchesQ && matchesTag
       })
       .sort((a, b) => {
+        // Featured products pinned to the top.
+        const aFeat = a.featured ? 1 : 0
+        const bFeat = b.featured ? 1 : 0
+        if (aFeat !== bFeat) return bFeat - aFeat
+
         const aOut = typeof activeStock[a.id] === "number" && activeStock[a.id] <= 0
         const bOut = typeof activeStock[b.id] === "number" && activeStock[b.id] <= 0
 

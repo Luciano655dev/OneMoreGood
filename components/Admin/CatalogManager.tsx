@@ -143,13 +143,29 @@ export default function CatalogManager({
             </div>
 
             <div>
-              <Label>Price</Label>
+              <Label>Price (USD)</Label>
               <input
                 name="price"
                 type="number"
                 min="0"
                 step="0.01"
                 defaultValue="8.00"
+                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                style={{
+                  background: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                }}
+              />
+            </div>
+
+            <div>
+              <Label>Brazil price (R$) — optional</Label>
+              <input
+                name="price_br"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Default R$25"
                 className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
                 style={{
                   background: colors.paper,
@@ -219,6 +235,22 @@ export default function CatalogManager({
               >
                 <option value="1">Visible in shop</option>
                 <option value="0">Hidden from shop</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2 xl:col-span-1">
+              <Label>Featured</Label>
+              <select
+                name="featured"
+                defaultValue="0"
+                className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                style={{
+                  background: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                }}
+              >
+                <option value="0">Normal</option>
+                <option value="1">Featured (top + highlight)</option>
               </select>
             </div>
 
@@ -396,13 +428,34 @@ export default function CatalogManager({
                       </div>
 
                       <div>
-                        <Label>Price</Label>
+                        <Label>Price (USD)</Label>
                         <input
                           name="price"
                           type="number"
                           min="0"
                           step="0.01"
                           defaultValue={product.price.toFixed(2)}
+                          className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                          style={{
+                            background: colors.paper,
+                            border: `2px solid ${colors.ink}`,
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Brazil price (R$) — optional</Label>
+                        <input
+                          name="price_br"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="Default R$25"
+                          defaultValue={
+                            product.price_br != null
+                              ? product.price_br.toFixed(2)
+                              : ""
+                          }
                           className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
                           style={{
                             background: colors.paper,
@@ -472,6 +525,22 @@ export default function CatalogManager({
                         >
                           <option value="1">Visible in shop</option>
                           <option value="0">Hidden from shop</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <Label>Featured</Label>
+                        <select
+                          name="featured"
+                          defaultValue={product.featured ? "1" : "0"}
+                          className="mt-2 w-full px-3 py-3 text-sm font-black outline-none"
+                          style={{
+                            background: colors.paper,
+                            border: `2px solid ${colors.ink}`,
+                          }}
+                        >
+                          <option value="0">Normal</option>
+                          <option value="1">Featured (top + highlight)</option>
                         </select>
                       </div>
 

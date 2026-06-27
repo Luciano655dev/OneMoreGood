@@ -8,6 +8,7 @@ import Portal from "./Portal"
 import ProgressiveImage from "../Home/Objects/ProgressiveImage"
 import {
   DEFAULT_SHIPPING_COUNTRY,
+  ONLINE_CHECKOUT_ENABLED,
   calculateCartTotals,
   formatMoneyFromCents,
   getShippingCountryLabel,
@@ -342,23 +343,42 @@ export default function CartDrawer({
               </p>
             )}
 
-            <button
-              className={`mt-4 w-full px-5 py-4 text-sm font-black uppercase tracking-wider ${popButtonClass} ${disabledButtonClass}`}
-              style={{
-                background: colors.accent,
-                color: colors.paper,
-                border: `2px solid ${colors.ink}`,
-                boxShadow: `4px 4px 0 ${colors.ink}`,
-                opacity: hasItems ? 1 : 0.6,
-              }}
-              disabled={!hasItems}
-              onClick={() => {
-                if (!hasItems) return
-                setCheckoutOpen(true)
-              }}
-            >
-              {t.cart.contactTitle}
-            </button>
+            {ONLINE_CHECKOUT_ENABLED && shippingCountry === "BR" ? (
+              <Link
+                href="/checkout"
+                onClick={() => closeCart()}
+                aria-disabled={!hasItems}
+                className={`mt-4 block w-full px-5 py-4 text-center text-sm font-black uppercase tracking-wider ${popButtonClass} ${disabledButtonClass}`}
+                style={{
+                  background: colors.accent,
+                  color: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `4px 4px 0 ${colors.ink}`,
+                  opacity: hasItems ? 1 : 0.6,
+                  pointerEvents: hasItems ? "auto" : "none",
+                }}
+              >
+                {t.checkout.title}
+              </Link>
+            ) : (
+              <button
+                className={`mt-4 w-full px-5 py-4 text-sm font-black uppercase tracking-wider ${popButtonClass} ${disabledButtonClass}`}
+                style={{
+                  background: colors.accent,
+                  color: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `4px 4px 0 ${colors.ink}`,
+                  opacity: hasItems ? 1 : 0.6,
+                }}
+                disabled={!hasItems}
+                onClick={() => {
+                  if (!hasItems) return
+                  setCheckoutOpen(true)
+                }}
+              >
+                {t.cart.contactTitle}
+              </button>
+            )}
 
             <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
               {t.cart.policiesBefore}{" "}

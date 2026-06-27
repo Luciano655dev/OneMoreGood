@@ -70,6 +70,8 @@ function revalidateCatalogPaths() {
 function buildProductPayload(formData: FormData, image: string) {
   const title = parseRequiredText(String(formData.get("title") || ""), "Title")
   const price = parsePrice(String(formData.get("price") || "0"))
+  const priceBrRaw = String(formData.get("price_br") || "").trim()
+  const priceBr = priceBrRaw ? parsePrice(priceBrRaw) : null
   const description = String(formData.get("description") || "").trim()
   const sortOrder = parseWholeNumber(
     String(formData.get("sort_order") || "0"),
@@ -84,10 +86,13 @@ function buildProductPayload(formData: FormData, image: string) {
     "Brazil stock"
   )
   const isActive = String(formData.get("is_active") || "1").trim() === "1"
+  const featured = String(formData.get("featured") || "").trim() === "1"
 
   return {
     title,
     price,
+    price_br: priceBr,
+    featured,
     image,
     description: description || null,
     tags: parseTags(String(formData.get("tags") || "")),

@@ -313,7 +313,7 @@ export default function OrganizationPage() {
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {focusAreas.map(({ Icon }, index) => (
               <RoughBorder
-                key={t.organization.focusAreas[index].title}
+                key={index}
                 bg={index % 2 === 0 ? colors.paper : colors.sand}
                 rotate={0}
                 label={t.organization.focusAreas[index].title}
@@ -416,7 +416,7 @@ export default function OrganizationPage() {
             <div className="grid gap-5">
               {t.organization.donationSteps.map((step, index) => (
                 <RoughBorder
-                  key={step.title}
+                  key={index}
                   bg={colors.paper}
                   rotate={0}
                   label={`Step 0${index + 1}`}

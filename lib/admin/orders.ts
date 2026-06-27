@@ -6,6 +6,7 @@ import {
 } from "@/lib/commerce"
 
 export const ORDER_STATUSES = [
+  "pending",
   "paid",
   "packed",
   "shipped",
@@ -54,11 +55,19 @@ export type OrderDetail = OrderListItem & {
   shipping_address: {
     line1?: string | null
     line2?: string | null
+    number?: string | null
+    district?: string | null
     city?: string | null
     state?: string | null
     postal_code?: string | null
     country?: string | null
+    document?: string | null
   } | null
+  shipping_phone: string | null
+  shipping_service: string | null
+  shipping_label_url: string | null
+  melhor_envio_order_id: string | null
+  label_status: string | null
   notes: string | null
   order_items: OrderItemRow[]
 }
@@ -365,6 +374,8 @@ export function normalizeOrderStatus(status: string): OrderStatus | string {
 
 export function formatOrderStatus(status: string) {
   switch (status) {
+    case "pending":
+      return "Pending payment"
     case "paid":
       return "Paid"
     case "packed":
@@ -408,6 +419,8 @@ export function formatAddress(
 
 export function getStatusColors(status: string) {
   switch (status) {
+    case "pending":
+      return { bg: "#F1E7D1", color: "#7A6A47", rail: "#B59A5E", soft: "#F7F0DE" }
     case "paid":
       return { bg: "#EFE4CF", color: "#151515", rail: "#C7783A", soft: "#F4E8D2" }
     case "packed":
@@ -865,9 +878,9 @@ export async function getOrderDetail(id: string) {
 
   const supabase = getSupabaseAdmin()
   const detailSelectWithCurrency =
-    "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, currency, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
+    "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, currency, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_phone, shipping_service, shipping_label_url, melhor_envio_order_id, label_status, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
   const detailSelectWithoutCurrency =
-    "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
+    "id, order_id, stripe_checkout_session_id, stripe_payment_intent_id, customer_email, status, subtotal_cents, promo_savings_cents, shipping_cents, total_cents, shipping_name, shipping_phone, shipping_service, shipping_label_url, melhor_envio_order_id, label_status, shipping_address, tracking_number, tracking_carrier, notes, created_at, updated_at, order_items(id, product_id, title, quantity, unit_price_cents, created_at)"
   const detailWithCurrencyResult = await supabase
     .from("orders")
     .select(detailSelectWithCurrency)

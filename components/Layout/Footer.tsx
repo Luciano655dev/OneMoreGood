@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Heart } from "lucide-react"
+import Image from "next/image"
 
 import colors from "../colors"
 import { useSiteLocale } from "@/app/hooks/useSiteLocale"
@@ -51,7 +51,13 @@ export default function Footer() {
                   boxShadow: `2px 2px 0 ${colors.ink}`,
                 }}
               >
-                <Heart size={18} fill="currentColor" />
+                <Image
+                  src="/brand/Logo.png"
+                  alt=""
+                  width={30}
+                  height={30}
+                  className="h-8 w-8 object-contain"
+                />
               </div>
               <div>
                 <div className="text-lg font-black tracking-tight">

@@ -1,5 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
 
+// No generated Supabase types yet; the loose schema keeps queries untyped but
+// permissive. Replace with generated types when available.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Database = any
 
 let adminClient: ReturnType<typeof createClient<Database>> | null = null

@@ -1,5 +1,16 @@
+import type { ReactNode } from "react"
+
 import colors from "@/components/colors"
 import SockIcon from "./SockIcon"
+
+type RoughBorderProps = {
+  children?: ReactNode
+  bg?: string
+  rotate?: number
+  label?: ReactNode
+  delay?: number
+  className?: string
+}
 
 const RoughBorder = ({
   children,
@@ -8,7 +19,7 @@ const RoughBorder = ({
   label,
   delay = 0,
   className = "",
-}: any) => (
+}: RoughBorderProps) => (
   <div
     data-reveal
     className={`reveal relative ${className}`.trim()}

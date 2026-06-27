@@ -1,12 +1,10 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { MapPin, ShieldCheck, ShoppingBag } from "lucide-react"
 import colors from "@/components/colors"
 import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import RoughBorder from "@/components/Home/Objects/RoughBorder"
 import HandButton from "@/components/Home/Objects/HandButton"
-import StampChip from "@/components/Home/Objects/StampChip"
 
 export default function NotFound() {
   const router = useRouter()

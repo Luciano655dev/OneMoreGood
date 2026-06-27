@@ -34,6 +34,7 @@ const featuredProducts: Array<Product & { mainTag: string }> = [
     id: "sock-brazil-yellow",
     title: "Brazil Yellow Socks",
     price: 8,
+    price_br: 30,
     image: "/products/BrazilYellowSocks.png",
     description: "Bright Brazil look. Soft feel. Stays comfy all day.",
     tags: ["Sport"],
@@ -227,7 +228,7 @@ function ProductCard({
         type="button"
         className="group block w-full text-left"
         onClick={() => router.push("/shop")}
-        aria-label={`Shop ${product.title}`}
+        aria-label={`${t.home.shopAria} ${product.title}`}
       >
         <div
           className="relative h-52 overflow-hidden border-2 border-black"
@@ -275,7 +276,7 @@ function ProductCard({
               boxShadow: `2px 2px 0 ${colors.ink}`,
             }}
           >
-            Shop
+            {t.home.shopLabel}
           </span>
         </div>
       </button>
@@ -291,6 +292,10 @@ export default function OneMoreGoodStorefront() {
     t.home.pricingStats,
     shippingCountry,
     locale
+  )
+  const featuredPrice = formatMoneyFromCents(
+    getUnitPriceCentsForCountry(featuredProducts[0], shippingCountry),
+    shippingCountry
   )
 
   return (
@@ -398,7 +403,7 @@ export default function OneMoreGoodStorefront() {
                     </p>
                   </div>
                   <div className="text-xl font-black" style={{ color: colors.accent }}>
-                    $8
+                    {featuredPrice}
                   </div>
                 </div>
               </RoughBorder>
@@ -461,10 +466,10 @@ export default function OneMoreGoodStorefront() {
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {productNotes.map(({ Icon }, index) => (
               <RoughBorder
-                key={t.home.productNotes[index].title}
+                key={index}
                 bg={index % 2 === 0 ? colors.paper : colors.sand}
                 rotate={0}
-                label={`Detail 0${index + 1}`}
+                label={`${t.home.detailBadge} 0${index + 1}`}
                 delay={index * 100}
                 className="h-full"
               >

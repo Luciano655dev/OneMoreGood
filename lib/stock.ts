@@ -1,5 +1,7 @@
+import type Redis from "ioredis"
+
 export async function getAvailableStock(params: {
-  redis: any
+  redis: Redis
   productId: string
   initial: number
 }) {
@@ -16,7 +18,7 @@ export async function getAvailableStock(params: {
 }
 
 export async function reserveStockAtomic(params: {
-  redis: any
+  redis: Redis
   items: { productId: string; qty: number; initial: number }[]
 }) {
   const { redis, items } = params

@@ -21,7 +21,7 @@ import {
   formatOrderMoney,
 } from "@/lib/admin/orders"
 import { getStoredProductMap } from "@/lib/products"
-import { updateOrderAction } from "../actions"
+import { generateLabelAction, updateOrderAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -55,12 +55,13 @@ export default async function AdminOrderDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ saved?: string; error?: string }>
+  searchParams: Promise<{ saved?: string; error?: string; label?: string }>
 }) {
   const { id } = await params
   const query = await searchParams
   const order = await getOrderDetail(id)
   const saved = query.saved === "1"
+  const labelDone = query.label === "1"
   const error = query.error?.trim() || null
 
   if (!order) {
@@ -129,6 +130,19 @@ export default async function AdminOrderDetailPage({
             }}
           >
             Order updated.
+          </div>
+        ) : null}
+
+        {labelDone ? (
+          <div
+            className="mt-4 p-3 text-sm font-black"
+            style={{
+              background: "#DDECE9",
+              border: `2px solid ${colors.ink}`,
+              color: colors.ink,
+            }}
+          >
+            Shipping label generated.
           </div>
         ) : null}
 
@@ -368,6 +382,52 @@ export default async function AdminOrderDetailPage({
                     <strong style={{ color: colors.ink }}>Number:</strong>{" "}
                     {order.tracking_number || "Not added"}
                   </div>
+
+                  {order.market === "BR" ? (
+                    <div
+                      className="mt-4 grid gap-2 pt-4 text-sm"
+                      style={{ borderTop: `2px solid ${colors.ink}` }}
+                    >
+                      <div>
+                        <strong style={{ color: colors.ink }}>Method:</strong>{" "}
+                        {order.shipping_service || "—"}
+                      </div>
+                      <div>
+                        <strong style={{ color: colors.ink }}>Label:</strong>{" "}
+                        {order.shipping_label_url ? (
+                          <a
+                            href={order.shipping_label_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline"
+                            style={{ color: colors.accent }}
+                          >
+                            Download label
+                          </a>
+                        ) : (
+                          order.label_status || "Not generated"
+                        )}
+                      </div>
+
+                      {order.label_status !== "generated" ? (
+                        <form action={generateLabelAction} className="mt-2">
+                          <input type="hidden" name="id" value={id} />
+                          <FormSubmitButton
+                            className="px-4 py-2 text-xs font-black uppercase tracking-widest"
+                            style={{
+                              background: colors.accent,
+                              color: colors.paper,
+                              border: `2px solid ${colors.ink}`,
+                              boxShadow: `2px 2px 0 ${colors.ink}`,
+                            }}
+                            idleLabel="Generate PAC/SEDEX label"
+                            pendingLabel="Generating…"
+                          />
+                        </form>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   <div className="mt-4 text-sm" style={{ color: colors.muted }}>
                     Add the tracking fields below when the label is ready, then
                     switch the status to shipped. Once the order arrives and is

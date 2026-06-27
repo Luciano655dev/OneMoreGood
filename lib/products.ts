@@ -15,6 +15,8 @@ type ProductRow = {
   id: string
   title: string
   price: number | string
+  price_br?: number | string | null
+  featured?: boolean | null
   image: string
   description?: string | null
   max_qnt?: number | string | null
@@ -30,6 +32,8 @@ type ProductSeedRow = {
   id: string
   title: string
   price: number
+  price_br: number | null
+  featured: boolean
   image: string
   description: string | null
   tags: string[]
@@ -54,6 +58,8 @@ function mapCatalogProductToStoredProduct(
     id: product.id,
     title: product.title,
     price: product.price,
+    price_br: product.price_br,
+    featured: product.featured ?? false,
     image: product.image,
     description: product.description,
     max_qnt: defaultInventory,
@@ -76,6 +82,8 @@ function mapCatalogProductToSeedRow(
     id: product.id,
     title: product.title,
     price: product.price,
+    price_br: product.price_br ?? null,
+    featured: product.featured ?? false,
     image: product.image,
     description: product.description ?? null,
     tags: product.tags ?? [],
@@ -131,6 +139,11 @@ export function mapRowToProduct(row: ProductRow): StoredProduct {
     id: row.id,
     title: row.title,
     price: Number(row.price),
+    price_br:
+      row.price_br != null && row.price_br !== ""
+        ? Number(row.price_br)
+        : undefined,
+    featured: row.featured ?? false,
     image: row.image,
     description: row.description ?? undefined,
     max_qnt: Math.max(
@@ -153,6 +166,8 @@ export function toStorefrontProduct(product: StoredProduct): Product {
     id: product.id,
     title: product.title,
     price: product.price,
+    price_br: product.price_br,
+    featured: product.featured,
     image: product.image,
     description: product.description,
     max_qnt: product.max_qnt,

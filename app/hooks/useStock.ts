@@ -23,6 +23,8 @@ export function useStock(country: ShippingCountry = DEFAULT_SHIPPING_COUNTRY) {
   }, [country])
 
   useEffect(() => {
+    // Fetch stock on mount and whenever the shipping country changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh()
   }, [refresh])
 

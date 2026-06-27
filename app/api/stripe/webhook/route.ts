@@ -7,6 +7,11 @@ import {
   getInventoryUpdateForCountry,
   getStoredProducts,
 } from "@/lib/products"
+import {
+  createLabel,
+  quoteShipping,
+  type ShippingService,
+} from "@/lib/melhor-envio"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 import { isMissingCurrencyColumnError } from "@/lib/supabase/errors"
 import { getStripe } from "@/lib/stripe"
@@ -167,6 +172,264 @@ async function sendOrderEmail(params: {
   }
 }
 
+function getResendConfig() {
+  const resendKey = process.env.RESEND_API_KEY
+  const from = process.env.RESEND_FROM?.replace(/^"(.*)"$/, "$1").trim()
+  const ordersTo = process.env.ORDERS_TO?.trim()
+  if (!resendKey || !from) return null
+  return { resend: new Resend(resendKey), from, ordersTo }
+}
+
+type BrEmailParams = {
+  orderId: string
+  customerEmail: string
+  shippingName: string
+  shippingAddress: string
+  service: string
+  shippingCost: number
+  total: number
+  items: Array<{ title: string; qty: number }>
+  trackingNumber: string | null
+  labelUrl: string | null
+  labelFailed: boolean
+}
+
+function brItemsHtml(items: Array<{ title: string; qty: number }>) {
+  return items
+    .map(
+      (item) =>
+        `<li style="margin-bottom:8px;"><strong>${item.title}</strong> x ${item.qty}</li>`
+    )
+    .join("")
+}
+
+async function sendBrOrderEmails(params: BrEmailParams) {
+  const config = getResendConfig()
+  if (!config) return
+  const { resend, from, ordersTo } = config
+
+  const fmt = (cents: number) => formatMoneyFromCents(cents, "BR")
+  const trackingLine = params.trackingNumber
+    ? `<p><strong>Rastreio:</strong> ${params.trackingNumber}</p>`
+    : ""
+
+  if (ordersTo) {
+    const labelBlock = params.labelFailed
+      ? `<p style="color:#b00;"><strong>A etiqueta automática falhou.</strong> Gere a etiqueta manualmente no painel admin.</p>`
+      : params.labelUrl
+        ? `<p><a href="${params.labelUrl}">Baixar etiqueta (${params.service})</a></p>`
+        : ""
+
+    const ownerEmail = await resend.emails.send({
+      from,
+      to: ordersTo,
+      subject: `Novo pedido pago - Brasil (${params.orderId})`,
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;">
+          <h2>Novo pedido pago (Brasil)</h2>
+          <p><strong>Pedido:</strong> ${params.orderId}</p>
+          <p><strong>Cliente:</strong> ${params.customerEmail}</p>
+          <p><strong>Enviar para:</strong><br />${params.shippingName}<br />${params.shippingAddress}</p>
+          <p><strong>Envio:</strong> ${params.service} - ${fmt(params.shippingCost)}</p>
+          <p><strong>Total pago:</strong> ${fmt(params.total)}</p>
+          ${trackingLine}
+          ${labelBlock}
+          <h3>Itens</h3>
+          <ul>${brItemsHtml(params.items)}</ul>
+        </div>
+      `,
+    })
+    if (ownerEmail.error) console.error("BR owner email failed", ownerEmail.error)
+  }
+
+  const buyerEmail = await resend.emails.send({
+    from,
+    to: params.customerEmail,
+    subject: `Seu pedido OneMoreGood foi confirmado (${params.orderId})`,
+    html: `
+      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;">
+        <h2>Seu pedido foi confirmado</h2>
+        <p>Obrigado por apoiar a OneMoreGood.</p>
+        <p><strong>Pedido:</strong> ${params.orderId}</p>
+        <p><strong>Envio:</strong> ${params.service} - ${fmt(params.shippingCost)}</p>
+        <p><strong>Total pago:</strong> ${fmt(params.total)}</p>
+        ${trackingLine}
+        <h3>Itens</h3>
+        <ul>${brItemsHtml(params.items)}</ul>
+        <p>Assim que o pacote for postado, você poderá acompanhar pelo código de rastreio.</p>
+      </div>
+    `,
+  })
+  if (buyerEmail.error) console.error("BR buyer email failed", buyerEmail.error)
+}
+
+type OrderRow = {
+  id: string
+  order_id: string
+  status: string
+  customer_email: string | null
+  shipping_name: string | null
+  shipping_phone: string | null
+  shipping_service: string | null
+  shipping_cents: number | null
+  total_cents: number | null
+  shipping_address: {
+    line1?: string | null
+    line2?: string | null
+    number?: string | null
+    district?: string | null
+    city?: string | null
+    state?: string | null
+    postal_code?: string | null
+    document?: string | null
+  } | null
+}
+
+async function handleBrPaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  const orderId = paymentIntent.metadata?.orderId
+  const shippingCountry = normalizeShippingCountry(
+    paymentIntent.metadata?.shippingCountry
+  )
+  if (!orderId || shippingCountry !== "BR") return
+  if (!isSupabaseConfigured()) return
+
+  const supabase = getSupabaseAdmin()
+
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select(
+      "id,order_id,status,customer_email,shipping_name,shipping_phone,shipping_service,shipping_cents,total_cents,shipping_address"
+    )
+    .eq("order_id", orderId)
+    .maybeSingle<OrderRow>()
+
+  if (orderError) {
+    console.error("BR order lookup failed", orderError)
+    return
+  }
+  if (!order) {
+    console.error("BR order not found for payment intent", orderId)
+    return
+  }
+  // Idempotency: only process a pending order once.
+  if (order.status !== "pending") return
+
+  await supabase.from("orders").update({ status: "paid" }).eq("id", order.id)
+
+  const { data: orderItems } = await supabase
+    .from("order_items")
+    .select("product_id,title,quantity,unit_price_cents")
+    .eq("order_id", order.id)
+
+  const items = (orderItems || []).map((item) => ({
+    title: String(item.title),
+    qty: Number(item.quantity),
+  }))
+
+  // Decrement BR inventory.
+  const storedProducts = await getStoredProducts()
+  const productMap = new Map(storedProducts.map((p) => [p.id, p]))
+  for (const item of orderItems || []) {
+    const product = productMap.get(String(item.product_id))
+    if (!product) continue
+    const nextInventory = Math.max(
+      0,
+      getInventoryForCountry(product, "BR") - Number(item.quantity)
+    )
+    const { error: invError } = await supabase
+      .from("products")
+      .update(getInventoryUpdateForCountry("BR", nextInventory))
+      .eq("id", item.product_id)
+    if (invError) console.error("BR inventory update failed", invError)
+  }
+
+  const address = order.shipping_address || {}
+  const addressHtml = [
+    address.line1,
+    address.number ? `nº ${address.number}` : null,
+    address.line2,
+    address.district,
+    [address.city, address.state].filter(Boolean).join(" - "),
+    address.postal_code,
+  ]
+    .filter(Boolean)
+    .join("<br />")
+
+  const service = (order.shipping_service || "PAC") as ShippingService
+  const pairs = items.reduce((sum, item) => sum + item.qty, 0)
+
+  let trackingNumber: string | null = null
+  let labelUrl: string | null = null
+  let labelFailed = false
+
+  try {
+    const cep = String(address.postal_code || "").replace(/\D/g, "")
+    const quotes = await quoteShipping({ toPostalCode: cep, pairs })
+    const quote = quotes.find((q) => q.service === service)
+    if (!quote) throw new Error(`No ${service} service available for label.`)
+
+    const label = await createLabel({
+      orderId: order.order_id,
+      meServiceId: quote.meServiceId,
+      pairs,
+      insuranceValueCents: Number(order.total_cents || 0),
+      to: {
+        name: order.shipping_name || "Cliente",
+        email: order.customer_email,
+        phone: order.shipping_phone,
+        document: address.document || null,
+        address: String(address.line1 || ""),
+        number: String(address.number || ""),
+        complement: address.line2 || null,
+        district: String(address.district || ""),
+        city: String(address.city || ""),
+        state: String(address.state || ""),
+        postalCode: cep,
+      },
+      products: (orderItems || []).map((item) => ({
+        name: String(item.title),
+        quantity: Number(item.quantity),
+        unitaryValueCents: Number(item.unit_price_cents),
+      })),
+    })
+
+    trackingNumber = label.trackingNumber
+    labelUrl = label.labelUrl
+
+    await supabase
+      .from("orders")
+      .update({
+        shipping_label_url: label.labelUrl,
+        tracking_number: label.trackingNumber,
+        tracking_carrier: "Correios",
+        melhor_envio_order_id: label.meOrderId,
+        label_status: "generated",
+      })
+      .eq("id", order.id)
+  } catch (labelError) {
+    labelFailed = true
+    console.error("Label generation failed", labelError)
+    await supabase
+      .from("orders")
+      .update({ label_status: "failed" })
+      .eq("id", order.id)
+  }
+
+  await sendBrOrderEmails({
+    orderId: order.order_id,
+    customerEmail: order.customer_email || "Unknown",
+    shippingName: order.shipping_name || "Cliente",
+    shippingAddress: addressHtml || "Endereço não informado",
+    service,
+    shippingCost: Number(order.shipping_cents || 0),
+    total: Number(order.total_cents || 0),
+    items,
+    trackingNumber,
+    labelUrl,
+    labelFailed,
+  })
+}
+
 function buildAddressHtml(details: ShippingDetails | CustomerDetails) {
   if (!details?.address) return "Address not provided"
 
@@ -202,6 +465,11 @@ export async function POST(req: Request) {
   }
 
   try {
+    if (event.type === "payment_intent.succeeded") {
+      await handleBrPaymentSucceeded(event.data.object as Stripe.PaymentIntent)
+      return NextResponse.json({ received: true })
+    }
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
       const sessionWithShipping =

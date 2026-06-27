@@ -30,6 +30,7 @@ export default function ProgressiveImage({
   quality,
   placeholder,
   blurDataURL,
+  alt,
   ...props
 }: ProgressiveImageProps) {
   const [loaded, setLoaded] = useState(false)
@@ -37,6 +38,7 @@ export default function ProgressiveImage({
   return (
     <Image
       {...props}
+      alt={alt}
       priority={priority}
       quality={quality ?? 72}
       loading={priority ? undefined : loading ?? "lazy"}

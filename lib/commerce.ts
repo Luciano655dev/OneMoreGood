@@ -2,6 +2,11 @@ import type { Product } from "@/types"
 
 export const CART_STORAGE_KEY = "omp_cart_v1"
 
+// Online checkout is disabled for now. The full flow (custom BR checkout,
+// shipping, Stripe payment) stays in the codebase but users cannot reach it.
+// Flip to true to re-enable.
+export const ONLINE_CHECKOUT_ENABLED = false
+
 export const RETURN_WINDOW_DAYS = 14
 
 export type ShippingCountry = "US" | "BR"
@@ -63,6 +68,38 @@ export const BRAZIL_SHIPPING_TIERS = [
   },
 ] as const
 
+// --- Brazil shipping (Correios via Melhor Envio) package estimation ---
+// Socks are light; we ship in a small mailer. Weight is estimated from the
+// number of pairs plus packaging. Dimensions are a fixed small-box default.
+// Melhor Envio enforces minimums of 2cm height, 11cm width, 16cm length.
+export const SOCK_PAIR_WEIGHT_GRAMS = 80
+export const PACKAGE_BASE_WEIGHT_GRAMS = 50
+export const PACKAGE_DIMENSIONS_CM = {
+  height: 4,
+  width: 11,
+  length: 16,
+} as const
+
+export type ShippingPackage = {
+  weight: number // kilograms (Melhor Envio expects kg)
+  height: number // cm
+  width: number // cm
+  length: number // cm
+}
+
+export function getPackageForItemCount(pairs: number): ShippingPackage {
+  const safePairs = Math.max(1, Math.floor(pairs))
+  const grams =
+    PACKAGE_BASE_WEIGHT_GRAMS + safePairs * SOCK_PAIR_WEIGHT_GRAMS
+
+  return {
+    weight: Math.max(0.1, grams / 1000),
+    height: PACKAGE_DIMENSIONS_CM.height,
+    width: PACKAGE_DIMENSIONS_CM.width,
+    length: PACKAGE_DIMENSIONS_CM.length,
+  }
+}
+
 export function moneyFromCents(cents: number) {
   return (cents / 100).toFixed(2)
 }
@@ -113,7 +150,11 @@ export function getShippingTiers(country: ShippingCountry) {
 }
 
 export function getUnitPriceCentsForCountry(product: Product, country: ShippingCountry) {
-  if (country === "BR") return BRAZIL_UNIT_PRICE_CENTS
+  if (country === "BR") {
+    return product.price_br && product.price_br > 0
+      ? priceToCents(product.price_br)
+      : BRAZIL_UNIT_PRICE_CENTS
+  }
   return priceToCents(product.price)
 }
 

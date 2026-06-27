@@ -10,7 +10,52 @@ import {
   refundPolicySummary,
 } from "@/lib/commerce"
 
-export default function CheckoutSuccessPage() {
+export default async function CheckoutSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ order?: string; redirect_status?: string }>
+}) {
+  const query = await searchParams
+  const orderId = query.order?.trim() || null
+  // BR embedded payments append redirect_status; anything other than
+  // "succeeded" means the payment did not complete, so don't clear the cart.
+  const incomplete = Boolean(
+    query.redirect_status && query.redirect_status !== "succeeded"
+  )
+
+  if (incomplete) {
+    return (
+      <main
+        className="min-h-screen px-6 py-16"
+        style={{ background: colors.paper, color: colors.ink }}
+      >
+        <div className="mx-auto max-w-3xl">
+          <RoughBorder bg={colors.sand} rotate={-0.2} label="Payment pending">
+            <h1 className="text-4xl font-black">Payment not completed</h1>
+            <p className="mt-4 text-base" style={{ color: colors.muted }}>
+              Your payment did not go through or is still processing. Your cart
+              is saved — you can try again.
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/checkout"
+                className="px-4 py-3 text-sm font-black uppercase tracking-wider"
+                style={{
+                  background: colors.accent,
+                  color: colors.paper,
+                  border: `2px solid ${colors.ink}`,
+                  boxShadow: `3px 3px 0 ${colors.ink}`,
+                }}
+              >
+                Back to checkout
+              </Link>
+            </div>
+          </RoughBorder>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main
       className="min-h-screen px-6 py-16"
@@ -26,6 +71,11 @@ export default function CheckoutSuccessPage() {
           className="max-w-3xl"
         >
           <h1 className="text-4xl font-black">Payment received</h1>
+          {orderId ? (
+            <p className="mt-2 text-sm font-black" style={{ color: colors.ink }}>
+              Order {orderId}
+            </p>
+          ) : null}
           <p className="mt-4 text-base" style={{ color: colors.muted }}>
             Your order is confirmed. Next you will receive your receipt, and
             then OneMoreGood will prepare shipment and email tracking after the

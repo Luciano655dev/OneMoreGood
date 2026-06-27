@@ -231,6 +231,8 @@ export const PRODUCTS: Product[] = [
     id: "sock-brazil-yellow",
     title: "Brazil Yellow Socks",
     price: 8,
+    price_br: 30,
+    featured: true,
     image: "/products/BrazilYellowSocks.png",
     description: "Bright Brazil look. Soft feel. Stays comfy all day.",
     max_qnt: 20,

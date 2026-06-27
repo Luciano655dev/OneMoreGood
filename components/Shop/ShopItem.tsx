@@ -16,6 +16,8 @@ type ShopItemProps = {
   image: string
   title: string
   price: number
+  price_br?: number
+  featured?: boolean
   description?: string
   max_qnt?: number
   stockQuantity?: number
@@ -34,6 +36,8 @@ export default function ShopItem({
   image,
   title,
   price,
+  price_br,
+  featured = false,
   description,
   max_qnt,
   stockQuantity,
@@ -57,8 +61,8 @@ export default function ShopItem({
   }, [open])
 
   const product: Product = useMemo(
-    () => ({ id, title, price, image, description, max_qnt }),
-    [id, title, price, image, description, max_qnt]
+    () => ({ id, title, price, price_br, image, description, max_qnt }),
+    [id, title, price, price_br, image, description, max_qnt]
   )
 
   const inCartQty = useMemo(() => {
@@ -82,12 +86,8 @@ export default function ShopItem({
   }, [badge, qtyLeft, t])
 
   const unitPriceCents = useMemo(
-    () =>
-      getUnitPriceCentsForCountry(
-        { id, title, price, image, description, max_qnt },
-        shippingCountry
-      ),
-    [id, title, price, image, description, max_qnt, shippingCountry]
+    () => getUnitPriceCentsForCountry(product, shippingCountry),
+    [product, shippingCountry]
   )
 
   const canAdd = !out && !atLimit
@@ -121,17 +121,37 @@ export default function ShopItem({
         <div
           className="relative p-3 transition"
           style={{
-            background: colors.paper,
-            border: `2px solid ${colors.ink}`,
-            boxShadow: `3px 3px 0 ${colors.ink}`,
-            transform: "rotate(-0.15deg)",
+            background: featured ? colors.sand : colors.paper,
+            border: `${featured ? 3 : 2}px solid ${
+              featured ? colors.clay : colors.ink
+            }`,
+            boxShadow: featured
+              ? `5px 5px 0 ${colors.clay}`
+              : `3px 3px 0 ${colors.ink}`,
+            transform: featured ? "rotate(-0.4deg)" : "rotate(-0.15deg)",
             opacity: out ? 0.75 : 1,
           }}
         >
           <div
             className="pointer-events-none absolute inset-[6px]"
-            style={{ border: `1.5px solid ${colors.ink}` }}
+            style={{
+              border: `1.5px solid ${featured ? colors.clay : colors.ink}`,
+            }}
           />
+
+          {featured && (
+            <div
+              className="absolute -top-3 right-4 z-10 px-3 py-1 text-[11px] font-black uppercase tracking-widest"
+              style={{
+                background: colors.clay,
+                color: colors.paper,
+                border: `2px solid ${colors.ink}`,
+                boxShadow: `2px 2px 0 ${colors.ink}`,
+              }}
+            >
+              ★ {t.shop.featured}
+            </div>
+          )}
 
           <div
             className="relative overflow-hidden"

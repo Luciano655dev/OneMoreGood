@@ -20,6 +20,14 @@ add column if not exists inventory_quantity_us integer not null default 0;
 alter table public.products
 add column if not exists inventory_quantity_br integer not null default 0;
 
+-- Optional per-product Brazil price (reais). Null falls back to the flat BR price.
+alter table public.products
+add column if not exists price_br numeric(10,2);
+
+-- Featured products are pinned to the top of the shop and highlighted.
+alter table public.products
+add column if not exists featured boolean not null default false;
+
 update public.products
 set
   inventory_quantity_us = coalesce(inventory_quantity_us, inventory_quantity, 0),
@@ -98,3 +106,19 @@ drop constraint if exists orders_currency_check;
 alter table public.orders
 add constraint orders_currency_check
 check (currency in ('usd', 'brl'));
+
+-- Brazil custom checkout + Correios (Melhor Envio) shipping labels
+alter table public.orders
+add column if not exists shipping_phone text;
+
+alter table public.orders
+add column if not exists shipping_service text;
+
+alter table public.orders
+add column if not exists shipping_label_url text;
+
+alter table public.orders
+add column if not exists melhor_envio_order_id text;
+
+alter table public.orders
+add column if not exists label_status text;

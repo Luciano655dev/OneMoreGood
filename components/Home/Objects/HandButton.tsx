@@ -1,6 +1,13 @@
+import type { ButtonHTMLAttributes, ReactNode } from "react"
+
 import colors from "@/components/colors"
 
-const HandButton = ({ variant = "solid", children, ...props }: any) => (
+type HandButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "solid" | "ghost"
+  children?: ReactNode
+}
+
+const HandButton = ({ variant = "solid", children, ...props }: HandButtonProps) => (
   <button
     {...props}
     className="btnInk inline-flex items-center gap-2 px-5 py-3 font-black uppercase tracking-wider"

@@ -1,9 +1,10 @@
 "use client"
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import colors from "../colors"
-import { Heart, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import HandButton from "../Home/Objects/HandButton"
 import { useSiteLocale } from "@/app/hooks/useSiteLocale"
 
@@ -36,7 +37,14 @@ export default function Navbar() {
               boxShadow: `2px 2px 0 ${colors.ink}`,
             }}
           >
-            <Heart size={18} fill="currentColor" />
+            <Image
+              src="/brand/Logo.png"
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 object-contain"
+              priority
+            />
           </div>
           <div className="leading-tight">
             <div className="text-lg font-black tracking-tight">

@@ -8,8 +8,14 @@ import {
   ORDER_STATUSES,
   getOrderCurrencyForMarket,
   getOrderMarketFromCurrency,
+  getOrderDetail,
   normalizeOrderMarket,
 } from "@/lib/admin/orders"
+import {
+  createLabel,
+  quoteShipping,
+  type ShippingService,
+} from "@/lib/melhor-envio"
 import {
   getInventoryForCountry,
   getInventoryUpdateForCountry,
@@ -457,6 +463,93 @@ type ManualLineItem = {
 }
 
 const MANUAL_ORDER_MAX_ROWS = 25
+
+export async function generateLabelAction(formData: FormData) {
+  const id = String(formData.get("id") || "").trim()
+  const returnTo = getSafeAdminReturnPath(`/admin/orders/${id}`, id || undefined)
+
+  try {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Supabase is not configured.")
+    }
+    if (!id) {
+      throw new Error("Order id is required.")
+    }
+
+    const order = await getOrderDetail(id)
+    if (!order) {
+      throw new Error("Order not found.")
+    }
+    if (order.market !== "BR") {
+      throw new Error("Labels are only available for Brazil orders.")
+    }
+
+    const address = order.shipping_address || {}
+    const cep = String(address.postal_code || "").replace(/\D/g, "")
+    if (cep.length !== 8) {
+      throw new Error("Order is missing a valid CEP.")
+    }
+
+    const service = (order.shipping_service || "PAC") as ShippingService
+    const pairs = order.order_items.reduce((sum, item) => sum + item.quantity, 0)
+
+    const quotes = await quoteShipping({ toPostalCode: cep, pairs })
+    const quote = quotes.find((q) => q.service === service)
+    if (!quote) {
+      throw new Error(`${service} is unavailable for this CEP.`)
+    }
+
+    const label = await createLabel({
+      orderId: order.order_id,
+      meServiceId: quote.meServiceId,
+      pairs,
+      insuranceValueCents: order.total_cents,
+      to: {
+        name: order.shipping_name || "Cliente",
+        email: order.customer_email,
+        phone: order.shipping_phone,
+        document: address.document || null,
+        address: String(address.line1 || ""),
+        number: String(address.number || ""),
+        complement: address.line2 || null,
+        district: String(address.district || ""),
+        city: String(address.city || ""),
+        state: String(address.state || ""),
+        postalCode: cep,
+      },
+      products: order.order_items.map((item) => ({
+        name: item.title,
+        quantity: item.quantity,
+        unitaryValueCents: item.unit_price_cents,
+      })),
+    })
+
+    const supabase = getSupabaseAdmin()
+    await supabase
+      .from("orders")
+      .update({
+        shipping_label_url: label.labelUrl,
+        tracking_number: label.trackingNumber,
+        tracking_carrier: "Correios",
+        melhor_envio_order_id: label.meOrderId,
+        label_status: "generated",
+      })
+      .eq("id", id)
+
+    revalidatePath("/admin/orders")
+    revalidatePath(`/admin/orders/${id}`)
+    redirect(appendQueryParam(returnTo, "label", "1"))
+  } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error
+    }
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : "Could not generate label."
+    redirect(appendQueryParam(returnTo, "error", message))
+  }
+}
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
