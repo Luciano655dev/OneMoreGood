@@ -115,6 +115,41 @@ const productBadges = {
   Money: { en: "Money", pt: "Dinheiro" },
 } as const
 
+function getLocalPricingStats(
+  pricingStats: ReadonlyArray<readonly [string, string]>,
+  shippingCountry: ShippingCountry,
+  locale: ReturnType<typeof useSiteLocale>["locale"]
+) {
+  if (shippingCountry === "BR") {
+    return [
+      pricingStats[0],
+      [
+        "Brasil",
+        locale === "pt"
+          ? "Checkout com preço local"
+          : "Local checkout pricing",
+      ],
+      [
+        "Pedido local",
+        locale === "pt"
+          ? "Finalização para endereços no Brasil"
+          : "Checkout for Brazil addresses",
+      ],
+    ] as const
+  }
+
+  return [
+    pricingStats[0],
+    pricingStats[1],
+    [
+      "U.S. only",
+      locale === "pt"
+        ? "Checkout com preço local"
+        : "Checkout uses local pricing",
+    ],
+  ] as const
+}
+
 function useReveal() {
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -252,6 +287,11 @@ export default function OneMoreGoodStorefront() {
   const rootRef = useReveal()
   const router = useRouter()
   const { shippingCountry, t, locale } = useSiteLocale()
+  const localPricingStats = getLocalPricingStats(
+    t.home.pricingStats,
+    shippingCountry,
+    locale
+  )
 
   return (
     <div ref={rootRef} style={{ background: colors.paper, color: colors.ink }}>
@@ -308,7 +348,7 @@ export default function OneMoreGoodStorefront() {
               <StitchRule />
 
               <div data-reveal className="reveal grid gap-4 text-sm sm:grid-cols-3">
-                {t.home.pricingStats.map(([value, description]) => (
+                {localPricingStats.map(([value, description]) => (
                   <div key={value}>
                     <div className="text-2xl font-black" style={{ color: colors.clay }}>
                       {value}
