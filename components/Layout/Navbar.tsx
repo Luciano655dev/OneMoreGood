@@ -5,10 +5,17 @@ import { useRouter } from "next/navigation"
 import colors from "../colors"
 import { Heart, Menu, X } from "lucide-react"
 import HandButton from "../Home/Objects/HandButton"
+import { useSiteLocale } from "@/app/hooks/useSiteLocale"
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
+  const { t } = useSiteLocale()
+  const navLinks = [
+    ["/", t.nav.home],
+    ["/collaborations", t.nav.collaborations],
+    ["/about", t.nav.about],
+  ] as const
 
   return (
     <header
@@ -39,19 +46,16 @@ export default function Navbar() {
               className="text-xs font-semibold"
               style={{ color: colors.muted }}
             >
-              Shop with a purpose
+              {t.nav.subtitle}
             </div>
           </div>
         </Link>
 
         <nav className="hidden md:flex items-center gap-7 text-sm font-black uppercase tracking-wider">
-          {[
-            ["/", "Home"],
-            ["/about", "About Us"],
-          ].map(([href, label]) => (
-            <a key={label} href={href} className="hover:opacity-70">
+          {navLinks.map(([href, label]) => (
+            <Link key={href} href={href} className="hover:opacity-70">
               {label}
-            </a>
+            </Link>
           ))}
           <HandButton
             className="px-4 py-2 font-black uppercase tracking-wider btncolors.Ink"
@@ -63,7 +67,7 @@ export default function Navbar() {
             }}
             onClick={() => router.push("/shop")}
           >
-            Shop
+            {t.nav.shop}
           </HandButton>
         </nav>
 
@@ -88,18 +92,15 @@ export default function Navbar() {
           style={{ background: colors.paper }}
         >
           <div className="max-w-7xl mx-auto px-6 py-4 grid gap-3 text-sm font-black uppercase tracking-wider">
-            {[
-              ["/", "Home"],
-              ["/about", "About Us"],
-            ].map(([href, label]) => (
-              <a
+            {navLinks.map(([href, label]) => (
+              <Link
                 key={href}
                 href={href}
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-1"
               >
                 {label}
-              </a>
+              </Link>
             ))}
             <HandButton
               className="mt-2 px-4 py-2 font-black uppercase tracking-wider btncolors.Ink"
@@ -111,7 +112,7 @@ export default function Navbar() {
               }}
               onClick={() => router.push("/shop")}
             >
-              Shop
+              {t.nav.shop}
             </HandButton>
           </div>
         </div>

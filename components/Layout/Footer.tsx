@@ -1,14 +1,10 @@
+"use client"
+
 import Link from "next/link"
 import { Heart } from "lucide-react"
 
 import colors from "../colors"
-
-const primaryLinks = [
-  { href: "/", label: "Home" },
-  { href: "/shop", label: "Shop" },
-  { href: "/about", label: "About Us" },
-  { href: "/design-guide", label: "Design Guide" },
-] as const
+import { useSiteLocale } from "@/app/hooks/useSiteLocale"
 
 const externalLinks = [
   {
@@ -26,6 +22,15 @@ const externalLinks = [
 ] as const
 
 export default function Footer() {
+  const { t } = useSiteLocale()
+  const primaryLinks = [
+    { href: "/", label: t.nav.home },
+    { href: "/shop", label: t.nav.shop },
+    { href: "/collaborations", label: t.nav.collaborations },
+    { href: "/about", label: t.nav.about },
+    { href: "/design-guide", label: t.footer.designGuide },
+  ] as const
+
   return (
     <footer
       style={{
@@ -53,7 +58,7 @@ export default function Footer() {
                   One More Good
                 </div>
                 <div className="text-sm" style={{ color: colors.muted }}>
-                  A small brand with a clear point of view.
+                  {t.footer.tagline}
                 </div>
               </div>
             </div>
@@ -62,8 +67,7 @@ export default function Footer() {
               className="mt-4 max-w-md text-sm leading-relaxed"
               style={{ color: colors.muted }}
             >
-              Built by the OneMoreGood team as a product brand that stays
-              personal, direct, and grounded in the people behind it.
+              {t.footer.description}
             </p>
           </div>
 
@@ -73,7 +77,7 @@ export default function Footer() {
                 className="text-[11px] font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Navigate
+                {t.footer.navigate}
               </div>
               <div className="mt-3 grid gap-2 text-sm font-black">
                 {primaryLinks.map((link) => (
@@ -89,7 +93,7 @@ export default function Footer() {
                 className="text-[11px] font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Connect
+                {t.footer.connect}
               </div>
               <div className="mt-3 grid gap-2 text-sm font-black">
                 {externalLinks.map((link) => (
@@ -113,7 +117,7 @@ export default function Footer() {
           style={{ borderColor: colors.ink, color: colors.muted }}
         >
           <div>Copyright © {new Date().getFullYear()} One More Good.</div>
-          <div>Designed and built by the OneMoreGood team.</div>
+          <div>{t.footer.builtBy}</div>
         </div>
       </div>
     </footer>

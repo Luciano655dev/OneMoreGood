@@ -10,13 +10,11 @@ import {
   DEFAULT_SHIPPING_COUNTRY,
   calculateCartTotals,
   formatMoneyFromCents,
-  getTotalItemCount,
   getShippingCountryLabel,
   getUnitPriceCentsForCountry,
-  refundPolicySummary,
-  shippingPolicySummary,
   type ShippingCountry,
 } from "@/lib/commerce"
+import { i18n, localeFromShippingCountry } from "@/lib/i18n"
 
 type StockMap = Record<string, number>
 type StockByCountry = Record<ShippingCountry, StockMap>
@@ -35,15 +33,9 @@ export default function CartDrawer({
     setQty,
     clearCart,
   } = useCart()
+  const t = i18n[localeFromShippingCountry(shippingCountry)]
 
   const hasItems = items.length > 0
-  const itemCount = useMemo(
-    () =>
-      getTotalItemCount(
-        items.map(({ product, qty }) => ({ productId: product.id, qty }))
-      ),
-    [items]
-  )
   const {
     subtotalCents: baseSubtotalCents,
     promoSavingsCents,
@@ -74,7 +66,7 @@ export default function CartDrawer({
     <div className="fixed inset-0 z-[1100]">
       {/* overlay */}
       <button
-        aria-label="Close cart"
+        aria-label={t.cart.closeCart}
         onClick={() => {
           setCheckoutOpen(false)
           closeCart()
@@ -93,7 +85,7 @@ export default function CartDrawer({
         }}
         role="dialog"
         aria-modal="true"
-        aria-label="Cart drawer"
+        aria-label={t.cart.drawer}
       >
         <div className="flex h-full flex-col">
           {/* header */}
@@ -108,7 +100,7 @@ export default function CartDrawer({
               className="text-sm font-black uppercase tracking-widest"
               style={{ color: colors.muted }}
             >
-              Your cart
+              {t.cart.yourCart}
             </div>
 
             <button
@@ -124,7 +116,7 @@ export default function CartDrawer({
                 color: colors.ink,
               }}
             >
-              Close ✕
+              {t.cart.close} ✕
             </button>
           </div>
 
@@ -140,9 +132,9 @@ export default function CartDrawer({
                 }}
               >
                 <div className="text-3xl">🧦</div>
-                <div className="mt-2 text-xl font-black">Cart is empty</div>
+                <div className="mt-2 text-xl font-black">{t.cart.empty}</div>
                 <p className="mt-1 text-sm" style={{ color: colors.muted }}>
-                  Add a pair and it’ll show up here.
+                  {t.cart.emptyText}
                 </p>
               </div>
             ) : (
@@ -208,7 +200,7 @@ export default function CartDrawer({
                                   boxShadow: `2px 2px 0 ${colors.ink}`,
                                 }}
                                 onClick={() => setQty(product.id, qty - 1)}
-                                aria-label={`Decrease quantity of ${product.title}`}
+                                aria-label={t.cart.decrease(product.title)}
                               >
                                 −
                               </button>
@@ -232,7 +224,7 @@ export default function CartDrawer({
                                 }}
                                 onClick={() => setQty(product.id, qty + 1)}
                                 disabled={!canIncrease}
-                                aria-label={`Increase quantity of ${product.title}`}
+                                aria-label={t.cart.increase(product.title)}
                               >
                                 +
                               </button>
@@ -248,7 +240,7 @@ export default function CartDrawer({
                               }}
                               onClick={() => removeFromCart(product.id)}
                             >
-                              Remove
+                              {t.cart.remove}
                             </button>
                           </div>
                         </div>
@@ -267,7 +259,7 @@ export default function CartDrawer({
                     color: colors.ink,
                   }}
                 >
-                  Clear cart
+                  {t.cart.clearCart}
                 </button>
               </div>
             )}
@@ -291,7 +283,7 @@ export default function CartDrawer({
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-black uppercase tracking-widest" style={{ color: colors.muted }}>
-                  Shipping country
+                  {t.cart.country}
                 </span>
                 <span
                   className="px-2 py-2 text-xs font-black uppercase tracking-widest"
@@ -306,7 +298,7 @@ export default function CartDrawer({
               </div>
 
               <div className="flex items-center justify-between text-sm font-black">
-                <span style={{ color: colors.muted }}>Subtotal</span>
+                <span style={{ color: colors.muted }}>{t.cart.subtotal}</span>
                 <span>
                   {formatMoneyFromCents(baseSubtotalCents, shippingCountry)}
                 </span>
@@ -314,7 +306,7 @@ export default function CartDrawer({
 
               {hasItems && shippingCountry === "US" && (
                 <div className="flex items-center justify-between text-sm font-black">
-                  <span style={{ color: colors.muted }}>Promo (2 for $15)</span>
+                  <span style={{ color: colors.muted }}>{t.cart.promo}</span>
                   <span style={{ color: colors.clay }}>
                     {promoSavingsCents > 0
                       ? `- ${formatMoneyFromCents(
@@ -328,7 +320,7 @@ export default function CartDrawer({
 
               {hasItems && (
                 <div className="flex items-center justify-between text-sm font-black">
-                  <span style={{ color: colors.muted }}>Shipping</span>
+                  <span style={{ color: colors.muted }}>{t.cart.shipping}</span>
                   <span>
                     {formatMoneyFromCents(shippingCents, shippingCountry)}
                   </span>
@@ -340,13 +332,13 @@ export default function CartDrawer({
               className="mt-3 flex items-center justify-between text-base font-black"
               style={{ borderTop: `2px solid ${colors.ink}`, paddingTop: 10 }}
             >
-              <span>Total</span>
+              <span>{t.cart.total}</span>
               <span>{formatMoneyFromCents(totalCents, shippingCountry)}</span>
             </div>
 
             {hasItems && (
               <p className="mt-3 text-xs" style={{ color: colors.muted }}>
-                {shippingPolicySummary(itemCount, shippingCountry)}
+                {t.cart.checkoutNote}
               </p>
             )}
 
@@ -365,19 +357,15 @@ export default function CartDrawer({
                 setCheckoutOpen(true)
               }}
             >
-              Contact to buy
+              {t.cart.contactTitle}
             </button>
 
             <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
-              {refundPolicySummary()}{" "}
+              {t.cart.policiesBefore}{" "}
               <Link href="/policies" className="underline">
-                Shipping
-              </Link>{" "}
-              and{" "}
-              <Link href="/policies" className="underline">
-                refund details
+                {t.cart.policiesLink}
               </Link>
-              .
+              {t.cart.policiesAfter}
             </div>
           </div>
         </div>
@@ -388,7 +376,7 @@ export default function CartDrawer({
         <Portal>
           <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
             <button
-              aria-label="Close contact modal"
+              aria-label={t.cart.close}
               className="absolute inset-0"
               onClick={() => setCheckoutOpen(false)}
               style={{ background: "rgba(0,0,0,.55)" }}
@@ -406,20 +394,18 @@ export default function CartDrawer({
                 className="text-sm font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Online payment paused
+                {t.cart.contactTitle}
               </div>
 
-              <div className="mt-2 text-xl font-black">Contact us to buy</div>
+              <div className="mt-2 text-xl font-black">{t.cart.contactTitle}</div>
 
               <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-                Online payment is suspended for now.
+                {t.cart.contactText}
                 <br />
                 <br />
-                If you want to buy these items, contact Luciano directly and we
-                will arrange the order manually. The current estimated shipping
-                for {getShippingCountryLabel(shippingCountry)} is{" "}
-                {formatMoneyFromCents(shippingCents, shippingCountry)} per
-                order.
+                {t.cart.shipping}: {getShippingCountryLabel(shippingCountry)} ·{" "}
+                {formatMoneyFromCents(shippingCents, shippingCountry)}{" "}
+                {t.cart.perOrder}.
               </p>
 
               <div
@@ -461,8 +447,7 @@ export default function CartDrawer({
                     color: colors.ink,
                   }}
                 >
-                  Include the product name, quantity, and your shipping country
-                  in the message.
+                  {t.cart.notePlaceholder}
                 </div>
               </div>
 
@@ -470,7 +455,7 @@ export default function CartDrawer({
                 className="mt-4 block text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Detected destination country
+                {t.cart.country}
               </label>
 
               <div
@@ -494,7 +479,7 @@ export default function CartDrawer({
                     boxShadow: `2px 2px 0 ${colors.ink}`,
                   }}
                 >
-                  Close
+                  {t.cart.close}
                 </button>
 
                 <Link
@@ -508,15 +493,15 @@ export default function CartDrawer({
                     boxShadow: `2px 2px 0 ${colors.ink}`,
                   }}
                 >
-                  Contact page
+                  {t.cart.sendMessage}
                 </Link>
               </div>
               <div className="mt-3 text-[11px]" style={{ color: colors.muted }}>
-                Shipping and refund details remain available in the{" "}
+                {t.cart.policiesBefore}{" "}
                 <Link href="/policies" className="underline">
-                  policy page
+                  {t.cart.policiesLink}
                 </Link>{" "}
-                while direct orders are handled manually.
+                {t.cart.policiesAfter}
               </div>
             </div>
           </div>

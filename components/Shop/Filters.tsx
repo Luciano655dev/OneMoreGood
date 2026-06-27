@@ -2,6 +2,7 @@
 
 import { useMemo } from "react"
 import colors from "../colors"
+import { useSiteLocale } from "@/app/hooks/useSiteLocale"
 
 export default function Filters({
   query,
@@ -16,6 +17,7 @@ export default function Filters({
   activeTag: string
   setActiveTag: (v: string) => void
 }) {
+  const { t } = useSiteLocale()
   const allTags = useMemo(() => {
     // de-dupe + stable order
     const clean = tags.map((t) => String(t).trim()).filter(Boolean)
@@ -38,20 +40,19 @@ export default function Filters({
               className="text-xs font-black uppercase tracking-widest"
               style={{ color: colors.muted }}
             >
-              Shop
+              {t.shop.kicker}
             </div>
 
             <h1 className="mt-2 text-4xl md:text-5xl font-black leading-[1.02]">
-              Good socks.{" "}
-              <strong style={{ color: colors.clay }}>Real impact.</strong>
+              {t.shop.headline}{" "}
+              <strong style={{ color: colors.clay }}>{t.shop.headlineAccent}</strong>
             </h1>
 
             <p
               className="mt-3 text-base max-w-xl"
               style={{ color: colors.muted }}
             >
-              Every purchase helps OneMoreGood donate most of the profit to
-              Instituto Semear in Pernambuco, Brazil.
+              {t.shop.intro}
             </p>
           </div>
 
@@ -73,7 +74,7 @@ export default function Filters({
                       className="text-xs font-black uppercase tracking-widest"
                       style={{ color: colors.muted }}
                     >
-                      Search
+                      {t.shop.search}
                     </label>
 
                     {query.trim().length > 0 && (
@@ -89,9 +90,9 @@ export default function Filters({
                           boxShadow: `2px 2px 0 ${colors.ink}`,
                           cursor: "pointer",
                         }}
-                        aria-label="Clear search"
+                        aria-label={t.shop.clearSearch}
                       >
-                        Clear
+                        {t.shop.clear}
                       </button>
                     )}
                   </div>
@@ -99,7 +100,7 @@ export default function Filters({
                   <input
                     id="shop-search"
                     type="text"
-                    placeholder="Search socks…"
+                    placeholder={t.shop.placeholder}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="mt-2 w-full px-3 py-3 font-black outline-none"
@@ -116,7 +117,7 @@ export default function Filters({
                     className="mt-2 text-[11px] font-black uppercase tracking-widest"
                     style={{ color: colors.muted }}
                   >
-                    Tip: try “classic”, “crew”, or “purpose”
+                    {t.shop.tip}
                   </div>
                 </div>
 
@@ -126,15 +127,15 @@ export default function Filters({
         </div>
 
         {/* TAGS */}
-        <div className="mt-6 flex flex-wrap gap-2" aria-label="Filter by tag">
-          {allTags.map((t, idx) => {
-            const active = activeTag === t
+        <div className="mt-6 flex flex-wrap gap-2" aria-label={t.shop.filterByTag}>
+          {allTags.map((tag, idx) => {
+            const active = activeTag === tag
 
             return (
               <button
-                key={t}
+                key={tag}
                 type="button"
-                onClick={() => setActiveTag(t)}
+                onClick={() => setActiveTag(tag)}
                 aria-pressed={active}
                 className="px-3 py-2 text-xs font-black uppercase tracking-widest transition"
                 style={{
@@ -148,7 +149,7 @@ export default function Filters({
                   cursor: "pointer",
                 }}
               >
-                {t}
+                {tag === "All" ? t.shop.all : tag}
               </button>
             )
           })}

@@ -8,22 +8,25 @@ import Filters from "./Filters"
 import colors from "../colors"
 import {
   DEFAULT_SHIPPING_COUNTRY,
-  formatMoneyFromCents,
   type ShippingCountry,
 } from "@/lib/commerce"
+import { i18n, localeFromShippingCountry } from "@/lib/i18n"
 import type { Product } from "@/types"
 
 type StockMap = Record<string, number>
 type StockByCountry = Record<ShippingCountry, StockMap>
+type ShopTranslations = typeof i18n.en | typeof i18n.pt
 
 function CartButton() {
   const { totalQty, toggleOpen } = useCart()
+  const { shippingCountry } = useCart()
+  const t = i18n[localeFromShippingCountry(shippingCountry)]
 
   return (
     <button
       type="button"
       onClick={toggleOpen}
-      aria-label="Open cart"
+      aria-label={t.cart.drawer}
       className="fixed bottom-5 right-5 z-50"
       style={{ color: colors.ink }}
     >
@@ -49,13 +52,19 @@ function CartButton() {
             {totalQty}
           </span>
         )}
-        Cart
+        {t.shop.cart}
       </div>
     </button>
   )
 }
 
-function EmptyState({ onClear }: { onClear: () => void }) {
+function EmptyState({
+  onClear,
+  t,
+}: {
+  onClear: () => void
+  t: ShopTranslations
+}) {
   return (
     <div className="mt-14 grid place-items-center">
       <div
@@ -67,9 +76,9 @@ function EmptyState({ onClear }: { onClear: () => void }) {
         }}
       >
         <div className="text-4xl">🧦</div>
-        <div className="mt-2 text-2xl font-black">No matches</div>
+        <div className="mt-2 text-2xl font-black">{t.shop.noMatches}</div>
         <p className="mt-2 text-sm" style={{ color: colors.muted }}>
-          Try a different search or clear filters.
+          {t.shop.noMatchesText}
         </p>
 
         <button
@@ -83,7 +92,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
             color: colors.ink,
           }}
         >
-          Clear filters
+          {t.shop.clearFilters}
         </button>
       </div>
     </div>
@@ -98,6 +107,7 @@ function InnerShop({
   stockByCountry: StockByCountry
 }) {
   const { shippingCountry } = useCart()
+  const t = i18n[localeFromShippingCountry(shippingCountry)]
   const activeStock =
     stockByCountry[shippingCountry] || stockByCountry[DEFAULT_SHIPPING_COUNTRY]
 
@@ -142,20 +152,16 @@ function InnerShop({
   }, [products, deferredQuery, deferredTag, activeStock])
 
   const resultsLabel = useMemo(() => {
-    const n = visibleProducts.length
-    return `${n} result${n === 1 ? "" : "s"}`
-  }, [visibleProducts.length])
+    return t.shop.results(visibleProducts.length)
+  }, [t, visibleProducts.length])
 
   const pricingLabel = useMemo(() => {
     if (shippingCountry === "BR") {
-      return `Brazil pricing: ${formatMoneyFromCents(
-        2500,
-        shippingCountry
-      )} per sock • Brazil-only checkout`
+      return t.shop.pricingBr
     }
 
-    return "US pricing: 1 pair $8 • 2 pairs $15 • U.S.-only checkout"
-  }, [shippingCountry])
+    return t.shop.pricingUs
+  }, [shippingCountry, t])
 
   return (
     <div
@@ -212,6 +218,7 @@ function InnerShop({
 
           {visibleProducts.length === 0 ? (
             <EmptyState
+              t={t}
               onClear={() => {
                 setQuery("")
                 setActiveTag("All")

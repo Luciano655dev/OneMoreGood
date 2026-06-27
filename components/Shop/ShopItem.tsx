@@ -8,6 +8,7 @@ import {
   formatMoneyFromCents,
   getUnitPriceCentsForCountry,
 } from "@/lib/commerce"
+import { i18n, localeFromShippingCountry } from "@/lib/i18n"
 import type { Product } from "@/types"
 
 type ShopItemProps = {
@@ -40,6 +41,7 @@ export default function ShopItem({
 }: ShopItemProps) {
   const [open, setOpen] = useState(false)
   const { addToCart, openCart, items, shippingCountry } = useCart()
+  const t = i18n[localeFromShippingCountry(shippingCountry)]
 
   // Modal UX: ESC closes + lock scroll
   useEffect(() => {
@@ -71,6 +73,13 @@ export default function ShopItem({
   const atLimit = hasQty && remaining === 0 && !out
 
   const badge = useMemo(() => getBadge(qtyLeft), [qtyLeft])
+  const badgeLabel = useMemo(() => {
+    if (!badge) return null
+    if (badge === "Out of stock") return t.shop.outOfStock
+    if (badge === "In stock") return t.shop.inStock
+    if (typeof qtyLeft === "number") return t.shop.left(qtyLeft)
+    return badge
+  }, [badge, qtyLeft, t])
 
   const unitPriceCents = useMemo(
     () =>
@@ -99,7 +108,7 @@ export default function ShopItem({
         role="button"
         tabIndex={0}
         aria-haspopup="dialog"
-        aria-label={`Open ${title}`}
+        aria-label={t.shop.openProduct(title)}
         onClick={openModal}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -143,7 +152,7 @@ export default function ShopItem({
             />
 
             {/* ONE badge only */}
-            {badge && (
+            {badgeLabel && (
               <div
                 className="absolute left-3 top-3 px-3 py-2 text-[11px] font-black uppercase tracking-widest"
                 style={{
@@ -154,7 +163,7 @@ export default function ShopItem({
                   boxShadow: `2px 2px 0 ${colors.ink}`,
                 }}
               >
-                {badge}
+                {badgeLabel}
               </div>
             )}
           </div>
@@ -164,7 +173,7 @@ export default function ShopItem({
               className="text-xs font-black uppercase tracking-widest"
               style={{ color: colors.muted }}
             >
-              Sock
+              {t.shop.sock}
             </div>
 
             <div className="mt-1 text-lg font-black leading-snug">{title}</div>
@@ -195,9 +204,9 @@ export default function ShopItem({
                     opacity: canAdd ? 1 : 0.6,
                     cursor: canAdd ? "pointer" : "not-allowed",
                   }}
-                  aria-label={`Add ${title} to cart`}
+                  aria-label={t.shop.addProduct(title)}
                 >
-                  Add
+                  {t.shop.add}
                 </button>
 
                 {/* View chip (not a button) */}
@@ -209,7 +218,7 @@ export default function ShopItem({
                     boxShadow: `2px 2px 0 ${colors.ink}`,
                   }}
                 >
-                  View
+                  {t.shop.view}
                 </span>
               </div>
             </div>
@@ -218,7 +227,7 @@ export default function ShopItem({
               className="mt-3 text-xs font-black uppercase tracking-widest"
               style={{ color: colors.muted }}
             >
-              + purpose-backed purchase
+              {t.shop.purposeBacked}
             </div>
           </div>
         </div>
@@ -254,13 +263,13 @@ export default function ShopItem({
                 className="text-xs font-black uppercase tracking-widest"
                 style={{ color: colors.muted }}
               >
-                Product
+                {t.shop.product}
               </div>
               <button
                 type="button"
                 className="px-3 py-2 text-xs font-black uppercase tracking-widest"
                 onClick={closeModal}
-                aria-label="Close"
+                aria-label={t.shop.close}
                 style={{
                   background: colors.paper,
                   border: `2px solid ${colors.ink}`,
@@ -268,7 +277,7 @@ export default function ShopItem({
                   cursor: "pointer",
                 }}
               >
-                Close ✕
+                {t.shop.close} ✕
               </button>
             </div>
 
@@ -312,12 +321,12 @@ export default function ShopItem({
                   style={{ color: out ? colors.clay : colors.muted }}
                 >
                   {!hasQty
-                    ? "Stock unavailable"
+                    ? t.shop.stockUnavailable
                     : out
-                    ? "Out of stock"
+                    ? t.shop.outOfStock
                     : qtyLeft <= 5
-                    ? `${qtyLeft} left`
-                    : "In stock"}
+                    ? t.shop.left(qtyLeft)
+                    : t.shop.inStock}
                 </div>
 
                 {description ? (
@@ -342,9 +351,9 @@ export default function ShopItem({
                       opacity: canAdd ? 1 : 0.6,
                       cursor: canAdd ? "pointer" : "not-allowed",
                     }}
-                    onClick={handleAdd}
-                  >
-                    Add to cart
+                  onClick={handleAdd}
+                >
+                    {t.shop.addToCart}
                   </button>
 
                   <button
@@ -357,9 +366,9 @@ export default function ShopItem({
                       boxShadow: `3px 3px 0 ${colors.ink}`,
                       cursor: "pointer",
                     }}
-                    onClick={closeModal}
-                  >
-                    Back
+                  onClick={closeModal}
+                >
+                    {t.shop.keepShopping}
                   </button>
                 </div>
 
@@ -367,7 +376,7 @@ export default function ShopItem({
                   className="mt-6 text-xs font-black uppercase tracking-widest"
                   style={{ color: colors.muted }}
                 >
-                  🧦 Comfort-first • durable • purpose-driven
+                  🧦 {t.shop.purposeBacked.replace("+ ", "")}
                 </div>
               </div>
             </div>

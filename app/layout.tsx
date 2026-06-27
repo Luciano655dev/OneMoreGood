@@ -33,7 +33,7 @@ export default function RootLayout({
 export const metadata: Metadata = {
   title: "OneMoreGood",
   description:
-    "Shop products with a purpose. OneMoreGood is an ecommerce brand with a grounded local point of view.",
+    "Shop graphic socks with personality, comfort, and a mission. OneMoreGood connects standout ecommerce with local collaborations and donation work.",
   icons: {
     icon: "/brand/Logo.png",
   },
