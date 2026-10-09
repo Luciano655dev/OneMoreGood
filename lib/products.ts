@@ -1,6 +1,9 @@
 import { PRODUCTS } from "@/data/products"
 import type { Product } from "@/types"
-import type { ShippingCountry } from "@/lib/commerce"
+import {
+  PRODUCTS_AVAILABLE_FOR_SALE,
+  type ShippingCountry,
+} from "@/lib/commerce"
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server"
 
 export type StoredProduct = Product & {
@@ -213,6 +216,8 @@ export function getInventoryForCountry(
   >,
   country: ShippingCountry
 ) {
+  if (!PRODUCTS_AVAILABLE_FOR_SALE) return 0
+
   return country === "BR"
     ? Number(product.inventory_quantity_br ?? product.inventory_quantity ?? 0)
     : Number(product.inventory_quantity_us ?? product.inventory_quantity ?? 0)

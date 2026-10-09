@@ -7,6 +7,10 @@ export const CART_STORAGE_KEY = "omp_cart_v1"
 // Flip to true to re-enable.
 export const ONLINE_CHECKOUT_ENABLED = false
 
+// Keep the catalog visible while the current collection is unavailable.
+// Flip to true when socks are ready to sell again; stored inventory is preserved.
+export const PRODUCTS_AVAILABLE_FOR_SALE = false
+
 export const RETURN_WINDOW_DAYS = 14
 
 export type ShippingCountry = "US" | "BR"

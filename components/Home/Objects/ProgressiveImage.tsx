@@ -40,7 +40,7 @@ export default function ProgressiveImage({
       {...props}
       alt={alt}
       priority={priority}
-      quality={quality ?? 72}
+      quality={quality ?? 75}
       loading={priority ? undefined : loading ?? "lazy"}
       placeholder={placeholder ?? "blur"}
       blurDataURL={blurDataURL ?? DEFAULT_BLUR_DATA_URL}

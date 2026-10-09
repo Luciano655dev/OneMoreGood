@@ -18,6 +18,7 @@ import { useSiteLocale } from "@/app/hooks/useSiteLocale"
 import {
   formatMoneyFromCents,
   getUnitPriceCentsForCountry,
+  PRODUCTS_AVAILABLE_FOR_SALE,
   type ShippingCountry,
 } from "@/lib/commerce"
 import type { Product } from "@/types"
@@ -28,6 +29,8 @@ import SectionTitle from "@/components/Home/Objects/SectionTitle"
 import SockIcon from "@/components/Home/Objects/SockIcon"
 import StampChip from "@/components/Home/Objects/StampChip"
 import StitchRule from "@/components/Home/Objects/StitchRule"
+import CampaignThankYouHero from "@/components/Home/Sections/CampaignThankYouHero"
+import WhoWeHelp from "@/components/Home/Sections/WhoWeHelp"
 
 const featuredProducts: Array<Product & { mainTag: string }> = [
   {
@@ -270,13 +273,17 @@ function ProductCard({
           <span
             className="btnInk px-4 py-2 text-xs font-black uppercase tracking-widest"
             style={{
-              background: colors.accent,
+              background: PRODUCTS_AVAILABLE_FOR_SALE
+                ? colors.accent
+                : colors.clay,
               color: colors.paper,
               border: `2px solid ${colors.ink}`,
               boxShadow: `2px 2px 0 ${colors.ink}`,
             }}
           >
-            {t.home.shopLabel}
+            {PRODUCTS_AVAILABLE_FOR_SALE
+              ? t.home.shopLabel
+              : t.shop.outOfStock}
           </span>
         </div>
       </button>
@@ -316,6 +323,8 @@ export default function OneMoreGoodStorefront() {
       />
 
       <main>
+        <CampaignThankYouHero />
+
         <section className="max-w-7xl mx-auto px-6 pt-12 md:pt-16 pb-10">
           <div className="grid gap-8 md:grid-cols-12 md:items-start">
             <div className="md:col-span-7">
@@ -325,13 +334,13 @@ export default function OneMoreGoodStorefront() {
                 <StampChip icon={Truck} text={t.home.chips[2]} />
               </div>
 
-              <h1
+              <h2
                 data-reveal
                 className="reveal mt-6 max-w-3xl text-5xl font-black leading-[0.98] tracking-tight md:text-6xl"
               >
                 {t.home.headline}{" "}
                 <span style={{ color: colors.clay }}>{t.home.headlineAccent}</span>
-              </h1>
+              </h2>
 
               <p
                 data-reveal
@@ -402,14 +411,25 @@ export default function OneMoreGoodStorefront() {
                       {t.home.productDescriptions["sock-brazil-yellow"]}
                     </p>
                   </div>
-                  <div className="text-xl font-black" style={{ color: colors.accent }}>
-                    {featuredPrice}
+                  <div
+                    className="text-xl font-black"
+                    style={{
+                      color: PRODUCTS_AVAILABLE_FOR_SALE
+                        ? colors.accent
+                        : colors.clay,
+                    }}
+                  >
+                    {PRODUCTS_AVAILABLE_FOR_SALE
+                      ? featuredPrice
+                      : t.shop.outOfStock}
                   </div>
                 </div>
               </RoughBorder>
             </div>
           </div>
         </section>
+
+        <WhoWeHelp />
 
         <section
           style={{

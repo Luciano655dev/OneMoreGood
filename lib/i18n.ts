@@ -25,11 +25,40 @@ export const i18n = {
       builtBy: "Designed and built by the OneMoreGood team.",
     },
     home: {
-      chips: ["Sock shop", "Purpose-backed", "US + Brazil"],
-      headline: "Graphic socks with personality, purpose, and",
-      headlineAccent: "everyday comfort.",
+      campaignThankYou: {
+        chips: ["Campaign complete", "100% donated", "Pernambuco, Brazil"],
+        kicker: "A message from OneMoreGood",
+        headline: "Thank you. Together, we raised more than",
+        headlineAccent: "$1,500.",
+        intro:
+          "Every dollar raised was donated. That happened because customers, friends, families, and supporters chose to believe in OneMoreGood and in the people behind this mission.",
+        impactLead: "What happens next:",
+        impactText:
+          "the donation will help Instituto Educacional Semear build a school in Pernambuco and give more children access to education, opportunity, and a place to learn.",
+        seeImpact: "See the full impact",
+        meetSemear: "Meet Instituto Semear",
+        stats: [
+          ["$1,500+", "raised together"],
+          ["100%", "donated"],
+          ["1 school", "helping build"],
+        ],
+        photoLabel: "Because of you",
+        mainPhotoCaption: "Instituto Semear • Pernambuco",
+        photoAlts: [
+          "Children from Instituto Semear holding the Brazil and Pernambuco flags",
+          "Instituto Semear educators holding training certificates",
+          "An educator leading a classroom activity with children at Instituto Semear",
+        ],
+        openPhoto: "Open photo",
+        expandPhoto: "Expand",
+        modalTitle: "Instituto Semear",
+        closePhoto: "Close photo",
+      },
+      chips: ["Sock shop", "Supporting Instituto Semear", "US + Brazil"],
+      headline: "Good socks. Real support for",
+      headlineAccent: "Instituto Semear.",
       intro:
-        "Choose bold crew socks for outfits, gifts, school days, game days, and small details that make people look twice. The shop is simple to browse, easy to buy from, and rooted in a mission that stays visible after checkout.",
+        "OneMoreGood sells graphic socks and directs most of the profit from each purchase to Instituto Educacional Semear in Pernambuco, Brazil—helping strengthen the opportunities it creates for local children and families.",
       shopAll: "Shop all socks",
       seeImpact: "See our impact",
       pricingStats: [
@@ -88,6 +117,47 @@ export const i18n = {
       shopLabel: "Shop",
       shopAria: "Shop",
       detailBadge: "Detail",
+      whoWeHelp: {
+        kicker: "Who we're helping",
+        title: "Meet Instituto Educacional Semear",
+        description:
+          "Our current partner is a local educational organization in Santa Terezinha, Pernambuco. This is the place, the people, and the purpose behind every OneMoreGood order.",
+        photoLabel: "The community behind the mission",
+        heroImageAlt:
+          "Children and community members connected to Instituto Educacional Semear",
+        locationTitle: "Santa Terezinha, Pernambuco",
+        locationText:
+          "Instituto Semear serves children and families in Sítio Bandeiras and nearby communities in Brazil's Sertão do Pajeú.",
+        partnerLabel: "Current partner",
+        partnerName: "Instituto Educacional Semear",
+        partnerDescription:
+          "Semear creates educational opportunities and a stronger local environment for children and families. OneMoreGood helps by turning ordinary product sales into ongoing, visible support.",
+        impactAreas: [
+          {
+            title: "Learning and activities",
+            text: "Support can strengthen materials, educational activities, and the day-to-day environment children experience.",
+          },
+          {
+            title: "Children and families",
+            text: "The work stays connected to specific people and practical needs in the local community.",
+          },
+          {
+            title: "Visible accountability",
+            text: "Photos, videos, and updates let customers follow the people and place behind the mission.",
+          },
+        ],
+        openPhoto: "Open photo",
+        expandPhoto: "Expand",
+        modalTitle: "Community photo",
+        closePhoto: "Close photo",
+        learnMore: "See the full story",
+        shopToHelp: "Shop to support",
+        galleryAlts: [
+          "Children participating in a community activity",
+          "Children and families in Santa Terezinha",
+          "An Instituto Semear community moment",
+        ],
+      },
     },
     organization: {
       chips: ["Collaborations", "Santa Terezinha", "Proof over promises"],
@@ -297,11 +367,40 @@ export const i18n = {
       builtBy: "Projetado e desenvolvido pela equipe OneMoreGood.",
     },
     home: {
-      chips: ["Loja de meias", "Com propósito", "EUA + Brasil"],
-      headline: "Meias criativas com personalidade, propósito e",
-      headlineAccent: "conforto para o dia a dia.",
+      campaignThankYou: {
+        chips: ["Campanha concluída", "100% doado", "Pernambuco, Brasil"],
+        kicker: "Uma mensagem da OneMoreGood",
+        headline: "Obrigado. Juntos, arrecadamos mais de",
+        headlineAccent: "US$ 1.500.",
+        intro:
+          "Todo o valor arrecadado foi doado. Isso aconteceu porque clientes, amigos, famílias e apoiadores acreditaram na OneMoreGood e nas pessoas por trás desta missão.",
+        impactLead: "O que acontece agora:",
+        impactText:
+          "a doação ajudará o Instituto Educacional Semear a construir uma escola em Pernambuco e dará a mais crianças acesso à educação, oportunidades e um lugar para aprender.",
+        seeImpact: "Ver o impacto completo",
+        meetSemear: "Conhecer o Instituto Semear",
+        stats: [
+          ["US$ 1.500+", "arrecadados juntos"],
+          ["100%", "doado"],
+          ["1 escola", "ajudando a construir"],
+        ],
+        photoLabel: "Graças a você",
+        mainPhotoCaption: "Instituto Semear • Pernambuco",
+        photoAlts: [
+          "Crianças do Instituto Semear segurando as bandeiras do Brasil e de Pernambuco",
+          "Educadoras do Instituto Semear segurando certificados de formação",
+          "Uma educadora conduzindo uma atividade em sala com crianças do Instituto Semear",
+        ],
+        openPhoto: "Abrir foto",
+        expandPhoto: "Ampliar",
+        modalTitle: "Instituto Semear",
+        closePhoto: "Fechar foto",
+      },
+      chips: ["Loja de meias", "Apoiando o Instituto Semear", "EUA + Brasil"],
+      headline: "Boas meias. Apoio real ao",
+      headlineAccent: "Instituto Semear.",
       intro:
-        "Escolha meias estilosas para looks, presentes, escola, jogos e pequenos detalhes que chamam atenção. A loja é simples de navegar, fácil de comprar e conectada a uma missão que continua visível depois da compra.",
+        "A OneMoreGood vende meias criativas e destina a maior parte do lucro de cada compra ao Instituto Educacional Semear, em Pernambuco—fortalecendo as oportunidades que ele oferece a crianças e famílias da região.",
       shopAll: "Ver todas as meias",
       seeImpact: "Ver o impacto",
       pricingStats: [
@@ -360,6 +459,47 @@ export const i18n = {
       shopLabel: "Comprar",
       shopAria: "Comprar",
       detailBadge: "Detalhe",
+      whoWeHelp: {
+        kicker: "Quem ajudamos",
+        title: "Conheça o Instituto Educacional Semear",
+        description:
+          "Nosso parceiro atual é uma organização educacional local de Santa Terezinha, Pernambuco. Este é o lugar, as pessoas e o propósito por trás de cada pedido da OneMoreGood.",
+        photoLabel: "A comunidade por trás da missão",
+        heroImageAlt:
+          "Crianças e membros da comunidade ligados ao Instituto Educacional Semear",
+        locationTitle: "Santa Terezinha, Pernambuco",
+        locationText:
+          "O Instituto Semear atende crianças e famílias do Sítio Bandeiras e de comunidades próximas no Sertão do Pajeú.",
+        partnerLabel: "Parceiro atual",
+        partnerName: "Instituto Educacional Semear",
+        partnerDescription:
+          "O Semear cria oportunidades educacionais e um ambiente local mais forte para crianças e famílias. A OneMoreGood ajuda transformando vendas de produtos em apoio contínuo e visível.",
+        impactAreas: [
+          {
+            title: "Aprendizado e atividades",
+            text: "O apoio pode fortalecer materiais, atividades educativas e o ambiente que as crianças vivem todos os dias.",
+          },
+          {
+            title: "Crianças e famílias",
+            text: "O trabalho continua ligado a pessoas específicas e necessidades práticas da comunidade local.",
+          },
+          {
+            title: "Transparência visível",
+            text: "Fotos, vídeos e atualizações permitem acompanhar as pessoas e o lugar por trás da missão.",
+          },
+        ],
+        openPhoto: "Abrir foto",
+        expandPhoto: "Ampliar",
+        modalTitle: "Foto da comunidade",
+        closePhoto: "Fechar foto",
+        learnMore: "Ver a história completa",
+        shopToHelp: "Comprar e apoiar",
+        galleryAlts: [
+          "Crianças participando de uma atividade comunitária",
+          "Crianças e famílias de Santa Terezinha",
+          "Um momento da comunidade do Instituto Semear",
+        ],
+      },
     },
     organization: {
       chips: ["Doações", "Santa Terezinha", "Provas reais"],
